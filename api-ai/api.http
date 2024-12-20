@@ -1,0 +1,1 @@
+GET http://localhost:8080/api/openai/chat?message=Tell me a joke
