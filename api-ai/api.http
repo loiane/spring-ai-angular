@@ -1,1 +1,9 @@
 GET http://localhost:8080/api/openai/chat?message=Tell me a joke
+
+###
+POST http://localhost:8080/api/openai/chat
+Content-Type: application/json
+
+{
+    "message": "Tell me a joke"
+}
