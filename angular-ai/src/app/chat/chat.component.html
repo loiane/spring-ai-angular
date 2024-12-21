@@ -14,15 +14,23 @@
           <div class="flex items-start space-x-2">
           @if (message.isBot) {
             <div class="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600"></div> <!-- Avatar -->
-            <div class="bg-gray-100 dark:bg-gray-700 p-3 rounded-lg max-w-xs">
+            <div class="bg-gray-100 dark:bg-gray-700 p-3 rounded-lg max-w-md">
               <p class="text-gray-700 dark:text-gray-300">{{ message.message }}</p>
             </div>
           } @else {
             <div class="w-10 h-10 rounded-full bg-blue-500 dark:bg-blue-600"></div> <!-- Avatar -->
-            <div class="bg-blue-100 dark:bg-blue-800 p-3 rounded-lg max-w-xs text-blue-800 dark:text-blue-300">
+            <div class="bg-blue-100 dark:bg-blue-800 p-3 rounded-lg max-w-md text-blue-800 dark:text-blue-300">
               <p>{{ message.message }}</p>
             </div>
           }
+          </div>
+        }
+        @if (isLoading) {
+          <div class="flex items-start space-x-2">
+            <div class="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600"></div> <!-- Avatar -->
+            <div class="bg-gray-100 dark:bg-gray-700 p-3 rounded-lg max-w-md">
+              <p class="text-gray-700 dark:text-gray-300">...</p>
+            </div>
           </div>
         }
     </div>
@@ -32,7 +40,7 @@
       <input type="text" id="messageInput" class="w-full p-2 rounded-lg bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-300 border focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-300" 
         placeholder="Type a message..." [(ngModel)]="message" (keyup.enter)="sendChatMessage()">
       <button id="sendButton" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none dark:bg-blue-700 dark:hover:bg-blue-600"
-        (click)="sendChatMessage()">
+        (click)="sendChatMessage()" [disabled]="isLoading">
         Send
       </button>
     </div>
