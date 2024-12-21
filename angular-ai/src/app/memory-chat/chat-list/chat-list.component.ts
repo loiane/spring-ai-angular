@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { ChatComponent } from '../../chat/chat.component';
+import { ChatType } from '../../chat/model/chat-type';
 
 @Component({
   selector: 'app-chat-list',
@@ -9,4 +10,5 @@ import { ChatComponent } from '../../chat/chat.component';
 })
 export class ChatListComponent {
 
+  readonly memoryChat = ChatType.MemoryChat;
 }

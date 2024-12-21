@@ -2,6 +2,7 @@ import { Component, inject, Input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ChatService } from './service/chat.service';
 import { catchError, delay, throwError } from 'rxjs';
+import { ChatType } from './model/chat-type';
 
 @Component({
   selector: 'app-chat',
@@ -12,6 +13,8 @@ import { catchError, delay, throwError } from 'rxjs';
 export class ChatComponent {
 
   @Input() title = 'Simple Chat';
+  @Input() chatType = ChatType.Chat;
+
   message = '';
   isLoading = false;
 
@@ -33,7 +36,7 @@ export class ChatComponent {
 
     this.chatService.sendChatMessage(this.message)
     .pipe(
-      delay(10000),
+      //delay(10000),
       catchError(error => {
         this.updateMessages('Sorry, I am unable to process your request at the moment.', true);
         this.isLoading = false;
