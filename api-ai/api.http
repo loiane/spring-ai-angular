@@ -7,3 +7,9 @@ Content-Type: application/json
 {
     "message": "Tell me a joke"
 }
+
+###
+GET http://localhost:8080/api/books/by-author?author=Rebecca+Yarros
+
+###
+GET http://localhost:8080/api/books/by-author-formatted?author=Rebecca+Yarros
