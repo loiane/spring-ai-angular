@@ -1,0 +1,35 @@
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  height: 80vh;
+  margin: 16px;
+}
+
+.messages {
+  flex: 1;
+  margin-bottom: 16px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.message {
+  margin-bottom: 8px;
+}
+
+.user-message {
+  text-align: right;
+}
+
+.bot-message {
+  text-align: left;
+}
+
+.input-field {
+  flex: 1;
+}
+
+mat-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

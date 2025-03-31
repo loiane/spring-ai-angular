@@ -1,0 +1,20 @@
+<mat-card class="chat-container">
+  <mat-card-header>
+    <mat-card-title>Simple Chat</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <div class="messages">
+      @for (message of messages(); track message; let system = $even) {
+        <div class="message">
+          {{ message.message }}
+        </div>
+      }
+    </div>
+  </mat-card-content>
+  <mat-card-actions>
+    <mat-form-field class="input-field" appearance="outline">
+      <input matInput placeholder="Type your message..." [(ngModel)]="message" (keyup.enter)="sendMessage()">
+    </mat-form-field>
+    <button mat-raised-button color="primary" (click)="sendMessage()" [disabled]="isLoading">Send</button>
+  </mat-card-actions>
+</mat-card>
