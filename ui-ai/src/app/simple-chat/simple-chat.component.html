@@ -4,12 +4,19 @@
       <span>Simple Chat</span>
     </mat-toolbar>
   </div>
-  <div class="chat-history">
+  <div class="chat-history" #chatHistory>
     <div class="messages">
     @for (message of messages(); track message; let system = $even) {
       <div class="message">
         <div class="message-bubble" [ngClass]="{'user': !message.isBot}">
           {{ message.text }}
+        </div>
+      </div>
+    }
+    @if (isLoading) {
+      <div class="message">
+        <div class="message-bubble">
+          <span class="typing">...</span>
         </div>
       </div>
     }

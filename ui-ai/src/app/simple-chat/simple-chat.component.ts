@@ -1,5 +1,5 @@
 import { NgClass } from '@angular/common';
-import { Component, signal } from '@angular/core';
+import { Component, signal, ViewChild, ElementRef } from '@angular/core';
 import { FormControl, FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -14,6 +14,9 @@ import { MatToolbar } from '@angular/material/toolbar';
   styleUrl: './simple-chat.component.scss'
 })
 export class SimpleChatComponent {
+
+  @ViewChild('chatHistory')
+  private chatHistory!: ElementRef;
 
   userInput = '';
   isLoading = false;
@@ -40,6 +43,7 @@ export class SimpleChatComponent {
 
   private updateMessages(text: string, isBot = false) {
     this.messages.update(messages => [...messages, { text, isBot }]);
+    this.scrollToBottom();
   }
 
   private getResponse() {
@@ -49,5 +53,11 @@ export class SimpleChatComponent {
       this.updateMessages(response, true);
       this.isLoading = false;
     }, 2000);
+  }
+
+  private scrollToBottom(): void {
+    try {
+      this.chatHistory.nativeElement.scrollTop = this.chatHistory.nativeElement.scrollHeight;
+    } catch(err) { }
   }
 }
