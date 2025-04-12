@@ -22,7 +22,7 @@ export class SimpleChatComponent {
 
   private chatService = inject(ChatService);
 
-  private readonly local = true;
+  private readonly local = false;
 
   userInput = '';
   isLoading = false;
