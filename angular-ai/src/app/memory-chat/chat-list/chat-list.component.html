@@ -1,0 +1,19 @@
+<mat-card class="chat-container">
+  <div class="chat-header">
+    <mat-toolbar>
+      <span>Chat with Memory</span>
+    </mat-toolbar>
+  </div>
+  <mat-drawer-container class="example-container">
+    <mat-drawer mode="side" opened>
+      <mat-list role="list">
+        <mat-list-item role="listitem">Chat 1</mat-list-item>
+        <mat-list-item role="listitem">Chat 2</mat-list-item>
+        <mat-list-item role="listitem">Chat 3</mat-list-item>
+      </mat-list>
+    </mat-drawer>
+    <mat-drawer-content>
+      <app-simple-chat/>
+    </mat-drawer-content>
+  </mat-drawer-container>
+</mat-card>

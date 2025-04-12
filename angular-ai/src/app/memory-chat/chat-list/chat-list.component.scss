@@ -1,0 +1,17 @@
+.example-container {
+  width: auto;
+  height: 100%;
+  margin: 10px;
+  background: #eee;
+}
+
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  height: 80vh;
+  margin: 36px;
+}
+
+.chat-header {
+  flex: 0 0 auto; /* Header doesn't grow or shrink */
+}
