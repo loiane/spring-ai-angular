@@ -1,11 +1,13 @@
 import { NgClass } from '@angular/common';
-import { Component, signal, ViewChild, ElementRef } from '@angular/core';
+import { Component, signal, ViewChild, ElementRef, inject } from '@angular/core';
 import { FormControl, FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatToolbar } from '@angular/material/toolbar';
+import { ChatService } from '../chat-service/chat.service';
+import { catchError, throwError } from 'rxjs';
 
 @Component({
   selector: 'app-simple-chat',
@@ -17,6 +19,10 @@ export class SimpleChatComponent {
 
   @ViewChild('chatHistory')
   private chatHistory!: ElementRef;
+
+  private chatService = inject(ChatService);
+
+  private readonly local = true;
 
   userInput = '';
   isLoading = false;
@@ -32,8 +38,11 @@ export class SimpleChatComponent {
     if (this.userInput !== '') {
       this.updateMessages(this.userInput);
       this.isLoading = true;
-      this.userInput = '';
-      this.getResponse();
+      if (this.local) {
+        this.simulateResponse();
+      } else {
+        this.sendChatMessage();
+      }
     }
   }
 
@@ -55,9 +64,30 @@ export class SimpleChatComponent {
     }, 2000);
   }
 
+  private simulateResponse() {
+    this.getResponse();
+    this.userInput = '';
+  }
+
   private scrollToBottom(): void {
     try {
       this.chatHistory.nativeElement.scrollTop = this.chatHistory.nativeElement.scrollHeight;
     } catch(err) { }
+  }
+
+  private sendChatMessage() {
+    this.chatService.sendChatMessage(this.userInput)
+    .pipe(
+      //delay(10000),
+      catchError(() => {
+        this.updateMessages('Sorry, I am unable to process your request at the moment.', true);
+        this.isLoading = false;
+        return throwError(() => new Error('Error occurred while sending message'));})
+    )
+    .subscribe(response => {
+      this.updateMessages(response.message, true);
+      this.userInput = '';
+      this.isLoading = false;
+    });
   }
 }
