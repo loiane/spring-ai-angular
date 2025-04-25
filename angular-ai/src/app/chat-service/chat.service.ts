@@ -6,7 +6,7 @@ import { inject, Injectable, Resource } from '@angular/core';
 })
 export class ChatService {
 
-  private readonly API = '/api/openai/chat';
+  private readonly API = '/api/chat';
 
   private http = inject(HttpClient);
 
