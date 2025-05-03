@@ -6,7 +6,7 @@ import { inject, Injectable, Resource } from '@angular/core';
 })
 export class ChatService {
 
-  private readonly API = '/api/chat';
+  private readonly API = '/api/chat/chat-memory';
 
   private http = inject(HttpClient);
 
