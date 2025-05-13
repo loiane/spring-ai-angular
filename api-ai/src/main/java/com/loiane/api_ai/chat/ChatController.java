@@ -1,5 +1,6 @@
 package com.loiane.api_ai.chat;
 
+import com.loiane.api_ai.chat.memory.MemoryChatService;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
