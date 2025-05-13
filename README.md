@@ -2,6 +2,18 @@
 
 This project is a sample application showcasing a Java Spring AI backend alongside an Angular frontend. It demonstrates the integration of Spring AI services (such as chat and book prompts) with an Angular UI.
 
+## 💻 Tecnologies
+
+- Java 24
+- Spring Boot 3.4.5 (Spring 6)
+- Spring AI (including OpenAI, Gemini, Azure OpenAI, OCI AI)
+- Maven
+- PostgreSQL
+- JUnit 5 + Mockito (back-end tests)
+- Angular v20
+- Angular Material
+- Karma + Jasmine (front-end tests)
+
 ### Videos published (in Portuguese)
 
 These videos showcase how to create this repository step by step:
