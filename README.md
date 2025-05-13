@@ -12,3 +12,5 @@ These videos showcase how to create this repository step by step:
 - [Spring AI + Angular: Chat Client com Azure OpenAI](https://youtu.be/fjkZjObT3ro)
 - Spring AI + Angular: Chat Client com Oracle GenAI
 - Spring AI + Angular: Criando Projeto Angular
+- Spring AI + Angular: Criando Cliente de Chat
+- Spring AI + Angular: Conectando Cliente de Chat com API
