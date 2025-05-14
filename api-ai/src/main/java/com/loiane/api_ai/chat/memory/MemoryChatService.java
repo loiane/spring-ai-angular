@@ -13,7 +13,7 @@ public class MemoryChatService {
 
     //private ChatMemory chatMemory;
 
-    private JdbcChatMemoryRepository jdbcChatMemoryRepository;
+    // private final JdbcChatMemoryRepository jdbcChatMemoryRepository;
 
     private final ChatClient chatClient;
 
@@ -22,7 +22,7 @@ public class MemoryChatService {
     public MemoryChatService(ChatClient.Builder chatClientBuilder,
                              JdbcChatMemoryRepository jdbcChatMemoryRepository, ChatMemoryIDRepository chatMemoryRepository) {
        // this.chatMemory = chatMemory;
-        this.jdbcChatMemoryRepository = jdbcChatMemoryRepository;
+        // this.jdbcChatMemoryRepository = jdbcChatMemoryRepository;
 
         this.chatMemoryRepository = chatMemoryRepository;
 
