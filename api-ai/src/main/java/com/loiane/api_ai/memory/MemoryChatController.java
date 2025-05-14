@@ -1,4 +1,4 @@
-package com.loiane.api_ai.chat.memory;
+package com.loiane.api_ai.memory;
 
 import com.loiane.api_ai.chat.ChatRequest;
 import com.loiane.api_ai.chat.ChatResponse;

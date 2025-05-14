@@ -1,4 +1,4 @@
-package com.loiane.api_ai.chat.memory;
+package com.loiane.api_ai.memory;
 
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;

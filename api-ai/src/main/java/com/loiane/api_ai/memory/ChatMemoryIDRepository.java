@@ -1,4 +1,4 @@
-package com.loiane.api_ai.chat.memory;
+package com.loiane.api_ai.memory;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
