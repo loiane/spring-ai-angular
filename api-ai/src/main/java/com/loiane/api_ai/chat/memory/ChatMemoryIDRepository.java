@@ -22,4 +22,15 @@ public class ChatMemoryIDRepository {
     private String generateUniqueChatId() {
         return java.util.UUID.randomUUID().toString();
     }
+
+    public boolean chatIdExists(String chatId) {
+        String sql = "SELECT COUNT(*) FROM ai_chat_memory WHERE conversation_id = ? AND type = 'USER'";
+        Integer count = jdbcTemplate.queryForObject(sql, new Object[]{chatId}, Integer.class);
+        return count != null && count == 1;
+    }
+
+    public void updateDescription(String chatId, String description) {
+        String sql = "UPDATE chat_memory SET description = ? WHERE id = ?";
+        jdbcTemplate.update(sql, description, chatId);
+    }
 }

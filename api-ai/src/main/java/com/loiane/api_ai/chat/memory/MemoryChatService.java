@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class MemoryChatService {
 
-    private ChatMemory chatMemory;
+    //private ChatMemory chatMemory;
 
     private JdbcChatMemoryRepository jdbcChatMemoryRepository;
 
@@ -20,14 +20,14 @@ public class MemoryChatService {
 
     private final ChatMemoryIDRepository chatMemoryRepository;
 
-    public MemoryChatService(ChatClient.Builder chatClientBuilder, ChatMemory chatMemory,
+    public MemoryChatService(ChatClient.Builder chatClientBuilder,
                              JdbcChatMemoryRepository jdbcChatMemoryRepository, ChatMemoryIDRepository chatMemoryRepository) {
-        this.chatMemory = chatMemory;
+       // this.chatMemory = chatMemory;
         this.jdbcChatMemoryRepository = jdbcChatMemoryRepository;
 
         this.chatMemoryRepository = chatMemoryRepository;
 
-        this.chatMemory = MessageWindowChatMemory.builder()
+        ChatMemory chatMemory = MessageWindowChatMemory.builder()
                 .chatMemoryRepository(jdbcChatMemoryRepository)
                 .maxMessages(10)
                 .build();
@@ -41,13 +41,32 @@ public class MemoryChatService {
 
     }
 
-    public String chat(String message) {
-        String chatId = this.chatMemoryRepository.generateChatId("Loiane");
+    public String createChat() {
+        return this.chatMemoryRepository.generateChatId("Loiane");
+    }
 
-        return this.chatClient.prompt()
+    public String chat(String chatId, String message) {
+        var response = this.chatClient.prompt()
                 .user(message)
                 .advisors(a -> a.param(AbstractChatMemoryAdvisor.CHAT_MEMORY_CONVERSATION_ID_KEY, chatId))
                 .call()
                 .content();
+        this.updateDescription(chatId, message);
+        return response;
     }
+
+    private void updateDescription(String chatId, String message) {
+        if (this.chatMemoryRepository.chatIdExists(chatId)) {
+            String description = this.generateDescription(message);
+            this.chatMemoryRepository.updateDescription(chatId, description);
+        }
+    }
+
+    private String generateDescription(String message) {
+        return this.chatClient.prompt()
+                .user("Generate a chat description based on the message, limiting the description to 30 characters: " + message)
+                .call()
+                .content();
+    }
+
 }

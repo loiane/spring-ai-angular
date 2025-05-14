@@ -5,13 +5,16 @@ Content-Type: application/json
     "message": "Tell me a joke"
 }
 
-###
+### Create a new chat memory ID
+POST http://localhost:8080/api/chat-memory
 
-POST http://localhost:8080/api/chat/chat-memory
+
+### Prompt the chat memory ID
+POST http://localhost:8080/api/chat-memory/833022ef-53cc-48f1-aa1c-1740d21c9221
 Content-Type: application/json
 
 {
-    "message": "Tell me a joke with memory"
+    "message": "Tell me a joke"
 }
 
 ###

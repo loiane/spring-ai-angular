@@ -2,5 +2,6 @@ drop table CHAT_MEMORY;
 
 CREATE TABLE IF NOT EXISTS CHAT_MEMORY (
     id VARCHAR(256) PRIMARY KEY,
-    user_id VARCHAR(256)
+    user_id VARCHAR(256),
+    description VARCHAR(256)
 );
