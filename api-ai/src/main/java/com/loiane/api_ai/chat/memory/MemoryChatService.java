@@ -1,12 +1,11 @@
 package com.loiane.api_ai.chat.memory;
 
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
-import org.springframework.ai.chat.memory.jdbc.JdbcChatMemoryRepository;
+import org.springframework.ai.chat.memory.repository.jdbc.JdbcChatMemoryRepository;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -48,7 +47,7 @@ public class MemoryChatService {
     public String chat(String chatId, String message) {
         var response = this.chatClient.prompt()
                 .user(message)
-                .advisors(a -> a.param(AbstractChatMemoryAdvisor.CHAT_MEMORY_CONVERSATION_ID_KEY, chatId))
+                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, chatId))
                 .call()
                 .content();
         this.updateDescription(chatId, message);
