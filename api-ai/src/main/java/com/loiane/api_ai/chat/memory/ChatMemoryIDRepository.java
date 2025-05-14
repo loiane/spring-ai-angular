@@ -24,7 +24,7 @@ public class ChatMemoryIDRepository {
     }
 
     public boolean chatIdExists(String chatId) {
-        String sql = "SELECT COUNT(*) FROM ai_chat_memory WHERE conversation_id = ? AND type = 'USER'";
+        String sql = "SELECT COUNT(*) FROM spring_ai_chat_memory WHERE conversation_id = ? AND type = 'USER'";
         Integer count = jdbcTemplate.queryForObject(sql, new Object[]{chatId}, Integer.class);
         return count != null && count == 1;
     }
