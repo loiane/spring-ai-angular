@@ -3,34 +3,22 @@ package com.loiane.api_ai.rag;
 import com.loiane.api_ai.chat.ChatRequest;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
-import org.springframework.ai.document.Document;
-import org.springframework.ai.embedding.EmbeddingModel;
-import org.springframework.ai.vectorstore.SimpleVectorStore;
 import org.springframework.ai.vectorstore.VectorStore;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("api/ai/rag")
 public class RagController {
 
-    private final RagPDFReader ragPDFReader;
     private final VectorStore vectorStore;
     private final ChatClient chatClient;
 
-    public RagController(RagPDFReader ragPDFReader, EmbeddingModel embeddingModel,
-                         ChatClient.Builder chatClientBuilder) {
-        this.ragPDFReader = ragPDFReader;
-        this.vectorStore = SimpleVectorStore.builder(embeddingModel).build();
+    public RagController(ChatClient.Builder chatClientBuilder, VectorStore vectorStore) {
+        this.vectorStore = vectorStore;
         this.chatClient = chatClientBuilder.build();
-    }
-
-    @GetMapping("load-pdf")
-    public void getPdf() {
-        List<Document> docs = this.ragPDFReader.getDocsFromPdf();
-        System.out.println("docs.size() = " + docs.size());
-        vectorStore.add(docs);
     }
 
     @PostMapping
