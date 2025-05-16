@@ -30,7 +30,7 @@ public class RagPDFReader {
     private String vectorStoreName;
 
     @Value("classpath:/docs/SpringAIReference.pdf")
-    private Resource faq;
+    private Resource pdfResource;
 
     @Bean
     public VectorStore vectorStore(EmbeddingModel embeddingModel) {
@@ -51,7 +51,7 @@ public class RagPDFReader {
     }
 
     private List<Document> getDocsFromPdf() {
-        PagePdfDocumentReader pdfReader = new PagePdfDocumentReader("classpath:/docs/SpringAIReference.pdf",
+        PagePdfDocumentReader pdfReader = new PagePdfDocumentReader(pdfResource,
                 PdfDocumentReaderConfig.builder()
                         .withPageTopMargin(0)
                         .withPageExtractedTextFormatter(ExtractedTextFormatter.builder()
