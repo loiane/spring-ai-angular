@@ -34,7 +34,7 @@ public class RagPDFReader {
     private Resource pdfResource;
 
     @Bean
-    public VectorStore vectorStore(EmbeddingModel embeddingModel) {
+    public VectorStore simpleVectorStore(EmbeddingModel embeddingModel) {
         SimpleVectorStore simpleVectorStore = SimpleVectorStore.builder(embeddingModel).build();
         File vectorStoreFile = getVectorStoreFile();
         if (vectorStoreFile.exists()) {

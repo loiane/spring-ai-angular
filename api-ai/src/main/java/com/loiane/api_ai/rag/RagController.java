@@ -4,6 +4,7 @@ import com.loiane.api_ai.chat.ChatRequest;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,9 +15,10 @@ import org.springframework.web.bind.annotation.RestController;
 public class RagController {
 
     private final VectorStore vectorStore;
+
     private final ChatClient chatClient;
 
-    public RagController(ChatClient.Builder chatClientBuilder, VectorStore vectorStore) {
+    public RagController(ChatClient.Builder chatClientBuilder,  @Qualifier("simpleVectorStore") VectorStore vectorStore) {
         this.vectorStore = vectorStore;
         this.chatClient = chatClientBuilder.build();
     }
