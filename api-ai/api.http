@@ -29,7 +29,12 @@ Content-Type: application/json
 }
 
 ###
-GET http://localhost:8080/api/ai/rag-mongo
+POST http://localhost:8080/api/ai/rag-mongo
+Content-Type: application/json
+
+{
+  "message": "What is Spring AI?"
+}
 
 ###
 GET http://localhost:8080/api/books/by-author?author=Rebecca+Yarros
