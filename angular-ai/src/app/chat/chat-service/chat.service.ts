@@ -1,5 +1,6 @@
-import { HttpClient, httpResource } from '@angular/common/http';
-import { inject, Injectable, Resource } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import { ChatResponse } from '../chat-response';
 
 @Injectable({
   providedIn: 'root'
@@ -16,7 +17,3 @@ export class ChatService {
 
 }
 
-export interface ChatResponse {
-  message: string;
-  isBot: boolean;
-}

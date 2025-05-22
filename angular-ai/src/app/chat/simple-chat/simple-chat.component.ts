@@ -1,13 +1,14 @@
 import { NgClass } from '@angular/common';
-import { Component, signal, ViewChild, ElementRef, inject } from '@angular/core';
-import { FormControl, FormsModule } from '@angular/forms';
+import { Component, ElementRef, inject, signal, ViewChild } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatToolbar } from '@angular/material/toolbar';
-import { ChatService } from '../chat-service/chat.service';
 import { catchError, throwError } from 'rxjs';
+import { ChatResponse } from '../chat-response';
+import { ChatService } from '../chat-service/chat.service';
 
 @Component({
   selector: 'app-simple-chat',
@@ -27,10 +28,8 @@ export class SimpleChatComponent {
   userInput = '';
   isLoading = false;
 
-  message = new FormControl('');
-
-  messages = signal([
-    { text: 'Hello, how can I help you today?', isBot: true },
+  messages = signal<ChatResponse[]>([
+    { message: 'Hello, how can I help you today?', isBot: true },
   ]);
 
   sendMessage(): void {
@@ -50,8 +49,8 @@ export class SimpleChatComponent {
     this.userInput = this.userInput.trim();
   }
 
-  private updateMessages(text: string, isBot = false) {
-    this.messages.update(messages => [...messages, { text, isBot }]);
+  private updateMessages(message: string, isBot = false) {
+    this.messages.update(messages => [...messages, { message, isBot }]);
     this.scrollToBottom();
   }
 
