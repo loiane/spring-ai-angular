@@ -6,7 +6,8 @@
     "start": "ng serve --proxy-config proxy.conf.js -o",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test --browsers=ChromeHeadless"
+    "test": "ng test --browsers=ChromeHeadless",
+    "test:ci": "ng test --no-watch --no-progress --code-coverage --browsers=ChromeHeadless"
   },
   "private": true,
   "dependencies": {
