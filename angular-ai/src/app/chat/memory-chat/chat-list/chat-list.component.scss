@@ -15,3 +15,13 @@
 .chat-header {
   flex: 0 0 auto; /* Header doesn't grow or shrink */
 }
+
+// Hide the close button until hover
+mat-list-item button[matListItemMeta] {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+mat-list-item:hover button[matListItemMeta] {
+  opacity: 1;
+}
