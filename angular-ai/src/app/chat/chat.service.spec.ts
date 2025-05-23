@@ -3,7 +3,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
 
 import { ChatService } from './chat.service';
-import { ChatResponse } from '../chat-response';
+import { ChatResponse } from './chat-response';
 
 describe('ChatService', () => {
   let service: ChatService;
