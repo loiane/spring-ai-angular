@@ -6,7 +6,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatToolbar } from '@angular/material/toolbar';
-import { catchError, throwError } from 'rxjs';
+import { catchError, of } from 'rxjs';
 import { ChatResponse } from '../chat-response';
 import { ChatService } from '../chat-service/chat.service';
 
@@ -81,10 +81,13 @@ export class SimpleChatComponent {
       catchError(() => {
         this.updateMessages('Sorry, I am unable to process your request at the moment.', true);
         this.isLoading = false;
-        return throwError(() => new Error('Error occurred while sending message'));})
+        return of(); // <-- fix: return an empty observable instead of re-throwing
+      })
     )
     .subscribe(response => {
-      this.updateMessages(response.message, true);
+      if (response) {
+        this.updateMessages(response.message, true);
+      }
       this.userInput = '';
       this.isLoading = false;
     });

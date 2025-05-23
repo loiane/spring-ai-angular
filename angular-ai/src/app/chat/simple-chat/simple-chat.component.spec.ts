@@ -1,15 +1,14 @@
+import { NgClass } from '@angular/common';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { SimpleChatComponent } from './simple-chat.component';
-import { ChatService } from '../chat-service/chat.service';
-import { of, throwError } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatToolbar } from '@angular/material/toolbar';
-import { NgClass } from '@angular/common';
-import { ChatResponse } from '../chat-response';
+import { of, throwError } from 'rxjs';
+import { ChatService } from '../chat-service/chat.service';
+import { SimpleChatComponent } from './simple-chat.component';
 
 class MockChatService {
   sendChatMessage(message: string) {
