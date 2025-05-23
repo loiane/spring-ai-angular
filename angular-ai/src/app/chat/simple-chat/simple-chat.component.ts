@@ -34,7 +34,7 @@ export class SimpleChatComponent {
 
   sendMessage(): void {
     this.trimUserMessage();
-    if (this.userInput !== '') {
+    if (this.userInput !== '' && !this.isLoading) {
       this.updateMessages(this.userInput);
       this.isLoading = true;
       if (this.local) {
