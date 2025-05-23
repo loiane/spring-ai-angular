@@ -3,7 +3,7 @@ import { AppComponent } from './app.component';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { RouterLink, RouterOutlet } from '@angular/router';
+import { RouterLink, RouterOutlet, provideRouter } from '@angular/router';
 
 
 describe('AppComponent', () => {
@@ -19,6 +19,9 @@ describe('AppComponent', () => {
         MatIconModule,
         RouterOutlet,
         RouterLink
+      ],
+      providers: [
+        provideRouter([])
       ]
     }).compileComponents();
     fixture = TestBed.createComponent(AppComponent);
@@ -46,7 +49,7 @@ describe('AppComponent', () => {
     expect(toolbar).toBeTruthy();
 
     const buttons = toolbar?.querySelectorAll('button');
-    expect(buttons?.length).toBe(2);
+    expect(buttons?.length).toBe(3);
 
     expect(buttons?.[0]?.textContent?.trim()).toBe('Simple Chat');
     expect(buttons?.[1]?.textContent?.trim()).toBe('Memory Chat');

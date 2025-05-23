@@ -43,7 +43,7 @@ describe('ChatListComponent', () => {
 
   it('should render the sidenav', () => {
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('mat-sidenav')).toBeTruthy();
+    expect(compiled.querySelector('mat-drawer')).toBeTruthy();
   });
 
   it('should render the card and list', () => {
