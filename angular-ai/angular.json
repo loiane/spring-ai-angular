@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "ui-ai": {
+    "angular-ai": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -17,7 +17,7 @@
         "build": {
           "builder": "@angular/build:application",
           "options": {
-            "outputPath": "dist/ui-ai",
+            "outputPath": "dist/angular-ai",
             "index": "src/index.html",
             "browser": "src/main.ts",
             "polyfills": [
@@ -65,10 +65,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "ui-ai:build:production"
+              "buildTarget": "angular-ai:build:production"
             },
             "development": {
-              "buildTarget": "ui-ai:build:development"
+              "buildTarget": "angular-ai:build:development"
             }
           },
           "defaultConfiguration": "development"
