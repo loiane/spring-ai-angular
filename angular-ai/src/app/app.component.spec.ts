@@ -13,13 +13,13 @@ describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [
+        AppComponent,
         MatToolbarModule,
         MatButtonModule,
         MatIconModule,
         RouterOutlet,
         RouterLink
-      ],
-      declarations: [AppComponent]
+      ]
     }).compileComponents();
     fixture = TestBed.createComponent(AppComponent);
     component = fixture.componentInstance;
