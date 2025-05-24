@@ -1,19 +1,19 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { AppComponent } from './app';
+import { App } from './app';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { RouterLink, RouterOutlet, provideRouter } from '@angular/router';
 
 
-describe('AppComponent', () => {
-  let fixture: ComponentFixture<AppComponent>;
-  let component: AppComponent;
+describe('App', () => {
+  let fixture: ComponentFixture<App>;
+  let component: App;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [
-        AppComponent,
+        App,
         MatToolbarModule,
         MatButtonModule,
         MatIconModule,
@@ -24,7 +24,7 @@ describe('AppComponent', () => {
         provideRouter([])
       ]
     }).compileComponents();
-    fixture = TestBed.createComponent(AppComponent);
+    fixture = TestBed.createComponent(App);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

@@ -7,7 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatToolbar } from '@angular/material/toolbar';
 import { of, throwError } from 'rxjs';
-import { SimpleChatComponent } from './simple-chat';
+import { SimpleChat } from './simple-chat';
 import { ChatService } from '../chat.service';
 
 class MockChatService {
@@ -16,9 +16,9 @@ class MockChatService {
   }
 }
 
-describe('SimpleChatComponent', () => {
-  let component: SimpleChatComponent;
-  let fixture: ComponentFixture<SimpleChatComponent>;
+describe('SimpleChat', () => {
+  let component: SimpleChat;
+  let fixture: ComponentFixture<SimpleChat>;
   let chatService: ChatService;
 
   beforeEach(async () => {
@@ -37,7 +37,7 @@ describe('SimpleChatComponent', () => {
       ]
     }).compileComponents();
 
-    fixture = TestBed.createComponent(SimpleChatComponent);
+    fixture = TestBed.createComponent(SimpleChat);
     component = fixture.componentInstance;
     chatService = TestBed.inject(ChatService);
     fixture.detectChanges();
