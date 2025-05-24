@@ -2,33 +2,57 @@
   <div class="chat-header">
     <mat-toolbar>
       <span>Chat with Memory</span>
+      <span class="spacer"></span>
+      <button mat-icon-button (click)="createNewChat()" aria-label="Create new chat">
+        <mat-icon>add</mat-icon>
+      </button>
     </mat-toolbar>
   </div>
   <mat-drawer-container class="example-container">
     <mat-drawer mode="side" opened>
       <mat-nav-list>
-        <mat-list-item>
-          <a>Chat 1</a>
-          <button mat-icon-button matListItemMeta>
-            <mat-icon>close_small</mat-icon>
-          </button>
-        </mat-list-item>
-        <mat-list-item>
-          <a>Chat 2</a>
-          <button mat-icon-button matListItemMeta>
-            <mat-icon>close_small</mat-icon>
-          </button>
-        </mat-list-item>
-        <mat-list-item>
-          <a>Chat 3</a>
-          <button mat-icon-button matListItemMeta>
-            <mat-icon>close_small</mat-icon>
-          </button>
-        </mat-list-item>
+        @if (chats.status() === 'loading') {
+          <mat-list-item>
+            <span>Loading chats...</span>
+          </mat-list-item>
+        }
+
+        @if (chats.status() === 'error') {
+          <mat-list-item>
+            <span>Error loading chats</span>
+            <button mat-icon-button matListItemMeta (click)="chats.reload()">
+              <mat-icon>refresh</mat-icon>
+            </button>
+          </mat-list-item>
+        }
+
+        @if (chats.status() === 'resolved' && chats.value()) {
+          @for (chat of chats.value(); track chat.id) {
+            <mat-list-item [class.selected]="selectedChatId() === chat.id" (click)="selectChat(chat.id)">
+              <a>{{ chat.description || 'New Chat' }}</a>
+              <button mat-icon-button matListItemMeta (click)="deleteChat(chat.id, $event)">
+                <mat-icon>close_small</mat-icon>
+              </button>
+            </mat-list-item>
+          } @empty {
+            <mat-list-item>
+              <span>No chats available</span>
+            </mat-list-item>
+          }
+        }
       </mat-nav-list>
     </mat-drawer>
     <mat-drawer-content>
-
+      @if (selectedChatId()) {
+        <div class="chat-content">
+          <p>Selected chat: {{ selectedChatId() }}</p>
+          <!-- Chat interface will be implemented here -->
+        </div>
+      } @else {
+        <div class="chat-content">
+          <p>Select a chat or create a new one</p>
+        </div>
+      }
     </mat-drawer-content>
   </mat-drawer-container>
 </mat-card>

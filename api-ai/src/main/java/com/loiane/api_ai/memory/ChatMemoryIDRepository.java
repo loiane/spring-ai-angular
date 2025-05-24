@@ -3,6 +3,9 @@ package com.loiane.api_ai.memory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+import java.util.Map;
+
 @Repository
 public class ChatMemoryIDRepository {
 
@@ -32,5 +35,10 @@ public class ChatMemoryIDRepository {
     public void updateDescription(String chatId, String description) {
         String sql = "UPDATE chat_memory SET description = ? WHERE id = ?";
         jdbcTemplate.update(sql, description, chatId);
+    }
+
+    public List<Map<String, Object>> getAllChatsForUser(String userId) {
+        String sql = "SELECT id, description, user_id FROM chat_memory WHERE user_id = ? ORDER BY id DESC";
+        return jdbcTemplate.queryForList(sql, userId);
     }
 }

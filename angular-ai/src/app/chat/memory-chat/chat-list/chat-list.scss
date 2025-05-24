@@ -16,6 +16,15 @@
   flex: 0 0 auto; /* Header doesn't grow or shrink */
 }
 
+.chat-content {
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #666;
+}
+
 // Hide the close button until hover
 mat-list-item button[matListItemMeta] {
   opacity: 0;
@@ -24,4 +33,13 @@ mat-list-item button[matListItemMeta] {
 
 mat-list-item:hover button[matListItemMeta] {
   opacity: 1;
+}
+
+mat-list-item.selected {
+  background-color: #e3f2fd;
+}
+
+mat-list-item.selected a {
+  color: #1976d2;
+  font-weight: 500;
 }

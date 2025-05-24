@@ -4,6 +4,9 @@ import com.loiane.api_ai.chat.ChatRequest;
 import com.loiane.api_ai.chat.ChatResponse;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/chat-memory")
 public class MemoryChatController {
@@ -12,6 +15,11 @@ public class MemoryChatController {
 
     public MemoryChatController(MemoryChatService memoryChatService) {
         this.memoryChatService = memoryChatService;
+    }
+
+    @GetMapping
+    public List<Map<String, Object>> getAllChats() {
+        return this.memoryChatService.getAllChats();
     }
 
     @PostMapping
