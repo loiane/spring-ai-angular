@@ -7,8 +7,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatToolbar } from '@angular/material/toolbar';
 import { of, throwError } from 'rxjs';
+import { SimpleChatComponent } from './simple-chat';
 import { ChatService } from '../chat.service';
-import { SimpleChatComponent } from './simple-chat.component';
 
 class MockChatService {
   sendChatMessage(message: string) {

@@ -1,10 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ChatListComponent } from './chat-list.component';
+import { ChatListComponent } from './chat-list';
 import { MatCardModule } from '@angular/material/card';
 import { MatListModule } from '@angular/material/list';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { SimpleChatComponent } from '../../simple-chat/simple-chat.component';
+import { SimpleChatComponent } from '../../simple-chat/simple-chat';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 

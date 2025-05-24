@@ -7,9 +7,9 @@ import { RouterLink, RouterOutlet } from '@angular/router';
 @Component({
   selector: 'app-root',
   imports: [RouterOutlet, MatToolbarModule, MatButtonModule, MatIconModule, RouterLink],
-  templateUrl: './app.component.html',
-  styleUrl: './app.component.scss'
+  templateUrl: './app.html',
+  styleUrl: './app.scss'
 })
-export class AppComponent {
+export class App {
   readonly title = 'AI-Spring-Angular';
 }

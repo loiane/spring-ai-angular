@@ -13,10 +13,10 @@ import { ChatService } from '../chat.service';
 @Component({
   selector: 'app-simple-chat',
   imports: [MatCardModule, MatInputModule, MatButtonModule, FormsModule, MatToolbar, NgClass, MatIconModule],
-  templateUrl: './simple-chat.component.html',
-  styleUrl: './simple-chat.component.scss'
+  templateUrl: './simple-chat.html',
+  styleUrl: './simple-chat.scss'
 })
-export class SimpleChatComponent {
+export class SimpleChat {
 
   @ViewChild('chatHistory')
   private chatHistory!: ElementRef;
