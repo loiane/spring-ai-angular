@@ -1,8 +1,9 @@
+import { provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
 
-import { ChatService } from './chat.service';
+import { ChatService } from './chat-service';
 import { ChatResponse } from './chat-response';
 
 describe('ChatService', () => {
@@ -12,6 +13,7 @@ describe('ChatService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [
+        provideZonelessChangeDetection(),
         ChatService,
         provideHttpClient(),
         provideHttpClientTesting()

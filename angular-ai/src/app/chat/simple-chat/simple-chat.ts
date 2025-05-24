@@ -8,7 +8,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatToolbar } from '@angular/material/toolbar';
 import { catchError, of } from 'rxjs';
 import { ChatResponse } from '../chat-response';
-import { ChatService } from '../chat.service';
+import { ChatService } from '../chat-service';
 
 @Component({
   selector: 'app-simple-chat',
@@ -84,7 +84,7 @@ export class SimpleChat {
         return of(); // <-- fix: return an empty observable instead of re-throwing
       })
     )
-    .subscribe(response => {
+    .subscribe((response: ChatResponse) => {
       if (response) {
         this.updateMessages(response.message, true);
       }

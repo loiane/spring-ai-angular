@@ -1,40 +1,37 @@
+import { provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { App } from './app';
+import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { RouterLink, RouterOutlet, provideRouter } from '@angular/router';
-
+import { provideRouter, RouterLink, RouterOutlet } from '@angular/router';
 
 describe('App', () => {
+
   let fixture: ComponentFixture<App>;
-  let component: App;
+  let app: App;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [
-        App,
+      imports: [App,
         MatToolbarModule,
         MatButtonModule,
         MatIconModule,
         RouterOutlet,
-        RouterLink
-      ],
-      providers: [
-        provideRouter([])
-      ]
+        RouterLink],
+      providers: [provideZonelessChangeDetection(), provideRouter([])]
     }).compileComponents();
     fixture = TestBed.createComponent(App);
-    component = fixture.componentInstance;
+    app = fixture.componentInstance;
     fixture.detectChanges();
   });
 
   it('should create the app', () => {
-    expect(component).toBeTruthy();
+    expect(app).toBeTruthy();
   });
 
   it(`should have the 'AI-Spring-Angular' title`, () => {
-    expect(component.title).toEqual('AI-Spring-Angular');
+    expect(app.title).toEqual('AI-Spring-Angular');
   });
 
   it('should render title', () => {

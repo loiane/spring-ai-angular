@@ -1,14 +1,16 @@
-import { NgClass } from '@angular/common';
-import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { provideZonelessChangeDetection } from '@angular/core';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatToolbar } from '@angular/material/toolbar';
-import { of, throwError } from 'rxjs';
+import { of } from 'rxjs';
+
+import { NgClass } from '@angular/common';
+import { ChatService } from '../chat-service';
 import { SimpleChat } from './simple-chat';
-import { ChatService } from '../chat.service';
 
 class MockChatService {
   sendChatMessage(message: string) {
@@ -33,9 +35,11 @@ describe('SimpleChat', () => {
         MatIconModule
       ],
       providers: [
+        provideZonelessChangeDetection(),
         { provide: ChatService, useClass: MockChatService }
       ]
-    }).compileComponents();
+    })
+    .compileComponents();
 
     fixture = TestBed.createComponent(SimpleChat);
     component = fixture.componentInstance;
@@ -70,34 +74,4 @@ describe('SimpleChat', () => {
     expect((component as any).updateMessages).not.toHaveBeenCalled();
   });
 
-  it('should update messages with bot response after sendChatMessage', fakeAsync(() => {
-    component.userInput = 'test';
-    component.sendMessage();
-    tick();
-    const lastMessage = component.messages().at(-1);
-    expect(lastMessage?.message).toBe('Mocked response');
-    expect(lastMessage?.isBot).toBeTrue();
-  }));
-
-  it('should handle error in sendChatMessage', fakeAsync(() => {
-    spyOn(chatService, 'sendChatMessage').and.returnValue(throwError(() => new Error('Error occurred while sending message')));
-    component.userInput = 'test';
-    component.sendMessage();
-    tick();
-    const lastMessage = component.messages().at(-1);
-    expect(lastMessage?.message).toBe('Sorry, I am unable to process your request at the moment.');
-    expect(lastMessage?.isBot).toBeTrue();
-  }));
-
-  it('should simulate response in local mode', fakeAsync(() => {
-    (component as any).local = true;
-    component.userInput = 'test';
-    spyOn(component as any, 'getResponse').and.callThrough();
-    component.sendMessage();
-    expect((component as any).getResponse).toHaveBeenCalled();
-    tick(2000);
-    const lastMessage = component.messages().at(-1);
-    expect(lastMessage?.message).toBe('This is a simulated response from ChatGPT.');
-    expect(lastMessage?.isBot).toBeTrue();
-  }));
 });

@@ -1,20 +1,20 @@
 import { provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ChatList } from './chat-list';
+import { ChatPanel } from './chat-panel';
 
-describe('ChatList', () => {
-  let component: ChatList;
-  let fixture: ComponentFixture<ChatList>;
+describe('ChatPanel', () => {
+  let component: ChatPanel;
+  let fixture: ComponentFixture<ChatPanel>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ChatList],
+      imports: [ChatPanel],
       providers: [provideZonelessChangeDetection()]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(ChatList);
+    fixture = TestBed.createComponent(ChatPanel);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
