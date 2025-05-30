@@ -26,8 +26,7 @@ public class RagPDFReader {
 
     private static final Logger log = LoggerFactory.getLogger(RagPDFReader.class);
 
-    @Value("vectorStore.json")
-    private String vectorStoreName;
+    private String vectorStoreName = "vectorStore.json";
 
     @Value("classpath:/docs/SpringAIReference.pdf")
     private Resource pdfResource;
@@ -64,8 +63,7 @@ public class RagPDFReader {
 
     private File getVectorStoreFile() {
         Path path = Paths.get("src", "main", "resources", "data");
-        String absolutePath = path.toFile().getAbsolutePath() + "/" + vectorStoreName;
-        return new File(absolutePath);
+        return new File(path.toFile(), vectorStoreName);
     }
 
 
