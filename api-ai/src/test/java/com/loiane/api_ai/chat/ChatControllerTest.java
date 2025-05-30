@@ -4,6 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
@@ -37,14 +40,17 @@ class ChatControllerTest {
         objectMapper = new ObjectMapper();
     }
 
-    @Test
-    void testChatWithValidRequest() throws Exception {
+    @ParameterizedTest
+    @CsvSource({
+        "'Hello, how are you?', 'I''m doing great, thank you for asking!'",
+        "'', 'I didn''t receive any message.'",
+        "'What is Spring Boot?', 'Spring Boot is a framework that makes it easy to create stand-alone, production-grade Spring based Applications.'"
+    })
+    void testChatWithDifferentMessages(String userMessage, String expectedResponse) throws Exception {
         // Given
-        String userMessage = "Hello, how are you?";
-        String aiResponse = "I'm doing great, thank you for asking!";
         ChatRequest request = new ChatRequest(userMessage);
         
-        when(simpleChatService.chat(userMessage)).thenReturn(aiResponse);
+        when(simpleChatService.chat(userMessage)).thenReturn(expectedResponse);
 
         // When & Then
         mockMvc.perform(post("/api/chat")
@@ -53,28 +59,7 @@ class ChatControllerTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(aiResponse));
-
-        verify(simpleChatService, times(1)).chat(userMessage);
-    }
-
-    @Test
-    void testChatWithEmptyMessage() throws Exception {
-        // Given
-        String userMessage = "";
-        String aiResponse = "I didn't receive any message.";
-        ChatRequest request = new ChatRequest(userMessage);
-        
-        when(simpleChatService.chat(userMessage)).thenReturn(aiResponse);
-
-        // When & Then
-        mockMvc.perform(post("/api/chat")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(aiResponse));
+                .andExpect(jsonPath("$.message").value(expectedResponse));
 
         verify(simpleChatService, times(1)).chat(userMessage);
     }
@@ -143,33 +128,9 @@ class ChatControllerTest {
         verify(simpleChatService, times(1)).chat(userMessage);
     }
 
-    @Test
-    void testChatServiceInteraction() throws Exception {
-        // Given
-        String userMessage = "What is Spring Boot?";
-        String aiResponse = "Spring Boot is a framework that makes it easy to create stand-alone, production-grade Spring based Applications.";
-        ChatRequest request = new ChatRequest(userMessage);
-        
-        when(simpleChatService.chat(userMessage)).thenReturn(aiResponse);
-
-        // When & Then
-        mockMvc.perform(post("/api/chat")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(aiResponse));
-
-        verify(simpleChatService, times(1)).chat(userMessage);
-        verifyNoMoreInteractions(simpleChatService);
-    }
-
-    @Test
-    void testChatWithInvalidJsonRequest() throws Exception {
-        // Given
-        String invalidJson = "{ invalid json }";
-
+    @ParameterizedTest
+    @ValueSource(strings = {"{ invalid json }", "{ \"message\": }"})
+    void testChatWithInvalidJsonRequest(String invalidJson) throws Exception {
         // When & Then
         mockMvc.perform(post("/api/chat")
                 .contentType(MediaType.APPLICATION_JSON)
