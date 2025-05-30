@@ -19,9 +19,9 @@ import { ChatService } from '../chat-service';
 export class SimpleChat {
 
   @ViewChild('chatHistory')
-  private chatHistory!: ElementRef;
+  private readonly chatHistory!: ElementRef;
 
-  private chatService = inject(ChatService);
+  private readonly chatService = inject(ChatService);
 
   private readonly local = false;
 
@@ -55,7 +55,6 @@ export class SimpleChat {
   }
 
   private getResponse() {
-    // TODO: Replace this with actual logic to get response from ChatGPT or a similar service
     setTimeout(() => {
       const response = 'This is a simulated response from ChatGPT.';
       this.updateMessages(response, true);
