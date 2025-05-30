@@ -43,16 +43,7 @@
       </mat-nav-list>
     </mat-drawer>
     <mat-drawer-content>
-      @if (selectedChatId()) {
-        <div class="chat-content">
-          <p>Selected chat: {{ selectedChatId() }}</p>
-          <!-- Chat interface will be implemented here -->
-        </div>
-      } @else {
-        <div class="chat-content">
-          <p>Select a chat or create a new one</p>
-        </div>
-      }
+      <app-chat-panel [chatId]="selectedChatId() ?? ''"/>
     </mat-drawer-content>
   </mat-drawer-container>
 </mat-card>

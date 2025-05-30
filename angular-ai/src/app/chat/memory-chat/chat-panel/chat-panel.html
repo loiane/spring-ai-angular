@@ -1,1 +1,32 @@
-<p>chat-panel works!</p>
+<mat-card class="chat-container">
+  <div class="chat-history" #chatHistory>
+    <div class="messages">
+    @for (message of messages(); track message; let system = $even) {
+      <div class="message">
+        <div class="message-bubble" [ngClass]="{'user': !message.isBot}">
+          {{ message.message }}
+        </div>
+      </div>
+    }
+    @if (isLoading) {
+      <div class="message">
+        <div class="message-bubble">
+          <span class="typing">...</span>
+        </div>
+      </div>
+    }
+  </div>
+  </div>
+
+  <div class="chat-input">
+    <mat-form-field class="full-width">
+      <mat-label>Ask anything</mat-label>
+      <input matInput [(ngModel)]="userInput" (keyup.enter)="sendMessage()">
+      @if (userInput) {
+        <button matSuffix mat-icon-button aria-label="Send" (click)="sendMessage()" [disabled]="isLoading">
+          <mat-icon>send</mat-icon>
+        </button>
+     }
+    </mat-form-field>
+  </div>
+</mat-card>

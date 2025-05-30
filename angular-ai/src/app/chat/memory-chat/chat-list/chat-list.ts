@@ -6,17 +6,17 @@ import { MatListModule } from '@angular/material/list';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { ChatService } from '../../chat-service';
-import { Chat } from '../../chat';
+import { ChatPanel } from '../chat-panel/chat-panel';
 
 @Component({
   selector: 'app-chat-list',
-  imports: [MatSidenavModule, MatCardModule, MatToolbarModule, MatListModule, MatIconModule, MatButtonModule],
+  imports: [MatSidenavModule, MatCardModule, MatToolbarModule, MatListModule, MatIconModule, MatButtonModule, ChatPanel],
   templateUrl: './chat-list.html',
   styleUrl: './chat-list.scss'
 })
 export class ChatList {
 
-  private chatService = inject(ChatService);
+  private readonly chatService = inject(ChatService);
 
   // Using the new httpResource for reactive data
   chats = this.chatService.chatsResource;
