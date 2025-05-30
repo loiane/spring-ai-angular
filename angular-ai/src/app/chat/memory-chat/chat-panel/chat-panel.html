@@ -3,8 +3,8 @@
     <div class="messages">
     @for (message of messages(); track message; let system = $even) {
       <div class="message">
-        <div class="message-bubble" [ngClass]="{'user': !message.isBot}">
-          {{ message.message }}
+        <div class="message-bubble" [class.user]="message.type === 'USER'">
+          {{ message.content }}
         </div>
       </div>
     }

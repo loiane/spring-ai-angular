@@ -51,6 +51,10 @@ public class MemoryChatService {
         return this.chatMemoryRepository.getAllChatsForUser("Loiane");
     }
 
+    public List<ChatMessage> getChatMessages(String userId) {
+        return this.chatMemoryRepository.getChatMessages(userId);
+    }
+
     public String chat(String chatId, String message) {
         var response = this.chatClient.prompt()
                 .user(message)

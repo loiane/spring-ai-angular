@@ -16,15 +16,13 @@ import { ChatPanel } from '../chat-panel/chat-panel';
 })
 export class ChatList {
 
-  private readonly chatService = inject(ChatService);
+  readonly chatService = inject(ChatService);
 
   // Using the new httpResource for reactive data
   chats = this.chatService.chatsResource;
 
-  selectedChatId = signal<string | null>(null);
-
   selectChat(chatId: string) {
-    this.selectedChatId.set(chatId);
+    this.chatService.selectedChatId.set(chatId);
   }
 
   createNewChat() {
@@ -32,7 +30,7 @@ export class ChatList {
       next: (chatId) => {
         // Reload the chats resource to include the new chat
         this.chats.reload();
-        this.selectedChatId.set(chatId);
+        this.selectChat(chatId);
       },
       error: (error) => {
         console.error('Error creating new chat:', error);

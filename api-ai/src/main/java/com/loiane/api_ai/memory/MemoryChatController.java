@@ -22,13 +22,18 @@ public class MemoryChatController {
         return this.memoryChatService.getAllChats();
     }
 
+    @GetMapping("/{chatId}")
+    public List<ChatMessage> getChatMessages(@PathVariable String chatId) {
+        return this.memoryChatService.getChatMessages(chatId);
+    }
+
     @PostMapping
     public String createChat() {
         return this.memoryChatService.createChat();
     }
 
     @PostMapping("/{chatId}")
-    public ChatResponse chatMemory(@PathVariable String chatId, @RequestBody ChatRequest request) {
-        return new ChatResponse(this.memoryChatService.chat(chatId, request.message()));
+    public ChatMessage chatMemory(@PathVariable String chatId, @RequestBody ChatRequest request) {
+        return new ChatMessage(this.memoryChatService.chat(chatId, request.message()), "USER");
     }
 }

@@ -20,6 +20,9 @@ Content-Type: application/json
     "message": "Tell me a joke"
 }
 
+### Get all chats for a specific chat memory ID
+GET http://localhost:8080/api/chat-memory/60dc3851-ab70-42ed-9e75-52ff21517144
+
 ### RAG
 GET http://localhost:8080/api/ai/rag/load-pdf
 
