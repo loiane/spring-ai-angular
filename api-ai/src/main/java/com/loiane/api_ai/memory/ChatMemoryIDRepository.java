@@ -37,8 +37,8 @@ public class ChatMemoryIDRepository {
         jdbcTemplate.update(sql, description, chatId);
     }
 
-    public List<Map<String, Object>> getAllChatsForUser(String userId) {
-        String sql = "SELECT id, description, user_id FROM chat_memory WHERE user_id = ? ORDER BY id DESC";
-        return jdbcTemplate.queryForList(sql, userId);
+    public List<Chat> getAllChatsForUser(String userId) {
+        String sql = "SELECT id, description FROM chat_memory WHERE user_id = ? AND description IS NOT NULL ORDER BY id DESC";
+        return jdbcTemplate.query(sql, (rs, rowNum) -> new Chat(rs.getString("id"), rs.getString("description")), userId);
     }
 }

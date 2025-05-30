@@ -18,7 +18,7 @@ public class MemoryChatController {
     }
 
     @GetMapping
-    public List<Map<String, Object>> getAllChats() {
+    public List<Chat> getAllChats() {
         return this.memoryChatService.getAllChats();
     }
 

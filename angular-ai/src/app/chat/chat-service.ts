@@ -11,7 +11,7 @@ export class ChatService {
 
   private readonly API = '/api/chat-memory';
 
-  private http = inject(HttpClient);
+  private readonly http = inject(HttpClient);
 
   // Using the new httpResource for reactive data fetching
   chatsResource = resource({

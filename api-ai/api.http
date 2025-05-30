@@ -5,6 +5,9 @@ Content-Type: application/json
     "message": "What is Spring AI?"
 }
 
+### Get all chats
+GET http://localhost:8080/api/chat-memory
+
 ### Create a new chat memory ID
 POST http://localhost:8080/api/chat-memory
 

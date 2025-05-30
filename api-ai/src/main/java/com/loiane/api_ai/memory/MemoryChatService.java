@@ -47,7 +47,7 @@ public class MemoryChatService {
         return this.chatMemoryRepository.generateChatId("Loiane");
     }
 
-    public List<Map<String, Object>> getAllChats() {
+    public List<Chat> getAllChats() {
         return this.chatMemoryRepository.getAllChatsForUser("Loiane");
     }
 
