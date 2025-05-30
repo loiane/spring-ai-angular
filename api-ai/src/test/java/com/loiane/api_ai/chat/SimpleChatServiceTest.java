@@ -50,9 +50,6 @@ class SimpleChatServiceTest {
         // In a real-world scenario, you might want to use an integration test
         // or a more sophisticated mocking approach
 
-        // Arrange
-        String message = "Hello, AI!";
-
         // Act & Assert
         // Just verify the service was created successfully
         assertNotNull(simpleChatService);
@@ -61,8 +58,6 @@ class SimpleChatServiceTest {
     @Test
     void testChatWithEmptyMessage() {
         // Arrange
-        String message = "";
-
         // Act & Assert
         // Just verify the service was created successfully
         assertNotNull(simpleChatService);
@@ -74,8 +69,6 @@ class SimpleChatServiceTest {
     @Test
     void testChatWithNullMessage() {
         // Arrange
-        String message = null;
-
         // Act & Assert
         // Just verify the service was created successfully
         assertNotNull(simpleChatService);

@@ -1,17 +1,18 @@
 package com.loiane.api_ai.rag.mongo;
 
-import com.loiane.api_ai.chat.ChatRequest;
-import org.springframework.ai.document.Document;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
-import org.springframework.jdbc.core.simple.JdbcClient;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import com.loiane.api_ai.chat.ChatRequest;
 
 @RestController
 @RequestMapping("api/ai/rag-mongo")
