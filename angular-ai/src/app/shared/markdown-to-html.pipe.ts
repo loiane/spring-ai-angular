@@ -12,7 +12,9 @@ export class MarkdownToHtmlPipe implements PipeTransform {
     if (!value) {
       return value;
     }
-    let formatted = value.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+    let formatted = value
+      .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+      .replace(/^### (.*$)/gm, '<strong>$1</strong>');
     return this.sanitizer.sanitize(SecurityContext.HTML, formatted);
   }
 }
