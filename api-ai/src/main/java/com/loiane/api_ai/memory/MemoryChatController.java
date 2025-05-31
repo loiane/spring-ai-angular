@@ -28,8 +28,8 @@ public class MemoryChatController {
     }
 
     @PostMapping
-    public String createChat() {
-        return this.memoryChatService.createChat();
+    public Chat createChat() {
+        return new Chat(this.memoryChatService.createChat(),"...");
     }
 
     @PostMapping("/{chatId}")

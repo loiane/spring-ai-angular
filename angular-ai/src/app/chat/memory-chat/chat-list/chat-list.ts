@@ -7,6 +7,7 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { ChatService } from '../../chat-service';
 import { ChatPanel } from '../chat-panel/chat-panel';
+import { Chat } from '../../chat';
 
 @Component({
   selector: 'app-chat-list',
@@ -26,16 +27,12 @@ export class ChatList {
   }
 
   createNewChat() {
-    this.chatService.createNewChat().subscribe({
-      next: (chatId) => {
-        // Reload the chats resource to include the new chat
-        this.chats.reload();
-        this.selectChat(chatId);
-      },
-      error: (error) => {
-        console.error('Error creating new chat:', error);
-      }
-    });
+    this.chatService.createNewChat()
+    .subscribe((chat: Chat) => {
+      this.selectChat(chat.id);
+      this.chats.reload();
+    }
+   );
   }
 
   deleteChat(chatId: string, event: Event) {

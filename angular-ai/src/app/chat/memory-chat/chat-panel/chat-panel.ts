@@ -5,12 +5,13 @@ import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { catchError, of } from 'rxjs';
+import { MarkdownToHtmlPipe } from '../../../shared/markdown-to-html.pipe';
 import { ChatMessage, ChatType } from '../../chat-message';
 import { ChatService } from '../../chat-service';
 
 @Component({
   selector: 'app-chat-panel',
-  imports: [MatCardModule, MatInputModule, MatButtonModule, FormsModule, MatIconModule],
+  imports: [MatCardModule, MatInputModule, MatButtonModule, FormsModule, MatIconModule, MarkdownToHtmlPipe],
   templateUrl: './chat-panel.html',
   styleUrl: './chat-panel.scss'
 })
@@ -67,6 +68,9 @@ export class ChatPanel {
         }
         this.userInput = '';
         this.isLoading = false;
+        if (this.chatService.chatMessagesResource.asReadonly.length <= 2) {
+          this.chatService.chatsResource.reload();
+        }
       });
     }
 
