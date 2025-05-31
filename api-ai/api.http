@@ -1,0 +1,20 @@
+GET localhost:8080/ai?userInput=Conte uma piada sobre Java
+
+####
+
+POST localhost:8080/api/chat
+Content-Type: application/json
+
+{
+  "message": "Conte uma piada sobre Java"
+}
+
+#### chat with memory
+
+POST localhost:8080/api/chat-memory
+Content-Type: application/json
+
+{
+  "message": "Conte uma piada sobre Java"
+}
+

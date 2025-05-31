@@ -1,0 +1,62 @@
+.chat-conainer {
+  display: flex;
+  flex-direction: column;
+  height: 80vh;
+  margin: 36px;
+}
+
+.chat-history {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.message {
+  margin-bottom: 8px;
+}
+
+.message-buble {
+  padding: 10px;
+  border-radius: 10px;
+  max-width: 80%;
+  display: inline-block;
+}
+
+.user {
+  background-color: #d7e3ff;
+  border-radius: 10px;
+  align-self: flex-end;
+  margin-left: auto;
+}
+
+.messages {
+  flex: 1;
+  margin-bottom: 16px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.typing {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  animation: typing 1s steps(10) infinite alternate;
+}
+
+@keyframes typing {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+.chat-input {
+  flex: 0 0 auto;
+  padding: 10px;
+}
+
+.full-width {
+  width: 100%;
+}
