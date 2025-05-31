@@ -3,13 +3,15 @@
     <mat-toolbar>
       <span>Chat with Memory</span>
       <span class="spacer"></span>
-      <button mat-icon-button (click)="createNewChat()" aria-label="Create new chat">
-        <mat-icon>add</mat-icon>
+      <button matButton="elevated" (click)="createNewChat()" aria-label="Create new chat">
+        <mat-icon>edit_square</mat-icon>
+        New chat
       </button>
     </mat-toolbar>
   </div>
   <mat-drawer-container class="example-container">
     <mat-drawer mode="side" opened>
+
       <mat-nav-list>
         @if (chats.status() === 'loading') {
           <mat-list-item>

@@ -1,13 +1,13 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
+import { Chat } from '../../chat';
 import { ChatService } from '../../chat-service';
 import { ChatPanel } from '../chat-panel/chat-panel';
-import { Chat } from '../../chat';
 
 @Component({
   selector: 'app-chat-list',
