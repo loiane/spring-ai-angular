@@ -10,7 +10,8 @@ import { ChatResponse } from './chat-response';
 })
 export class ChatService {
 
-  private readonly API = '/api/chat-memory';
+  private readonly API = '/api/chat';
+  private readonly API_MEMORY = '/api/chat-memory';
 
   private readonly http = inject(HttpClient);
 
@@ -20,20 +21,20 @@ export class ChatService {
 
   // Using the new httpResource for reactive data fetching
   chatsResource = resource({
-    loader: () => firstValueFrom(this.http.get<Chat[]>(this.API))
+    loader: () => firstValueFrom(this.http.get<Chat[]>(this.API_MEMORY))
   });
 
-  chatMessagesResource = httpResource<ChatMessage[]>(() => `${this.API}/${this.selectedChatId()}`);
+  chatMessagesResource = httpResource<ChatMessage[]>(() => `${this.API_MEMORY}/${this.selectedChatId()}`);
 
   sendChatMessage(message: string) {
     return this.http.post<ChatResponse>(this.API, { message });
   }
 
   createNewChat() {
-    return this.http.post<Chat>(this.API, {});
+    return this.http.post<Chat>(this.API_MEMORY, {});
   }
 
   sendChatMessageWithId(message: string) {
-    return this.http.post<ChatMessage>(`${this.API}/${this.selectedChatId()}`, { message });
+    return this.http.post<ChatMessage>(`${this.API_MEMORY}/${this.selectedChatId()}`, { message });
   }
 }
