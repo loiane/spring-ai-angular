@@ -4,7 +4,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Map;
 
 @Repository
 public class ChatMemoryIDRepository {
@@ -39,11 +38,11 @@ public class ChatMemoryIDRepository {
 
     public List<Chat> getAllChatsForUser(String userId) {
         String sql = "SELECT id, description FROM chat_memory WHERE user_id = ? AND description IS NOT NULL ORDER BY id DESC";
-        return jdbcTemplate.query(sql, (rs, rowNum) -> new Chat(rs.getString("id"), rs.getString("description")), userId);
+        return jdbcTemplate.query(sql, (rs, _) -> new Chat(rs.getString("id"), rs.getString("description")), userId);
     }
 
     public List<ChatMessage> getChatMessages(String chatId) {
         String sql = "SELECT content, type FROM spring_ai_chat_memory WHERE conversation_id = ? ORDER BY timestamp ASC";
-        return jdbcTemplate.query(sql, (rs, rowNum) -> new ChatMessage(rs.getString("content"), rs.getString("type")), chatId);
+        return jdbcTemplate.query(sql, (rs, _) -> new ChatMessage(rs.getString("content"), rs.getString("type")), chatId);
     }
 }

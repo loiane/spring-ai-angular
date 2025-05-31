@@ -1,11 +1,15 @@
 package com.loiane.api_ai.memory;
 
-import com.loiane.api_ai.chat.ChatRequest;
-import com.loiane.api_ai.chat.ChatResponse;
-import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
-import java.util.Map;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.loiane.api_ai.chat.ChatRequest;
 
 @RestController
 @RequestMapping("/api/chat-memory")
