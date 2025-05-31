@@ -30,5 +30,7 @@ build/
 !**/src/test/**/build/
 
 ### VS Code ###
-.vscode/
 /.mvn/wrapper/maven-wrapper.properties
+
+### Environment Variables ###
+.env

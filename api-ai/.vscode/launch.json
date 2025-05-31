@@ -1,0 +1,31 @@
+{
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Spring Boot-ApiAiApplication<api-ai>",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "mainClass": "com.loiane.api_ai.ApiAiApplication",
+      "projectName": "api-ai",
+      "args": "",
+      "envFile": "${workspaceFolder}/.env",
+      "env": {
+        "SPRING_PROFILES_ACTIVE": "dev"
+      }
+    },
+    {
+      "type": "java",
+      "name": "Spring Boot App (with .env)",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "mainClass": "com.loiane.api_ai.ApiAiApplication",
+      "projectName": "api-ai",
+      "args": "",
+      "envFile": "${workspaceFolder}/.env",
+      "env": {
+        "SPRING_PROFILES_ACTIVE": "dev"
+      },
+      "console": "integratedTerminal"
+    }
+  ]
+}
