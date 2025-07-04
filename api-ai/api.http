@@ -13,7 +13,7 @@ POST http://localhost:8080/api/chat-memory
 
 
 ### Prompt the chat memory ID
-POST http://localhost:8080/api/chat-memory/60dc3851-ab70-42ed-9e75-52ff21517144
+POST http://localhost:8080/api/chat-memory/60724568-a49e-437d-8705-e2508bf12a1
 Content-Type: application/json
 
 {

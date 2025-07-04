@@ -15,14 +15,8 @@ public class ChatMemoryIDRepository {
     }
 
     public String generateChatId(String userId) {
-        String sql = "INSERT INTO chat_memory (user_id, id) VALUES (?, ?)";
-        String chatId = generateUniqueChatId();
-        jdbcTemplate.update(sql, userId, chatId);
-        return chatId;
-    }
-
-    private String generateUniqueChatId() {
-        return java.util.UUID.randomUUID().toString();
+        String sql = "INSERT INTO chat_memory (user_id) VALUES (?) RETURNING id";
+        return jdbcTemplate.queryForObject(sql, String.class, userId);
     }
 
     public boolean chatIdExists(String chatId) {
@@ -32,7 +26,7 @@ public class ChatMemoryIDRepository {
     }
 
     public void updateDescription(String chatId, String description) {
-        String sql = "UPDATE chat_memory SET description = ? WHERE id = ?";
+        String sql = "UPDATE chat_memory SET description = ? WHERE id = ?::uuid";
         jdbcTemplate.update(sql, description, chatId);
     }
 
