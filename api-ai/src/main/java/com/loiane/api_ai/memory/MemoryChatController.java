@@ -33,9 +33,7 @@ public class MemoryChatController {
 
     @PostMapping("/start")
     public ChatStartResponse startNewChat(@RequestBody ChatRequest request) {
-        String chatId = this.memoryChatService.createChat(request.message());
-        String response = this.memoryChatService.chat(chatId, request.message());
-        return new ChatStartResponse(chatId, response);
+        return this.memoryChatService.createChatWithResponse(request.message());
     }
 
     @PostMapping("/{chatId}")

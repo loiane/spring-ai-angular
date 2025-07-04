@@ -42,6 +42,13 @@ public class MemoryChatService {
         return this.chatMemoryRepository.generateChatId(DEFAULT_USER_ID, description);
     }
 
+    public ChatStartResponse createChatWithResponse(String message) {
+        String description = this.generateDescription(message);
+        String chatId = this.chatMemoryRepository.generateChatId(DEFAULT_USER_ID, description);
+        String response = this.chat(chatId, message);
+        return new ChatStartResponse(chatId, response, description);
+    }
+
     public List<Chat> getAllChats() {
         return this.chatMemoryRepository.getAllChatsForUser(DEFAULT_USER_ID);
     }
