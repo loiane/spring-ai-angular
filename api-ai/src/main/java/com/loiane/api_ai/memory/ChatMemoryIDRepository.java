@@ -15,12 +15,12 @@ public class ChatMemoryIDRepository {
     }
 
     public String generateChatId(String userId, String description) {
-        String sql = "INSERT INTO chat_memory (user_id, description) VALUES (?, ?) RETURNING id";
+        String sql = "INSERT INTO chat_memory (user_id, description) VALUES (?, ?) RETURNING conversation_id";
         return jdbcTemplate.queryForObject(sql, String.class, userId, description);
     }
 
     public boolean chatIdExists(String chatId) {
-        String sql = "SELECT COUNT(*) FROM spring_ai_chat_memory WHERE conversation_id = ? AND type = 'USER'";
+        String sql = "SELECT COUNT(*) FROM chat_memory WHERE conversation_id = ?::uuid";
         Integer count = jdbcTemplate.queryForObject(sql, Integer.class, chatId);
         return count != null && count == 1;
     }
