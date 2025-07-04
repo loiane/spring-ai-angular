@@ -31,13 +31,15 @@ public class MemoryChatController {
         return this.memoryChatService.getChatMessages(chatId);
     }
 
-    @PostMapping
-    public Chat createChat() {
-        return new Chat(this.memoryChatService.createChat(),"...");
+    @PostMapping("/start")
+    public ChatStartResponse startNewChat(@RequestBody ChatRequest request) {
+        String chatId = this.memoryChatService.createChat(request.message());
+        String response = this.memoryChatService.chat(chatId, request.message());
+        return new ChatStartResponse(chatId, response);
     }
 
     @PostMapping("/{chatId}")
     public ChatMessage chatMemory(@PathVariable String chatId, @RequestBody ChatRequest request) {
-        return new ChatMessage(this.memoryChatService.chat(chatId, request.message()), "USER");
+        return new ChatMessage(this.memoryChatService.chat(chatId, request.message()), "ASSISTANT");
     }
 }

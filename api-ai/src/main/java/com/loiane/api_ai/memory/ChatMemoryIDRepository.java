@@ -14,9 +14,9 @@ public class ChatMemoryIDRepository {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    public String generateChatId(String userId) {
-        String sql = "INSERT INTO chat_memory (user_id) VALUES (?) RETURNING id";
-        return jdbcTemplate.queryForObject(sql, String.class, userId);
+    public String generateChatId(String userId, String description) {
+        String sql = "INSERT INTO chat_memory (user_id, description) VALUES (?, ?) RETURNING id";
+        return jdbcTemplate.queryForObject(sql, String.class, userId, description);
     }
 
     public boolean chatIdExists(String chatId) {
@@ -24,12 +24,7 @@ public class ChatMemoryIDRepository {
         Integer count = jdbcTemplate.queryForObject(sql, Integer.class, chatId);
         return count != null && count == 1;
     }
-
-    public void updateDescription(String chatId, String description) {
-        String sql = "UPDATE chat_memory SET description = ? WHERE id = ?::uuid";
-        jdbcTemplate.update(sql, description, chatId);
-    }
-
+    
     public List<Chat> getAllChatsForUser(String userId) {
         String sql = "SELECT id, description FROM chat_memory WHERE user_id = ? AND description IS NOT NULL ORDER BY id DESC";
         return jdbcTemplate.query(sql, (rs, _) -> new Chat(rs.getString("id"), rs.getString("description")), userId);

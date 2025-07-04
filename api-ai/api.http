@@ -8,11 +8,15 @@ Content-Type: application/json
 ### Get all chats
 GET http://localhost:8080/api/chat-memory
 
-### Create a new chat memory ID
-POST http://localhost:8080/api/chat-memory
+### Option 2: Start a new chat with first message (recommended)
+POST http://localhost:8080/api/chat-memory/start
+Content-Type: application/json
 
+{
+    "message": "Tell me a joke"
+}
 
-### Prompt the chat memory ID
+### Continue conversation with existing chat ID (auto-creates if doesn't exist)
 POST http://localhost:8080/api/chat-memory/60724568-a49e-437d-8705-e2508bf12a1
 Content-Type: application/json
 
