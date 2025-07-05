@@ -1,4 +1,4 @@
-import { Component, ElementRef, inject, ViewChild } from '@angular/core';
+import { Component, effect, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -6,7 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { catchError, of } from 'rxjs';
 import { MarkdownToHtmlPipe } from '../../../shared/markdown-to-html.pipe';
-import { Chat, ChatStartResponse } from '../../chat';
+import { ChatStartResponse } from '../../chat';
 import { ChatMessage, ChatType } from '../../chat-message';
 import { MemoryChatService } from '../memory-chat.service';
 
@@ -18,17 +18,30 @@ import { MemoryChatService } from '../memory-chat.service';
 })
 export class ChatPanel {
 
-  @ViewChild('chatHistory')
-  private readonly chatHistory!: ElementRef;
+  private readonly chatHistory = viewChild.required<ElementRef>('chatHistory');
 
   private readonly memoryChatService = inject(MemoryChatService);
 
   userInput = '';
   isLoading = false;
 
-  messages = this.memoryChatService.chatMessagesResource.value;
+  messages = signal<ChatMessage[]>([]);
 
-    sendMessage(): void {
+  // Effect to sync messages from the service resource
+  private readonly syncMessagesEffect = effect(() => {
+    const resourceMessages = this.memoryChatService.chatMessagesResource.value();
+    if (resourceMessages) {
+      this.messages.set(resourceMessages);
+    }
+  });
+
+  // Effect to auto-scroll when messages change
+  private readonly autoScrollEffect = effect(() => {
+    this.messages(); // Read the signal to track changes
+    setTimeout(() => this.scrollToBottom(), 0); // Use setTimeout to ensure DOM is updated
+  });
+
+  sendMessage(): void {
     this.trimUserMessage();
     if (this.userInput !== '' && !this.isLoading) {
       this.updateMessages(this.userInput);
@@ -42,14 +55,16 @@ export class ChatPanel {
   }
 
   private updateMessages(content: string, type: ChatType = ChatType.USER) {
-    this.messages.update((messages: ChatMessage[] | undefined) => [ ...(messages ?? []), { content, type } ]);
-    this.scrollToBottom();
+    this.messages.update((messages: ChatMessage[]) => [...messages, { content, type }]);
   }
 
-   private scrollToBottom(): void {
+  private scrollToBottom(): void {
     try {
-      this.chatHistory.nativeElement.scrollTop = this.chatHistory.nativeElement.scrollHeight;
-    } catch(err) {
+      const chatElement = this.chatHistory();
+      if (chatElement?.nativeElement) {
+        chatElement.nativeElement.scrollTop = chatElement.nativeElement.scrollHeight;
+      }
+    } catch (err) {
       console.error('Failed to scroll chat history:', err);
     }
   }
