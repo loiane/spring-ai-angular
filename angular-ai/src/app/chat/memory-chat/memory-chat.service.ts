@@ -1,7 +1,7 @@
 import { HttpClient, httpResource } from '@angular/common/http';
 import { effect, inject, Injectable, resource, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { Chat } from '../chat';
+import { Chat, ChatStartResponse } from '../chat';
 import { ChatMessage } from '../chat-message';
 
 @Injectable({
@@ -32,7 +32,7 @@ export class MemoryChatService {
    * Start new chat: POST /api/chat-memory/start with first message
    */
   startNewChat(message: string) {
-    return this.http.post<Chat>(`${this.API_MEMORY}/start`, { message });
+    return this.http.post<ChatStartResponse>(`${this.API_MEMORY}/start`, { message });
   }
 
   /**

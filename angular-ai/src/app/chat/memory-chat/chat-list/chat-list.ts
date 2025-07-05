@@ -18,7 +18,6 @@ export class ChatList {
 
   readonly memoryChatService = inject(MemoryChatService);
 
-  // Using the new httpResource for reactive data
   chats = this.memoryChatService.chatsResource;
 
   selectChat(chatId: string) {
@@ -26,10 +25,7 @@ export class ChatList {
   }
 
   createNewChat() {
-    // Clear selection first to start fresh
     this.memoryChatService.clearSelection();
-    // Note: The new chat will be created when the first message is sent
-    // through the startNewChat method in the service
   }
 
   deleteChat(chatId: string, event: Event) {

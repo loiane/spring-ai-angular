@@ -6,7 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { catchError, of } from 'rxjs';
 import { MarkdownToHtmlPipe } from '../../../shared/markdown-to-html.pipe';
-import { Chat } from '../../chat';
+import { Chat, ChatStartResponse } from '../../chat';
 import { ChatMessage, ChatType } from '../../chat-message';
 import { MemoryChatService } from '../memory-chat.service';
 
@@ -91,10 +91,10 @@ export class ChatPanel {
             return of();
           })
         )
-        .subscribe((response: Chat) => {
+        .subscribe((response: ChatStartResponse) => {
           if (response) {
             // Select the new chat and reload resources
-            this.memoryChatService.selectChat(response.id);
+            this.memoryChatService.selectChat(response.chatId);
             this.memoryChatService.chatsResource.reload();
           }
           this.userInput = '';
