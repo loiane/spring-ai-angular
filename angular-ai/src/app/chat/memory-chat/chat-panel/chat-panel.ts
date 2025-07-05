@@ -41,6 +41,12 @@ export class ChatPanel {
     setTimeout(() => this.scrollToBottom(), 0); // Use setTimeout to ensure DOM is updated
   });
 
+  // Effect to clear messages when selectedChatId changes
+  private readonly clearMessagesEffect = effect(() => {
+    this.memoryChatService.selectedChatId();
+    this.messages.set([]);
+  });
+
   sendMessage(): void {
     this.trimUserMessage();
     if (this.userInput !== '' && !this.isLoading) {
