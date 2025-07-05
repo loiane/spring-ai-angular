@@ -6,8 +6,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { catchError, of } from 'rxjs';
 import { MarkdownToHtmlPipe } from '../../../shared/markdown-to-html.pipe';
+import { Chat } from '../../chat';
 import { ChatMessage, ChatType } from '../../chat-message';
-import { ChatService } from '../../chat-service';
+import { MemoryChatService } from '../memory-chat.service';
 
 @Component({
   selector: 'app-chat-panel',
@@ -20,12 +21,12 @@ export class ChatPanel {
   @ViewChild('chatHistory')
   private readonly chatHistory!: ElementRef;
 
-  private readonly chatService = inject(ChatService);
+  private readonly memoryChatService = inject(MemoryChatService);
 
   userInput = '';
   isLoading = false;
 
-  messages = this.chatService.chatMessagesResource.value;
+  messages = this.memoryChatService.chatMessagesResource.value;
 
     sendMessage(): void {
     this.trimUserMessage();
@@ -41,7 +42,7 @@ export class ChatPanel {
   }
 
   private updateMessages(content: string, type: ChatType = ChatType.USER) {
-    this.messages.update(messages => [ ...(messages ?? []), { content, type } ]);
+    this.messages.update((messages: ChatMessage[] | undefined) => [ ...(messages ?? []), { content, type } ]);
     this.scrollToBottom();
   }
 
@@ -54,24 +55,52 @@ export class ChatPanel {
   }
 
   private sendChatMessage() {
-      this.chatService.sendChatMessageWithId(this.userInput)
-      .pipe(
-        catchError(() => {
-          this.updateMessages('Sorry, I am unable to process your request at the moment.', ChatType.ASSISTANT);
+    const currentChatId = this.memoryChatService.selectedChatId();
+    const message = this.userInput;
+
+    if (currentChatId) {
+      // Continue existing chat
+      this.memoryChatService.continueChat(currentChatId, message)
+        .pipe(
+          catchError(() => {
+            this.updateMessages('Sorry, I am unable to process your request at the moment.', ChatType.ASSISTANT);
+            this.isLoading = false;
+            return of();
+          })
+        )
+        .subscribe((response: ChatMessage) => {
+          if (response) {
+            this.updateMessages(response.content, ChatType.ASSISTANT);
+          }
+          this.userInput = '';
           this.isLoading = false;
-          return of();
-        })
-      )
-      .subscribe((response: ChatMessage) => {
-        if (response) {
-          this.updateMessages(response.content, ChatType.ASSISTANT);
-        }
-        this.userInput = '';
-        this.isLoading = false;
-        if (this.chatService.chatMessagesResource.asReadonly.length <= 2) {
-          this.chatService.chatsResource.reload();
-        }
-      });
+
+          // Reload chat list if this was one of the first messages
+          const currentMessages = this.memoryChatService.chatMessagesResource.value();
+          if (currentMessages && currentMessages.length <= 2) {
+            this.memoryChatService.chatsResource.reload();
+          }
+        });
+    } else {
+      // Start new chat
+      this.memoryChatService.startNewChat(message)
+        .pipe(
+          catchError(() => {
+            this.updateMessages('Sorry, I am unable to process your request at the moment.', ChatType.ASSISTANT);
+            this.isLoading = false;
+            return of();
+          })
+        )
+        .subscribe((response: Chat) => {
+          if (response) {
+            // Select the new chat and reload resources
+            this.memoryChatService.selectChat(response.id);
+            this.memoryChatService.chatsResource.reload();
+          }
+          this.userInput = '';
+          this.isLoading = false;
+        });
     }
+  }
 
 }

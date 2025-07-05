@@ -26,8 +26,8 @@ public class ChatMemoryIDRepository {
     }
     
     public List<Chat> getAllChatsForUser(String userId) {
-        String sql = "SELECT id, description FROM chat_memory WHERE user_id = ? AND description IS NOT NULL ORDER BY id DESC";
-        return jdbcTemplate.query(sql, (rs, _) -> new Chat(rs.getString("id"), rs.getString("description")), userId);
+        String sql = "SELECT conversation_id, description FROM chat_memory WHERE user_id = ? ORDER BY conversation_id DESC";
+        return jdbcTemplate.query(sql, (rs, _) -> new Chat(rs.getString("conversation_id"), rs.getString("description")), userId);
     }
 
     public List<ChatMessage> getChatMessages(String chatId) {

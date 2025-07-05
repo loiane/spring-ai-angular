@@ -5,8 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { Chat } from '../../chat';
-import { ChatService } from '../../chat-service';
+import { MemoryChatService } from '../memory-chat.service';
 import { ChatPanel } from '../chat-panel/chat-panel';
 
 @Component({
@@ -17,27 +16,24 @@ import { ChatPanel } from '../chat-panel/chat-panel';
 })
 export class ChatList {
 
-  readonly chatService = inject(ChatService);
+  readonly memoryChatService = inject(MemoryChatService);
 
   // Using the new httpResource for reactive data
-  chats = this.chatService.chatsResource;
+  chats = this.memoryChatService.chatsResource;
 
   selectChat(chatId: string) {
-    this.chatService.selectedChatId.set(chatId);
+    this.memoryChatService.selectChat(chatId);
   }
 
   createNewChat() {
-    this.chatService.createNewChat()
-    .subscribe((chat: Chat) => {
-      this.selectChat(chat.id);
-      this.chats.reload();
-    }
-   );
+    // Clear selection first to start fresh
+    this.memoryChatService.clearSelection();
+    // Note: The new chat will be created when the first message is sent
+    // through the startNewChat method in the service
   }
 
   deleteChat(chatId: string, event: Event) {
     event.stopPropagation(); // Prevent chat selection when clicking delete
-    // TODO: Implement delete functionality when backend endpoint is available
     console.log('Delete chat:', chatId);
   }
 }

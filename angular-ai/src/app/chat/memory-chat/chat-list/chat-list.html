@@ -30,7 +30,7 @@
 
         @if (chats.status() === 'resolved' && chats.value()) {
           @for (chat of chats.value(); track chat.id) {
-            <mat-list-item [class.selected]="chatService.selectedChatId() === chat.id" (click)="selectChat(chat.id)">
+            <mat-list-item [class.selected]="memoryChatService.selectedChatId() === chat.id" (click)="selectChat(chat.id)" (keydown.enter)="selectChat(chat.id)" (keydown.space)="selectChat(chat.id)">
               <a>{{ chat.description || 'New Chat' }}</a>
               <button mat-icon-button matListItemMeta (click)="deleteChat(chat.id, $event)">
                 <mat-icon>close_small</mat-icon>
