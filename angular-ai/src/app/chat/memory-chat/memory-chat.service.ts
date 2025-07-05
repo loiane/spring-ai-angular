@@ -1,6 +1,5 @@
 import { HttpClient, httpResource } from '@angular/common/http';
-import { effect, inject, Injectable, resource, signal } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
+import { effect, inject, Injectable, signal } from '@angular/core';
 import { Chat, ChatStartResponse } from '../chat';
 import { ChatMessage } from '../chat-message';
 
@@ -15,14 +14,16 @@ export class MemoryChatService {
 
   selectedChatId = signal<string | undefined>(undefined);
 
-  chatIdEffect = effect(() => console.log('Selected chat ID:', this.selectedChatId()));
+  private readonly chatIdEffect = effect(() => console.log('Selected chat ID:', this.selectedChatId()));
 
-  // Using the new httpResource for reactive data fetching
-  chatsResource = resource({
-    loader: () => firstValueFrom(this.http.get<Chat[]>(this.API_MEMORY))
-  });
+  /**
+   * List all chats: GET /api/chat-memory
+   */
+  chatsResource = httpResource<Chat[]>(() => this.API_MEMORY);
 
-  // Get chat history for selected chat
+  /**
+   * Get chat history: GET /api/chat-memory/{chatId}
+   */
   chatMessagesResource = httpResource<ChatMessage[]>(() => {
     const chatId = this.selectedChatId();
     return chatId ? `${this.API_MEMORY}/${chatId}` : undefined;
@@ -40,20 +41,6 @@ export class MemoryChatService {
    */
   continueChat(chatId: string, message: string) {
     return this.http.post<ChatMessage>(`${this.API_MEMORY}/${chatId}`, { message });
-  }
-
-  /**
-   * Get chat history: GET /api/chat-memory/{chatId}
-   */
-  getChatHistory(chatId: string) {
-    return this.http.get<ChatMessage[]>(`${this.API_MEMORY}/${chatId}`);
-  }
-
-  /**
-   * List all chats: GET /api/chat-memory
-   */
-  getAllChats() {
-    return this.http.get<Chat[]>(this.API_MEMORY);
   }
 
   /**
