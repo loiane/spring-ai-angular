@@ -1,7 +1,7 @@
 <mat-card class="chat-container">
   <div class="chat-history" #chatHistory>
     <div class="messages">
-    @for (message of messages(); track message; let system = $even) {
+    @for (message of messages(); track message) {
       <div class="message">
         <div class="message-bubble" [class.user]="message.type === 'USER'" style="white-space: pre-wrap;"
         [innerHTML]="message.content | markdownToHtml">
