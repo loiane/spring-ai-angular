@@ -1,10 +1,8 @@
 package com.loiane.api_ai.memory;
 
-import com.loiane.api_ai.chat.ChatMessage;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/chat-memory")
@@ -16,9 +14,24 @@ public class MemoryChatController {
         this.chatService = chatService;
     }
 
-    @PostMapping
-    ChatMessage simpleChat(@RequestBody ChatMessage chatMessage) {
-        var response = this.chatService.simpleChat(chatMessage.message());
-        return new ChatMessage(response);
+    @PostMapping("/{chatId}")
+    ChatMessage simpleChat(@PathVariable String chatId, @RequestBody ChatMessage chatMessage) {
+        var response = this.chatService.chat(chatMessage.content(), chatId);
+        return new ChatMessage(response, "ASSISTANT");
+    }
+
+    @PostMapping("/start")
+    NewChatResponse startNewChat(@RequestBody ChatMessage chatMessage) {
+        return this.chatService.createNewChat(chatMessage.content());
+    }
+
+    @GetMapping
+    List<Chat> getAllChatsForUser() {
+        return this.chatService.getAllChatsForUser();
+    }
+
+    @GetMapping("/{chatId}")
+    List<ChatMessage> getChatMessages(@PathVariable String chatId) {
+        return this.chatService.getChatMessages(chatId);
     }
 }

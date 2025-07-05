@@ -11,10 +11,30 @@ Content-Type: application/json
 
 #### chat with memory
 
-POST localhost:8080/api/chat-memory
+POST localhost:8080/api/chat-memory/7bc19289-22e7-4239-8c71-16f84ae9213f
+Content-Type: application/json
+
+{
+  "message": "Conte uma piada sobre JavaScript"
+}
+
+#### chat with memory and conversation ID
+
+POST localhost:8080/api/chat-memory/start
 Content-Type: application/json
 
 {
   "message": "Conte uma piada sobre Java"
 }
+
+####
+
+GET localhost:8080/api/chat-memory
+Content-Type: application/json
+
+#### chatid
+
+GET localhost:8080/api/chat-memory/7bc19289-22e7-4239-8c71-16f84ae9213f
+Content-Type: application/json
+
 
