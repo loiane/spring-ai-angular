@@ -1,0 +1,49 @@
+<mat-card class="chat-container">
+  <div class="chat-header">
+    <mat-toolbar>
+      <span>Chat with Memory</span>
+      <span class="spacer"></span>
+      <button matButton="elevated" (click)="createNewChat()" aria-label="Create new chat">
+        <mat-icon>edit_square</mat-icon>
+        New chat
+      </button>
+    </mat-toolbar>
+  </div>
+
+  <mat-drawer-container class="example-container">
+    <mat-drawer mode="side" opened>
+
+      <mat-nav-list>
+
+        @if (chats.isLoading()) {
+           <mat-list-item>Loadng chats...</mat-list-item>
+        }
+
+        @if (chats.status() === 'error') {
+          <mat-list-item>
+            <span>Erros loading chats</span>
+            <button matIconButton matListItemMeta (click)="chats.reload()" >
+              <mat-icon>refresh</mat-icon>
+            </button>
+          </mat-list-item>
+        }
+
+        @if (chats.status() === 'resolved' && chats.value()) {
+          @for (chat of chats.value(); track chat.id) {
+            <mat-list-item>
+              <a>{{ chat.description }}</a>
+            </mat-list-item>
+          } @empty {
+            <mat-list-item>No chats available</mat-list-item>
+          }
+        }
+
+      </mat-nav-list>
+
+    </mat-drawer>
+    <mat-drawer-content>
+      <app-chat-panel/>
+    </mat-drawer-content>
+  </mat-drawer-container>
+
+</mat-card>

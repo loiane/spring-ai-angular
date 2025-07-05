@@ -7,7 +7,7 @@ import { ChatResponse } from './chat-response';
 })
 export class ChatService {
 
-  private readonly API = '/api/chat-memory';
+  private readonly API = '/api/chat';
 
   private http = inject(HttpClient);
 

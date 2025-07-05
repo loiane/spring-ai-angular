@@ -1,0 +1,21 @@
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  height: 87vh;
+  margin: 20px;
+}
+
+.chat-header {
+  flex: 0 0 auto;
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+.example-container {
+  width: auto;
+  height: 100%;
+  margin: 5px;
+}
+
