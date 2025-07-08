@@ -33,13 +33,13 @@ describe('ChatList', () => {
     expect(component.chats).toBeDefined();
   });
 
-  it('should have selectedChatId signal initialized to null', () => {
-    expect(component.selectedChatId()).toBeNull();
+  it('should have selectedChatId signal initialized to undefined', () => {
+    expect(component.memoryChatService.selectedChatId()).toBeUndefined();
   });
 
   it('should select chat when selectChat is called', () => {
     const chatId = 'test-chat-id';
     component.selectChat(chatId);
-    expect(component.selectedChatId()).toBe(chatId);
+    expect(component.memoryChatService.selectedChatId()).toBe(chatId);
   });
 });

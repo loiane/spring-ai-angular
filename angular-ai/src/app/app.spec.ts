@@ -46,7 +46,7 @@ describe('App', () => {
     expect(toolbar).toBeTruthy();
 
     const buttons = toolbar?.querySelectorAll('button');
-    expect(buttons?.length).toBe(3);
+    expect(buttons?.length).toBe(2);
 
     expect(buttons?.[0]?.textContent?.trim()).toBe('Simple Chat');
     expect(buttons?.[1]?.textContent?.trim()).toBe('Memory Chat');

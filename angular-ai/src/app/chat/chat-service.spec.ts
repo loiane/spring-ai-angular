@@ -40,7 +40,7 @@ describe('ChatService', () => {
         expect(response).toEqual(mockResponse);
       });
 
-      const req = httpMock.expectOne('/api/chat/chat-memory');
+      const req = httpMock.expectOne('/api/chat');
       expect(req.request.method).toBe('POST');
       expect(req.request.body).toEqual({ message: mockMessage });
       req.flush(mockResponse);
@@ -58,7 +58,7 @@ describe('ChatService', () => {
         }
       });
 
-      const req = httpMock.expectOne('/api/chat/chat-memory');
+      const req = httpMock.expectOne('/api/chat');
       expect(req.request.method).toBe('POST');
       req.flush(errorMessage, { status: 500, statusText: 'Server Error' });
     });

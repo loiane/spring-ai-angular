@@ -1,7 +1,8 @@
 import { TestBed } from '@angular/core/testing';
+import { provideZonelessChangeDetection } from '@angular/core';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { MemoryChatService } from './memory-chat.service';
-import { Chat } from '../chat';
+import { Chat, ChatStartResponse } from '../chat';
 import { ChatMessage, ChatType } from '../chat-message';
 
 describe('MemoryChatService', () => {
@@ -11,7 +12,10 @@ describe('MemoryChatService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
-      providers: [MemoryChatService]
+      providers: [
+        provideZonelessChangeDetection(),
+        MemoryChatService
+      ]
     });
     service = TestBed.inject(MemoryChatService);
     httpMock = TestBed.inject(HttpTestingController);
@@ -27,17 +31,21 @@ describe('MemoryChatService', () => {
 
   describe('startNewChat', () => {
     it('should start a new chat with first message', () => {
-      const mockChat: Chat = { id: '123', description: 'Test chat' };
+      const mockChatStartResponse: ChatStartResponse = {
+        chatId: '123',
+        message: 'AI response',
+        description: 'Test chat'
+      };
       const message = 'Hello, world!';
 
-      service.startNewChat(message).subscribe(chat => {
-        expect(chat).toEqual(mockChat);
+      service.startNewChat(message).subscribe(chatStartResponse => {
+        expect(chatStartResponse).toEqual(mockChatStartResponse);
       });
 
       const req = httpMock.expectOne('/api/chat-memory/start');
       expect(req.request.method).toBe('POST');
       expect(req.request.body).toEqual({ message });
-      req.flush(mockChat);
+      req.flush(mockChatStartResponse);
     });
   });
 
@@ -55,41 +63,6 @@ describe('MemoryChatService', () => {
       expect(req.request.method).toBe('POST');
       expect(req.request.body).toEqual({ message });
       req.flush(mockResponse);
-    });
-  });
-
-  describe('getChatHistory', () => {
-    it('should get chat history for a specific chat', () => {
-      const mockMessages: ChatMessage[] = [
-        { content: 'User message', type: ChatType.USER },
-        { content: 'AI response', type: ChatType.ASSISTANT }
-      ];
-      const chatId = '123';
-
-      service.getChatHistory(chatId).subscribe(messages => {
-        expect(messages).toEqual(mockMessages);
-      });
-
-      const req = httpMock.expectOne(`/api/chat-memory/${chatId}`);
-      expect(req.request.method).toBe('GET');
-      req.flush(mockMessages);
-    });
-  });
-
-  describe('getAllChats', () => {
-    it('should get all chats', () => {
-      const mockChats: Chat[] = [
-        { id: '1', description: 'Chat 1' },
-        { id: '2', description: 'Chat 2' }
-      ];
-
-      service.getAllChats().subscribe(chats => {
-        expect(chats).toEqual(mockChats);
-      });
-
-      const req = httpMock.expectOne('/api/chat-memory');
-      expect(req.request.method).toBe('GET');
-      req.flush(mockChats);
     });
   });
 
