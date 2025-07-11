@@ -16,6 +16,14 @@ import java.util.Optional;
 public class FlightReservationService {
 
     private static final Logger logger = LoggerFactory.getLogger(FlightReservationService.class);
+    
+    // Constants for repeated string literals (SonarQube Rule S1192)
+    private static final String RESERVATION_ID_NULL_MESSAGE = "Reservation ID cannot be null";
+    private static final String FLIGHT_RESERVATION_NOT_FOUND_PREFIX = "Flight reservation not found: ";
+    private static final String FAILED_TO_RETRIEVE_PREFIX = "Failed to retrieve flight reservation: ";
+    private static final String FAILED_TO_UPDATE_STATUS = "Failed to update reservation status";
+    private static final String FAILED_TO_RETRIEVE_UPDATED = "Failed to retrieve updated reservation";
+    private static final String FAILED_TO_RETRIEVE_CANCELLED = "Failed to retrieve cancelled reservation";
 
     private final FlightReservationRepository flightReservationRepository;
 
@@ -33,8 +41,11 @@ public class FlightReservationService {
             List<FlightReservation> reservations = flightReservationRepository.findAll();
             logger.info("Retrieved {} flight reservations", reservations.size());
             return reservations;
+        } catch (FlightReservationException e) {
+            // Re-throw business exceptions as-is
+            throw e;
         } catch (Exception e) {
-            logger.error("Error retrieving flight reservations", e);
+            logger.error("Unexpected error retrieving flight reservations", e);
             throw new FlightReservationException("Failed to retrieve flight reservations", e);
         }
     }
@@ -43,7 +54,7 @@ public class FlightReservationService {
      * Get a specific flight reservation by ID
      */
     public Optional<FlightReservation> getReservationById(String reservationId) {
-        Objects.requireNonNull(reservationId, "Reservation ID cannot be null");
+        Objects.requireNonNull(reservationId, RESERVATION_ID_NULL_MESSAGE);
         
         logger.info("Retrieving flight reservation with ID: {}", reservationId);
         try {
@@ -54,9 +65,12 @@ public class FlightReservationService {
                 logger.warn("Flight reservation not found: {}", reservationId);
             }
             return reservation;
+        } catch (FlightReservationException e) {
+            // Re-throw business exceptions as-is
+            throw e;
         } catch (Exception e) {
-            logger.error("Error retrieving flight reservation: {}", reservationId, e);
-            throw new FlightReservationException("Failed to retrieve flight reservation: " + reservationId, e);
+            logger.error("Unexpected error retrieving flight reservation: {}", reservationId, e);
+            throw new FlightReservationException(FAILED_TO_RETRIEVE_PREFIX + reservationId, e);
         }
     }
 
@@ -74,8 +88,11 @@ public class FlightReservationService {
             FlightReservation savedReservation = flightReservationRepository.save(reservation);
             logger.info("Successfully created flight reservation: {}", savedReservation.reservationId());
             return savedReservation;
+        } catch (FlightReservationException e) {
+            // Re-throw business exceptions as-is
+            throw e;
         } catch (Exception e) {
-            logger.error("Error creating flight reservation", e);
+            logger.error("Unexpected error creating flight reservation", e);
             throw new FlightReservationException("Failed to create flight reservation", e);
         }
     }
@@ -84,7 +101,7 @@ public class FlightReservationService {
      * Cancel a flight reservation
      */
     public FlightReservation cancelReservation(String reservationId) {
-        Objects.requireNonNull(reservationId, "Reservation ID cannot be null");
+        Objects.requireNonNull(reservationId, RESERVATION_ID_NULL_MESSAGE);
         
         logger.info("Canceling flight reservation: {}", reservationId);
         
@@ -92,7 +109,7 @@ public class FlightReservationService {
         Optional<FlightReservation> existingReservation = getReservationById(reservationId);
         if (existingReservation.isEmpty()) {
             logger.warn("Cannot cancel - reservation not found: {}", reservationId);
-            throw new FlightReservationNotFoundException("Flight reservation not found: " + reservationId);
+            throw new FlightReservationNotFoundException(FLIGHT_RESERVATION_NOT_FOUND_PREFIX + reservationId);
         }
 
         FlightReservation reservation = existingReservation.get();
@@ -112,17 +129,20 @@ public class FlightReservationService {
         try {
             boolean updated = flightReservationRepository.updateStatus(reservationId, ReservationStatus.CANCELLED);
             if (!updated) {
-                throw new FlightReservationException("Failed to update reservation status");
+                throw new FlightReservationException(FAILED_TO_UPDATE_STATUS);
             }
             
             // Return the updated reservation
             Optional<FlightReservation> cancelledReservation = getReservationById(reservationId);
             logger.info("Successfully cancelled flight reservation: {}", reservationId);
             return cancelledReservation.orElseThrow(() -> 
-                new FlightReservationException("Failed to retrieve cancelled reservation"));
+                new FlightReservationException(FAILED_TO_RETRIEVE_CANCELLED));
                 
+        } catch (FlightReservationException | FlightReservationNotFoundException e) {
+            // Re-throw business exceptions as-is
+            throw e;
         } catch (Exception e) {
-            logger.error("Error canceling flight reservation: {}", reservationId, e);
+            logger.error("Unexpected error canceling flight reservation: {}", reservationId, e);
             throw new FlightReservationException("Failed to cancel flight reservation: " + reservationId, e);
         }
     }
@@ -131,29 +151,32 @@ public class FlightReservationService {
      * Update reservation status
      */
     public FlightReservation updateReservationStatus(String reservationId, ReservationStatus newStatus) {
-        Objects.requireNonNull(reservationId, "Reservation ID cannot be null");
+        Objects.requireNonNull(reservationId, RESERVATION_ID_NULL_MESSAGE);
         Objects.requireNonNull(newStatus, "New status cannot be null");
         
         logger.info("Updating reservation {} status to {}", reservationId, newStatus);
         
         // Verify reservation exists
         if (!flightReservationRepository.existsById(reservationId)) {
-            throw new FlightReservationNotFoundException("Flight reservation not found: " + reservationId);
+            throw new FlightReservationNotFoundException(FLIGHT_RESERVATION_NOT_FOUND_PREFIX + reservationId);
         }
 
         try {
             boolean updated = flightReservationRepository.updateStatus(reservationId, newStatus);
             if (!updated) {
-                throw new FlightReservationException("Failed to update reservation status");
+                throw new FlightReservationException(FAILED_TO_UPDATE_STATUS);
             }
             
             Optional<FlightReservation> updatedReservation = getReservationById(reservationId);
             logger.info("Successfully updated reservation {} status to {}", reservationId, newStatus);
             return updatedReservation.orElseThrow(() -> 
-                new FlightReservationException("Failed to retrieve updated reservation"));
+                new FlightReservationException(FAILED_TO_RETRIEVE_UPDATED));
                 
+        } catch (FlightReservationException | FlightReservationNotFoundException e) {
+            // Re-throw business exceptions as-is
+            throw e;
         } catch (Exception e) {
-            logger.error("Error updating reservation status: {}", reservationId, e);
+            logger.error("Unexpected error updating reservation status: {}", reservationId, e);
             throw new FlightReservationException("Failed to update reservation status: " + reservationId, e);
         }
     }
@@ -169,8 +192,11 @@ public class FlightReservationService {
             List<FlightReservation> reservations = flightReservationRepository.findByPassengerEmail(email);
             logger.info("Found {} reservations for email: {}", reservations.size(), email);
             return reservations;
+        } catch (FlightReservationException e) {
+            // Re-throw business exceptions as-is
+            throw e;
         } catch (Exception e) {
-            logger.error("Error retrieving reservations for email: {}", email, e);
+            logger.error("Unexpected error retrieving reservations for email: {}", email, e);
             throw new FlightReservationException("Failed to retrieve reservations for email: " + email, e);
         }
     }
