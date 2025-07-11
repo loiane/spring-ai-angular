@@ -64,7 +64,6 @@ Instructions for generating high-quality Angular applications with TypeScript, u
 - Use lazy loading for routes to reduce initial bundle size
 - Optimize change detection with `OnPush` strategy and signals for fine-grained reactivity
 - Use trackBy in `ngFor` loops to improve rendering performance
-- Implement server-side rendering (SSR) or static site generation (SSG) with Angular Universal (if specified)
 
 ### Testing
 - Write unit tests for components, services, and pipes using Jasmine and Karma
