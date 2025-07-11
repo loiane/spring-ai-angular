@@ -1,4 +1,4 @@
-package com.loiane.api_ai.rag.mongo;
+package com.loiane.api_ai.rag;
 
 import org.springframework.ai.document.Document;
 import org.springframework.ai.reader.ExtractedTextFormatter;
