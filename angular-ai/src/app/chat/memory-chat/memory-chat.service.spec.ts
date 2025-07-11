@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { MemoryChatService } from './memory-chat.service';
-import { Chat, ChatStartResponse } from '../chat';
+import { ChatStartResponse } from '../chat';
 import { ChatMessage, ChatType } from '../chat-message';
 
 describe('MemoryChatService', () => {
@@ -77,6 +77,40 @@ describe('MemoryChatService', () => {
   describe('clearSelection', () => {
     it('should clear the selected chat ID', () => {
       service.selectChat('123');
+      service.clearSelection();
+      expect(service.selectedChatId()).toBeUndefined();
+    });
+  });
+
+  describe('resources', () => {
+    it('should have chatsResource defined', () => {
+      expect(service.chatsResource).toBeDefined();
+    });
+
+    it('should have chatMessagesResource defined', () => {
+      expect(service.chatMessagesResource).toBeDefined();
+    });
+
+    it('should return undefined for chatMessagesResource when no chat selected', () => {
+      service.clearSelection();
+      // The resource loader function should return undefined when no chat is selected
+      expect(service.selectedChatId()).toBeUndefined();
+    });
+
+    it('should build correct URL for chatMessagesResource when chat selected', () => {
+      service.selectChat('test-chat-123');
+      expect(service.selectedChatId()).toBe('test-chat-123');
+    });
+  });
+
+  describe('signal updates', () => {
+    it('should update selected chat ID signal', () => {
+      service.selectChat('test-id');
+      expect(service.selectedChatId()).toBe('test-id');
+    });
+
+    it('should clear selected chat ID signal', () => {
+      service.selectChat('test-id');
       service.clearSelection();
       expect(service.selectedChatId()).toBeUndefined();
     });

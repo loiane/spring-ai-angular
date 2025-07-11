@@ -5,6 +5,8 @@ import { provideHttpClientTesting, HttpTestingController } from '@angular/common
 
 import { ChatService } from './chat-service';
 import { ChatResponse } from './chat-response';
+import { Chat } from './chat';
+import { ChatMessage, ChatType } from './chat-message';
 
 describe('ChatService', () => {
   let service: ChatService;
@@ -61,6 +63,59 @@ describe('ChatService', () => {
       const req = httpMock.expectOne('/api/chat');
       expect(req.request.method).toBe('POST');
       req.flush(errorMessage, { status: 500, statusText: 'Server Error' });
+    });
+  });
+
+  describe('createNewChat', () => {
+    it('should create a new chat', () => {
+      const mockChat: Chat = { id: '123', description: 'New Chat' };
+
+      service.createNewChat().subscribe(response => {
+        expect(response).toEqual(mockChat);
+      });
+
+      const req = httpMock.expectOne('/api/chat-memory');
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toEqual({});
+      req.flush(mockChat);
+    });
+  });
+
+  describe('sendChatMessageWithId', () => {
+    it('should send a message with chat ID', () => {
+      const mockMessage: ChatMessage = { content: 'Test message', type: ChatType.USER };
+      const chatId = '123';
+      service.selectedChatId.set(chatId);
+
+      service.sendChatMessageWithId('Test message').subscribe(response => {
+        expect(response).toEqual(mockMessage);
+      });
+
+      const req = httpMock.expectOne(`/api/chat-memory/${chatId}`);
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toEqual({ message: 'Test message' });
+      req.flush(mockMessage);
+    });
+  });
+
+  describe('selectedChatId signal', () => {
+    it('should have initial value', () => {
+      expect(service.selectedChatId()).toBe('1111111');
+    });
+
+    it('should update selectedChatId', () => {
+      service.selectedChatId.set('new-chat-id');
+      expect(service.selectedChatId()).toBe('new-chat-id');
+    });
+  });
+
+  describe('resources', () => {
+    it('should have chatsResource defined', () => {
+      expect(service.chatsResource).toBeDefined();
+    });
+
+    it('should have chatMessagesResource defined', () => {
+      expect(service.chatMessagesResource).toBeDefined();
     });
   });
 });
