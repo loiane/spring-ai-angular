@@ -24,7 +24,7 @@ public class RagReader {
     private Resource pdfResource;
 
     @Bean
-    public VectorStore ragVectorStore(VectorStore vectorStore, JdbcTemplate jdbcTemplate) {
+    VectorStore ragVectorStore(VectorStore vectorStore, JdbcTemplate jdbcTemplate) {
 
         // check if the document is already in the vector store
         Integer count = jdbcTemplate.queryForObject("select count(*) from vector_store", Integer.class);
