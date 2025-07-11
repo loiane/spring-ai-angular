@@ -55,6 +55,7 @@ applyTo: '**/*.java'
 | `S1854` | Unused assignments should be removed                   | Avoid dead variables—remove or refactor.                                      |
 | `S109`  | Magic numbers should be replaced with constants        | Improves readability and maintainability.                                     |
 | `S1188` | Catch blocks should not be empty                       | Always log or handle exceptions meaningfully.                                 |
+| `S7467` | Unused exception parameter should use the unnamed variable pattern |
 
 ## Build and Verification
 
