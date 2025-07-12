@@ -1,5 +1,5 @@
 import { NgClass } from '@angular/common';
-import { Component, ElementRef, inject, signal, ViewChild } from '@angular/core';
+import { Component, effect, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -18,8 +18,7 @@ import { ChatService } from '../chat-service';
 })
 export class SimpleChat {
 
-  @ViewChild('chatHistory')
-  private readonly chatHistory!: ElementRef;
+  private readonly chatHistory = viewChild.required<ElementRef>('chatHistory');
 
   private readonly chatService = inject(ChatService);
 
@@ -31,6 +30,12 @@ export class SimpleChat {
   messages = signal<ChatResponse[]>([
     { message: 'Hello, how can I help you today?', isBot: true },
   ]);
+
+  // Effect to auto-scroll when messages change
+  private readonly autoScrollEffect = effect(() => {
+    this.messages(); // Read the signal to track changes
+    setTimeout(() => this.scrollToBottom(), 0); // Use setTimeout to ensure DOM is updated
+  });
 
   sendMessage(): void {
     this.trimUserMessage();
@@ -51,7 +56,6 @@ export class SimpleChat {
 
   private updateMessages(message: string, isBot = false) {
     this.messages.update(messages => [...messages, { message, isBot }]);
-    this.scrollToBottom();
   }
 
   private getResponse() {
@@ -69,18 +73,22 @@ export class SimpleChat {
 
   private scrollToBottom(): void {
     try {
-      this.chatHistory.nativeElement.scrollTop = this.chatHistory.nativeElement.scrollHeight;
-    } catch(err) { }
+      const chatElement = this.chatHistory();
+      if (chatElement?.nativeElement) {
+        chatElement.nativeElement.scrollTop = chatElement.nativeElement.scrollHeight;
+      }
+    } catch (err) {
+      console.error('Failed to scroll chat history:', err);
+    }
   }
 
   private sendChatMessage() {
     this.chatService.sendChatMessage(this.userInput)
     .pipe(
-      //delay(10000),
       catchError(() => {
         this.updateMessages('Sorry, I am unable to process your request at the moment.', true);
         this.isLoading = false;
-        return of(); // <-- fix: return an empty observable instead of re-throwing
+        return of();
       })
     )
     .subscribe((response: ChatResponse) => {
