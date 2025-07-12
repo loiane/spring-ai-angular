@@ -22,7 +22,7 @@ export class SimpleChat {
 
   private readonly chatService = inject(ChatService);
 
-  private readonly local = false;
+  private readonly local = true;
 
   userInput = '';
   isLoading = false;
@@ -60,7 +60,7 @@ export class SimpleChat {
 
   private getResponse() {
     setTimeout(() => {
-      const response = 'This is a simulated response from ChatGPT.';
+      const response = 'This is a simulated response from the AI model.';
       this.updateMessages(response, true);
       this.isLoading = false;
     }, 2000);
