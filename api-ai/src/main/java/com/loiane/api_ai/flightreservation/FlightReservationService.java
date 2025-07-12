@@ -36,9 +36,21 @@ public class FlightReservationService {
      */
     public List<FlightReservation> getAllReservations() {
         logger.info("Retrieving all flight reservations");
-        List<FlightReservation> reservations = flightReservationRepository.findAll();
-        logger.info("Retrieved {} flight reservations", reservations.size());
-        return reservations;
+        try {
+            List<FlightReservation> reservations = flightReservationRepository.findAll();
+            logger.info("Retrieved {} flight reservations", reservations.size());
+            return reservations;
+        } catch (Exception e) {
+            // Log the specific repository error with full context for debugging
+            logger.error("Repository operation failed - Method: findAll(), Repository: FlightReservationRepository, " +
+                        "Error: {}, Type: {}", e.getMessage(), e.getClass().getSimpleName(), e);
+            
+            // Transform repository exception into domain-specific business exception with contextual details
+            String contextualMessage = String.format("Failed to retrieve flight reservations due to database error: %s " +
+                                                    "[Operation: repository.findAll(), Error Type: %s]", 
+                                                    e.getMessage(), e.getClass().getSimpleName());
+            throw new FlightReservationException(contextualMessage, e);
+        }
     }
 
     /**
