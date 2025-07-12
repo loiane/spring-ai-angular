@@ -1,0 +1,29 @@
+<div class="flight-reservation-container">
+  <mat-toolbar class="main-toolbar">
+    <button
+      mat-icon-button
+      (click)="toggleSidenav()"
+      aria-label="Toggle concierge chat">
+      <mat-icon>{{ sidenavOpened ? 'chevron_right' : 'chat' }}</mat-icon>
+    </button>
+    <span class="title">
+      <mat-icon>flight_takeoff</mat-icon>
+      SpringFly Reservations
+    </span>
+  </mat-toolbar>
+
+  <mat-sidenav-container class="sidenav-container">
+    <mat-sidenav
+      #sidenav
+      mode="side"
+      [opened]="sidenavOpened"
+      position="end"
+      class="concierge-sidenav">
+      <app-concierge-chat></app-concierge-chat>
+    </mat-sidenav>
+
+    <mat-sidenav-content class="main-content">
+      <app-reservation-list></app-reservation-list>
+    </mat-sidenav-content>
+  </mat-sidenav-container>
+</div>

@@ -1,0 +1,63 @@
+.reservations-container {
+  width: 100%;
+  height: 100%;
+
+  mat-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+  }
+}
+
+.loading-container,
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  gap: 1rem;
+}
+
+.reservations-table {
+  width: 100%;
+
+  .selected-row {
+    background-color: rgba(0, 0, 0, 0.04);
+  }
+
+  tr:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+    cursor: pointer;
+  }
+
+  .selected {
+    color: primary;
+  }
+}
+
+.status-confirmed {
+  background-color: #4caf50;
+  color: white;
+}
+
+.status-pending {
+  background-color: #ff9800;
+  color: white;
+}
+
+.status-cancelled {
+  background-color: #f44336;
+  color: white;
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+}

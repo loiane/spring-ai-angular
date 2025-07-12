@@ -1,0 +1,56 @@
+<mat-card class="concierge-container">
+  <mat-card-header>
+    <div class="concierge-header">
+      <mat-icon>support_agent</mat-icon>
+      <div class="header-content">
+        <mat-card-title>SpringFly Concierge</mat-card-title>
+        @if (selectedReservation()) {
+          <mat-card-subtitle>
+            Assisting with reservation {{ selectedReservation()!.number }}
+          </mat-card-subtitle>
+        }
+      </div>
+    </div>
+  </mat-card-header>
+
+  <mat-card-content class="chat-content">
+    <div class="messages-container">
+      @for (message of messages(); track $index) {
+        <div class="message" [class]="'message-' + message.type.toLowerCase()">
+          <div class="message-header">
+            @if (message.type === MessageType.ASSISTANT) {
+              <mat-icon class="avatar assistant-avatar">support_agent</mat-icon>
+              <span class="sender">Assistant</span>
+            } @else {
+              <mat-icon class="avatar user-avatar">person</mat-icon>
+              <span class="sender">You</span>
+            }
+            <span class="timestamp">{{ formatTimestamp(message.timestamp) }}</span>
+          </div>
+          <div class="message-content" [innerHTML]="message.content | markdownToHtml"></div>
+        </div>
+      }
+    </div>
+
+    <div class="input-container">
+      <mat-form-field class="message-input" appearance="outline">
+        <mat-label>Type your message...</mat-label>
+        <textarea
+          matInput
+          [(ngModel)]="currentMessage"
+          (keydown)="onKeyPress($event)"
+          placeholder="Ask about your booking, cancellations, or any travel assistance..."
+          rows="3">
+        </textarea>
+      </mat-form-field>
+      <button
+        mat-fab
+        color="primary"
+        (click)="sendMessage()"
+        [disabled]="!currentMessage().trim()"
+        aria-label="Send message">
+        <mat-icon>send</mat-icon>
+      </button>
+    </div>
+  </mat-card-content>
+</mat-card>

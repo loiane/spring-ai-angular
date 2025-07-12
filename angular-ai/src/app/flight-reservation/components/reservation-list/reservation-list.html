@@ -1,0 +1,103 @@
+<mat-card class="reservations-container">
+  <mat-card-header>
+    <mat-card-title>
+      <mat-icon>flight</mat-icon>
+      SpringFly Bookings
+    </mat-card-title>
+    <div class="header-actions">
+      <button mat-icon-button (click)="onRefresh()" aria-label="Refresh reservations">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </div>
+  </mat-card-header>
+
+  <mat-card-content>
+    @if (reservations.status() === 'loading') {
+      <div class="loading-container">
+        <mat-spinner></mat-spinner>
+        <span>Loading reservations...</span>
+      </div>
+    }
+
+    @if (reservations.status() === 'error') {
+      <div class="error-container">
+        <mat-icon color="warn">error</mat-icon>
+        <span>Error loading reservations</span>
+        <button mat-button (click)="onRefresh()">Try Again</button>
+      </div>
+    }
+
+    @if (reservations.status() === 'resolved' && reservations.value()) {
+      <table mat-table [dataSource]="reservations.value()!" class="reservations-table">
+
+        <ng-container matColumnDef="number">
+          <th mat-header-cell *matHeaderCellDef>Number</th>
+          <td mat-cell *matCellDef="let reservation">{{ reservation.number }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef>Name</th>
+          <td mat-cell *matCellDef="let reservation">{{ reservation.name }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="date">
+          <th mat-header-cell *matHeaderCellDef>Date</th>
+          <td mat-cell *matCellDef="let reservation">{{ reservation.date }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let reservation">
+            <mat-chip [class]="getStatusChipClass(reservation.status)">
+              {{ reservation.status }}
+            </mat-chip>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="from">
+          <th mat-header-cell *matHeaderCellDef>From</th>
+          <td mat-cell *matCellDef="let reservation">{{ reservation.from }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="to">
+          <th mat-header-cell *matHeaderCellDef>To</th>
+          <td mat-cell *matCellDef="let reservation">{{ reservation.to }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="seat">
+          <th mat-header-cell *matHeaderCellDef>Seat</th>
+          <td mat-cell *matCellDef="let reservation">{{ reservation.seat }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="class">
+          <th mat-header-cell *matHeaderCellDef>Class</th>
+          <td mat-cell *matCellDef="let reservation">{{ reservation.class }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let reservation">
+            <button
+              mat-icon-button
+              (click)="onSelectReservation(reservation)"
+              [class.selected]="selectedReservation() === reservation"
+              aria-label="Select reservation">
+              <mat-icon>info</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr
+          mat-row
+          *matRowDef="let row; columns: displayedColumns;"
+          [class.selected-row]="selectedReservation() === row"
+          (click)="onSelectReservation(row)"
+          (keydown.enter)="onSelectReservation(row)"
+          (keydown.space)="onSelectReservation(row)"
+          tabindex="0">
+        </tr>
+      </table>
+    }
+  </mat-card-content>
+</mat-card>

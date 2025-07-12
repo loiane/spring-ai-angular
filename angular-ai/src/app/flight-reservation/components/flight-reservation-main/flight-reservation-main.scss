@@ -1,0 +1,46 @@
+.flight-reservation-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+
+  .main-toolbar {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+
+    .title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1.2em;
+      font-weight: 500;
+    }
+  }
+
+  .sidenav-container {
+    flex: 1;
+
+    .concierge-sidenav {
+      width: 400px;
+      border-left: 1px solid #e0e0e0;
+
+      @media (max-width: 768px) {
+        width: 100vw;
+      }
+    }
+
+    .main-content {
+      padding: 16px;
+      background-color: #f5f5f5;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .flight-reservation-container {
+    .sidenav-container {
+      .concierge-sidenav {
+        width: 100vw;
+      }
+    }
+  }
+}
