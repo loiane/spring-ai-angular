@@ -1,4 +1,3 @@
-import { NgClass } from '@angular/common';
 import { Component, effect, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -12,7 +11,7 @@ import { ChatService } from '../chat-service';
 
 @Component({
   selector: 'app-simple-chat',
-  imports: [MatCardModule, MatInputModule, MatButtonModule, FormsModule, MatToolbar, NgClass, MatIconModule],
+  imports: [MatCardModule, MatInputModule, MatButtonModule, FormsModule, MatToolbar, MatIconModule],
   templateUrl: './simple-chat.html',
   styleUrl: './simple-chat.scss'
 })
@@ -22,7 +21,7 @@ export class SimpleChat {
 
   private readonly chatService = inject(ChatService);
 
-  private readonly local = true;
+  private readonly local = false;
 
   userInput = '';
   isLoading = false;

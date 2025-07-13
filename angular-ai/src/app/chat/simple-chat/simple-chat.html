@@ -8,7 +8,7 @@
     <div class="messages">
     @for (message of messages(); track message; let system = $even) {
       <div class="message">
-        <div class="message-bubble" [ngClass]="{'user': !message.isBot}">
+        <div class="message-bubble" [class.user]="!message.isBot">
           {{ message.message }}
         </div>
       </div>
