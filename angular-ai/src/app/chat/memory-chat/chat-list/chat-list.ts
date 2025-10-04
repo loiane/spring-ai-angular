@@ -5,6 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
+import { LoggingService } from '../../../shared/logging.service';
 import { MemoryChatService } from '../memory-chat.service';
 import { ChatPanel } from '../chat-panel/chat-panel';
 
@@ -18,6 +19,7 @@ import { ChatPanel } from '../chat-panel/chat-panel';
 export class ChatList {
 
   readonly memoryChatService = inject(MemoryChatService);
+  private readonly logger = inject(LoggingService);
 
   chats = this.memoryChatService.chatsResource;
 
@@ -31,6 +33,7 @@ export class ChatList {
 
   deleteChat(chatId: string, event: Event) {
     event.stopPropagation(); // Prevent chat selection when clicking delete
-    console.log('Delete chat:', chatId);
+    this.logger.debug('Delete chat requested', chatId);
+    // Delete functionality to be implemented
   }
 }

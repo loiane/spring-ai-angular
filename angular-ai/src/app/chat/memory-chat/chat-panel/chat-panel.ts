@@ -5,6 +5,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { catchError, of } from 'rxjs';
+import { LoggingService } from '../../../shared/logging.service';
 import { MarkdownToHtmlPipe } from '../../../shared/markdown-to-html.pipe';
 import { ChatStartResponse } from '../../chat';
 import { ChatMessage, ChatType } from '../../chat-message';
@@ -22,6 +23,7 @@ export class ChatPanel {
   private readonly chatHistory = viewChild.required<ElementRef>('chatHistory');
 
   private readonly memoryChatService = inject(MemoryChatService);
+  private readonly logger = inject(LoggingService);
 
   userInput = '';
   isLoading = false;
@@ -72,7 +74,7 @@ export class ChatPanel {
         chatElement.nativeElement.scrollTop = chatElement.nativeElement.scrollHeight;
       }
     } catch (err) {
-      console.error('Failed to scroll chat history:', err);
+      this.logger.error('Failed to scroll chat history', err);
     }
   }
 

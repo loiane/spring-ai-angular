@@ -1,5 +1,6 @@
 import { HttpClient, httpResource } from '@angular/common/http';
 import { effect, inject, Injectable, signal } from '@angular/core';
+import { LoggingService } from '../../shared/logging.service';
 import { Chat, ChatStartResponse } from '../chat';
 import { ChatMessage } from '../chat-message';
 
@@ -11,10 +12,13 @@ export class MemoryChatService {
   private readonly API_MEMORY = '/api/chat-memory';
 
   private readonly http = inject(HttpClient);
+  private readonly logger = inject(LoggingService);
 
   selectedChatId = signal<string | undefined>(undefined);
 
-  private readonly chatIdEffect = effect(() => console.log('Selected chat ID:', this.selectedChatId()));
+  private readonly chatIdEffect = effect(() =>
+    this.logger.debug('Memory chat - Selected chat ID', this.selectedChatId())
+  );
 
   /**
    * List all chats: GET /api/chat-memory

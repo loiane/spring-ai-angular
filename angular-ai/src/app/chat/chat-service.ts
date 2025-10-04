@@ -1,6 +1,7 @@
 import { HttpClient, httpResource } from '@angular/common/http';
 import { effect, inject, Injectable, resource, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
+import { LoggingService } from '../shared/logging.service';
 import { Chat } from './chat';
 import { ChatMessage } from './chat-message';
 import { ChatResponse } from './chat-response';
@@ -14,10 +15,11 @@ export class ChatService {
   private readonly API_MEMORY = '/api/chat-memory';
 
   private readonly http = inject(HttpClient);
+  private readonly logger = inject(LoggingService);
 
   selectedChatId = signal('1111111');
 
-  chatIdEffect = effect(() => console.log(this.selectedChatId()));
+  chatIdEffect = effect(() => this.logger.debug('Selected chat ID changed', this.selectedChatId()));
 
   // Using the new httpResource for reactive data fetching
   chatsResource = resource({

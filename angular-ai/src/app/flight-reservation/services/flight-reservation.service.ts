@@ -1,5 +1,6 @@
 import { HttpClient, httpResource } from '@angular/common/http';
 import { effect, inject, Injectable, signal } from '@angular/core';
+import { LoggingService } from '../../shared/logging.service';
 import { FlightReservation, CancellationRequest, CancellationResponse } from '../models/flight-reservation';
 import { ConciergeMessage, ConciergeResponse, MessageType } from '../models/concierge-message';
 
@@ -12,6 +13,7 @@ export class FlightReservationService {
   private readonly CONCIERGE_API = '/api/concierge';
 
   private readonly http = inject(HttpClient);
+  private readonly logger = inject(LoggingService);
 
   selectedReservation = signal<FlightReservation | null>(null);
 
@@ -32,7 +34,7 @@ export class FlightReservationService {
     effect(() => {
       const selected = this.selectedReservation();
       if (selected) {
-        console.log('Selected reservation:', selected.number);
+        this.logger.debug('Selected reservation', selected.number);
       }
     });
   }
@@ -71,7 +73,7 @@ export class FlightReservationService {
    * Handles errors when sending a concierge message
    */
   handleConciergeError(error: unknown) {
-    console.error('Error sending concierge message:', error);
+    this.logger.error('Error sending concierge message', error);
     const errorMessage: ConciergeMessage = {
       content: 'I apologize, but I\'m having trouble connecting right now. Please try again in a moment.',
       type: MessageType.ASSISTANT,

@@ -95,12 +95,10 @@ describe('ChatList', () => {
     const mockEvent = {
       stopPropagation: jasmine.createSpy()
     } as any;
-    spyOn(console, 'log');
 
     component.deleteChat(chatId, mockEvent);
 
     expect(mockEvent.stopPropagation).toHaveBeenCalled();
-    expect(console.log).toHaveBeenCalledWith('Delete chat:', chatId);
   });
 
   it('should render toolbar with title', () => {

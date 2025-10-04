@@ -6,6 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatToolbar } from '@angular/material/toolbar';
 import { catchError, of } from 'rxjs';
+import { LoggingService } from '../../shared/logging.service';
 import { ChatResponse } from '../chat-response';
 import { ChatService } from '../chat-service';
 
@@ -21,6 +22,7 @@ export class SimpleChat {
   private readonly chatHistory = viewChild.required<ElementRef>('chatHistory');
 
   private readonly chatService = inject(ChatService);
+  private readonly logger = inject(LoggingService);
 
   private readonly local = false;
 
@@ -78,7 +80,7 @@ export class SimpleChat {
         chatElement.nativeElement.scrollTop = chatElement.nativeElement.scrollHeight;
       }
     } catch (err) {
-      console.error('Failed to scroll chat history:', err);
+      this.logger.error('Failed to scroll chat history', err);
     }
   }
 
