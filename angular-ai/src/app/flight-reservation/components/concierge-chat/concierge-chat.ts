@@ -40,7 +40,10 @@ export class ConciergeChatComponent {
   sendMessage() {
     const message = this.currentMessage();
     if (message.trim()) {
-      this.flightService.sendConciergeMessage(message);
+      this.flightService.sendConciergeMessage(message).subscribe({
+        next: (response) => this.flightService.handleConciergeResponse(response),
+        error: (error) => this.flightService.handleConciergeError(error)
+      });
       this.currentMessage.set('');
     }
   }

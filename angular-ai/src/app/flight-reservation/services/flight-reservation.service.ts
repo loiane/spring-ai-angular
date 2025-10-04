@@ -51,26 +51,33 @@ export class FlightReservationService {
 
     this.messages.update(messages => [...messages, userMessage]);
 
-    // Send to API and handle response
-    return this.http.post<ConciergeResponse>(this.CONCIERGE_API, { message }).subscribe({
-      next: (response) => {
-        const assistantMessage: ConciergeMessage = {
-          content: response.content,
-          type: MessageType.ASSISTANT,
-          timestamp: new Date()
-        };
-        this.messages.update(messages => [...messages, assistantMessage]);
-      },
-      error: (error) => {
-        console.error('Error sending concierge message:', error);
-        const errorMessage: ConciergeMessage = {
-          content: 'I apologize, but I\'m having trouble connecting right now. Please try again in a moment.',
-          type: MessageType.ASSISTANT,
-          timestamp: new Date()
-        };
-        this.messages.update(messages => [...messages, errorMessage]);
-      }
-    });
+    // Return Observable for caller to handle subscription
+    return this.http.post<ConciergeResponse>(this.CONCIERGE_API, { message });
+  }
+
+  /**
+   * Handles the response from sending a concierge message
+   */
+  handleConciergeResponse(response: ConciergeResponse) {
+    const assistantMessage: ConciergeMessage = {
+      content: response.content,
+      type: MessageType.ASSISTANT,
+      timestamp: new Date()
+    };
+    this.messages.update(messages => [...messages, assistantMessage]);
+  }
+
+  /**
+   * Handles errors when sending a concierge message
+   */
+  handleConciergeError(error: unknown) {
+    console.error('Error sending concierge message:', error);
+    const errorMessage: ConciergeMessage = {
+      content: 'I apologize, but I\'m having trouble connecting right now. Please try again in a moment.',
+      type: MessageType.ASSISTANT,
+      timestamp: new Date()
+    };
+    this.messages.update(messages => [...messages, errorMessage]);
   }
 
   cancelReservation(request: CancellationRequest) {
