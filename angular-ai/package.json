@@ -19,6 +19,8 @@
     "@angular/material": "^20.2.5",
     "@angular/platform-browser": "^20.3.2",
     "@angular/router": "^20.3.2",
+    "highlight.js": "^11.11.1",
+    "marked": "^16.3.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.15.0"
@@ -28,6 +30,7 @@
     "@angular/cli": "^20.3.3",
     "@angular/compiler-cli": "^20.3.2",
     "@types/jasmine": "~5.1.0",
+    "@types/marked": "^5.0.2",
     "jasmine-core": "~5.7.0",
     "karma": "~6.4.0",
     "karma-chrome-launcher": "~3.2.0",

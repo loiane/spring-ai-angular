@@ -1,5 +1,9 @@
 @use '@angular/material' as mat;
 
+// Import highlight.js theme for code syntax highlighting
+// Using GitHub's light theme for better readability with light UI
+@import 'highlight.js/styles/github.css';
+
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 
