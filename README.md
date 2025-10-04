@@ -4,8 +4,8 @@ This project is a sample application showcasing a Java Spring AI backend alongsi
 
 ## 🚀 Tecnologies
 
-- Java 24
-- Spring Boot 3.5.0 (Spring 6)
+- Java 25
+- Spring Boot 3.5.x (Spring 6)
 - Spring AI (including OpenAI, Gemini, Azure OpenAI, OCI AI)
 - Maven
 - PostgreSQL
