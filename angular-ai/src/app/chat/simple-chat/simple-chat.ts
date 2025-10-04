@@ -1,4 +1,4 @@
-import { Component, effect, ElementRef, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -13,7 +13,8 @@ import { ChatService } from '../chat-service';
   selector: 'app-simple-chat',
   imports: [MatCardModule, MatInputModule, MatButtonModule, FormsModule, MatToolbar, MatIconModule],
   templateUrl: './simple-chat.html',
-  styleUrl: './simple-chat.scss'
+  styleUrl: './simple-chat.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SimpleChat {
 

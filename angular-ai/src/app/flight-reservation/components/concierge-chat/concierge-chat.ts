@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -13,7 +13,6 @@ import { MarkdownToHtmlPipe } from '../../../shared/markdown-to-html.pipe';
 
 @Component({
   selector: 'app-concierge-chat',
-  standalone: true,
   imports: [
     CommonModule,
     FormsModule,
@@ -26,7 +25,8 @@ import { MarkdownToHtmlPipe } from '../../../shared/markdown-to-html.pipe';
     MarkdownToHtmlPipe
   ],
   templateUrl: './concierge-chat.html',
-  styleUrl: './concierge-chat.scss'
+  styleUrl: './concierge-chat.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ConciergeChatComponent {
   private readonly flightService = inject(FlightReservationService);

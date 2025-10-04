@@ -109,10 +109,9 @@ describe('ChatList', () => {
   });
 
   it('should render new chat button', () => {
-    const newChatButton = fixture.debugElement.query(By.css('button[data-test="new-chat-btn"]'));
-    if (newChatButton) {
-      expect(newChatButton.nativeElement.textContent).toContain('New Chat');
-    }
+    const newChatButton = fixture.debugElement.query(By.css('button[aria-label="Create new chat"]'));
+    expect(newChatButton).toBeTruthy();
+    expect(newChatButton.nativeElement.textContent).toContain('New chat');
   });
 
   it('should handle loading state', () => {

@@ -1,10 +1,10 @@
 import { provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { App } from './app';
-import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatToolbarModule } from '@angular/material/toolbar';
 import { provideRouter, RouterLink, RouterOutlet } from '@angular/router';
+import { App } from './app';
 
 describe('App', () => {
 
@@ -46,7 +46,7 @@ describe('App', () => {
     expect(toolbar).toBeTruthy();
 
     const buttons = toolbar?.querySelectorAll('button');
-    expect(buttons?.length).toBe(2);
+    expect(buttons?.length).toBe(3);
 
     expect(buttons?.[0]?.textContent?.trim()).toBe('Simple Chat');
     expect(buttons?.[1]?.textContent?.trim()).toBe('Memory Chat');

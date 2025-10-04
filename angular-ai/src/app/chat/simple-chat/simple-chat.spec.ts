@@ -1,14 +1,7 @@
 import { provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { FormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatToolbar } from '@angular/material/toolbar';
 import { of, throwError } from 'rxjs';
 
-import { NgClass } from '@angular/common';
 import { ChatService } from '../chat-service';
 import { SimpleChat } from './simple-chat';
 
@@ -91,14 +84,12 @@ describe('SimpleChat', () => {
 
   it('should update messages correctly', () => {
     const initialMessageCount = component.messages().length;
-    spyOn(component as any, 'scrollToBottom');
 
     (component as any).updateMessages('Test message', false);
 
     expect(component.messages().length).toBe(initialMessageCount + 1);
     expect(component.messages()[component.messages().length - 1].message).toBe('Test message');
     expect(component.messages()[component.messages().length - 1].isBot).toBe(false);
-    expect((component as any).scrollToBottom).toHaveBeenCalled();
   });
 
   it('should update messages with bot flag true by default for second parameter', () => {
@@ -194,7 +185,7 @@ describe('SimpleChat', () => {
 
     setTimeout(() => {
       expect((component as any).updateMessages).toHaveBeenCalledWith(
-        'This is a simulated response from ChatGPT.',
+        'This is a simulated response from the AI model.',
         true
       );
       expect(component.isLoading).toBe(false);

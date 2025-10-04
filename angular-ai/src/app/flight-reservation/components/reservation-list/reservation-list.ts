@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
 import { MatCardModule } from '@angular/material/card';
@@ -11,7 +11,6 @@ import { FlightReservation, ReservationStatus } from '../../models/flight-reserv
 
 @Component({
   selector: 'app-reservation-list',
-  standalone: true,
   imports: [
     CommonModule,
     MatTableModule,
@@ -22,7 +21,8 @@ import { FlightReservation, ReservationStatus } from '../../models/flight-reserv
     MatProgressSpinnerModule
   ],
   templateUrl: './reservation-list.html',
-  styleUrl: './reservation-list.scss'
+  styleUrl: './reservation-list.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ReservationListComponent {
   private readonly flightService = inject(FlightReservationService);

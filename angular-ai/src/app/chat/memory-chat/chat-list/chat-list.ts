@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -12,7 +12,8 @@ import { ChatPanel } from '../chat-panel/chat-panel';
   selector: 'app-chat-list',
   imports: [MatSidenavModule, MatCardModule, MatToolbarModule, MatListModule, MatIconModule, MatButtonModule, ChatPanel],
   templateUrl: './chat-list.html',
-  styleUrl: './chat-list.scss'
+  styleUrl: './chat-list.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ChatList {
 

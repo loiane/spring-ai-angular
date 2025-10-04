@@ -1,4 +1,4 @@
-import { Component, effect, ElementRef, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -14,7 +14,8 @@ import { MemoryChatService } from '../memory-chat.service';
   selector: 'app-chat-panel',
   imports: [MatCardModule, MatInputModule, MatButtonModule, FormsModule, MatIconModule, MarkdownToHtmlPipe],
   templateUrl: './chat-panel.html',
-  styleUrl: './chat-panel.scss'
+  styleUrl: './chat-panel.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ChatPanel {
 

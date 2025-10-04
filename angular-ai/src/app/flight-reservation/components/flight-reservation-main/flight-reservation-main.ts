@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -9,7 +9,6 @@ import { ConciergeChatComponent } from '../concierge-chat/concierge-chat';
 
 @Component({
   selector: 'app-flight-reservation-main',
-  standalone: true,
   imports: [
     CommonModule,
     MatSidenavModule,
@@ -20,7 +19,8 @@ import { ConciergeChatComponent } from '../concierge-chat/concierge-chat';
     ConciergeChatComponent
   ],
   templateUrl: './flight-reservation-main.html',
-  styleUrl: './flight-reservation-main.scss'
+  styleUrl: './flight-reservation-main.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class FlightReservationMainComponent {
   sidenavOpened = true;
