@@ -28,7 +28,7 @@ import { MarkdownToHtmlPipe } from '../../../shared/markdown-to-html.pipe';
   styleUrl: './concierge-chat.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ConciergeChatComponent {
+export class ConciergeChat {
   private readonly flightService = inject(FlightReservationService);
 
   messages = this.flightService.messages;

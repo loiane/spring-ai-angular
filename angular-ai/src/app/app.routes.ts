@@ -9,7 +9,7 @@ export const routes: Routes = [
     loadComponent: () => import('./chat/memory-chat/chat-list/chat-list').then(c => c.ChatList)
   },
   { path: 'flight-reservations',
-    loadComponent: () => import('./flight-reservation/components/flight-reservation-main/flight-reservation-main').then(c => c.FlightReservationMainComponent)
+    loadComponent: () => import('./flight-reservation/components/flight-reservation-main/flight-reservation-main').then(c => c.FlightReservationMain)
   },
   { path: '**', redirectTo: 'simple-chat' }
 ];

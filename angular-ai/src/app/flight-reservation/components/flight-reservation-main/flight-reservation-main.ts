@@ -4,8 +4,8 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
-import { ReservationListComponent } from '../reservation-list/reservation-list';
-import { ConciergeChatComponent } from '../concierge-chat/concierge-chat';
+import { ReservationList } from '../reservation-list/reservation-list';
+import { ConciergeChat } from '../concierge-chat/concierge-chat';
 
 @Component({
   selector: 'app-flight-reservation-main',
@@ -15,14 +15,14 @@ import { ConciergeChatComponent } from '../concierge-chat/concierge-chat';
     MatToolbarModule,
     MatIconModule,
     MatButtonModule,
-    ReservationListComponent,
-    ConciergeChatComponent
+    ReservationList,
+    ConciergeChat
   ],
   templateUrl: './flight-reservation-main.html',
   styleUrl: './flight-reservation-main.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class FlightReservationMainComponent {
+export class FlightReservationMain {
   sidenavOpened = true;
 
   toggleSidenav() {

@@ -24,7 +24,7 @@ import { FlightReservation, ReservationStatus } from '../../models/flight-reserv
   styleUrl: './reservation-list.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ReservationListComponent {
+export class ReservationList {
   private readonly flightService = inject(FlightReservationService);
 
   reservations = this.flightService.reservationsResource;
