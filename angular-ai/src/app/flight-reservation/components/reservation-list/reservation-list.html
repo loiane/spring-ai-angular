@@ -20,11 +20,13 @@
     }
 
     @if (reservations.status() === 'error') {
-      <div class="error-container">
-        <mat-icon color="warn">error</mat-icon>
-        <span>Error loading reservations</span>
-        <button mat-button (click)="onRefresh()">Try Again</button>
-      </div>
+      <app-resource-error
+        [error]="errorHandler.error()"
+        [retryCount]="errorHandler.retryCount()"
+        [maxRetries]="3"
+        [title]="'Error Loading Reservations'"
+        (retry)="onRetry()">
+      </app-resource-error>
     }
 
     @if (reservations.status() === 'resolved' && reservations.value()) {

@@ -8,6 +8,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { FlightReservationService } from '../../services/flight-reservation.service';
 import { FlightReservation, ReservationStatus } from '../../models/flight-reservation';
+import { ResourceErrorComponent } from '../../../shared/resource-error';
 
 @Component({
   selector: 'app-reservation-list',
@@ -18,7 +19,8 @@ import { FlightReservation, ReservationStatus } from '../../models/flight-reserv
     MatIconModule,
     MatButtonModule,
     MatChipsModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    ResourceErrorComponent
   ],
   templateUrl: './reservation-list.html',
   styleUrl: './reservation-list.scss',
@@ -29,6 +31,7 @@ export class ReservationList {
 
   reservations = this.flightService.reservationsResource;
   selectedReservation = this.flightService.selectedReservation;
+  errorHandler = this.flightService.reservationsErrorHandler;
 
   displayedColumns: string[] = ['number', 'name', 'date', 'status', 'from', 'to', 'seat', 'class', 'actions'];
 
@@ -53,5 +56,9 @@ export class ReservationList {
 
   onRefresh(): void {
     this.flightService.refreshReservations();
+  }
+
+  onRetry(): void {
+    this.flightService.retryLoadReservations();
   }
 }

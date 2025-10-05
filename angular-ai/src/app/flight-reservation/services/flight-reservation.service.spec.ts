@@ -35,11 +35,28 @@ describe('FlightReservationService', () => {
 
   it('should be created', () => {
     expect(service).toBeTruthy();
+    expect(service.reservationsErrorHandler).toBeTruthy();
   });
 
   it('should have correct API endpoints', () => {
     expect(service.RESERVATIONS_API).toBe('/api/reservations');
     expect(service.CONCIERGE_API).toBe('/api/concierge');
+  });
+
+  describe('error handling', () => {
+    it('should have error handler initialized', () => {
+      expect(service.reservationsErrorHandler).toBeTruthy();
+      expect(service.reservationsErrorHandler.error()).toBeNull();
+      expect(service.reservationsErrorHandler.retryCount()).toBe(0);
+    });
+
+    it('should expose retryLoadReservations method', () => {
+      expect(service.retryLoadReservations).toBeDefined();
+    });
+
+    // Note: The effects that monitor resource status are tested through integration/E2E tests
+    // Unit testing effects is complex due to their reactive nature and async timing
+    // The error handling infrastructure (ResourceErrorHandler) is thoroughly unit tested
   });
 
   describe('selectedReservation signal', () => {
@@ -77,6 +94,8 @@ describe('FlightReservationService', () => {
 
       service.selectReservation(mockReservation);
       expect(service.selectedReservation()).toEqual(mockReservation);
+      // The effect should trigger and log the reservation number
+      // This exercises the debug logging path in the constructor effect
     });
   });
 
@@ -101,15 +120,15 @@ describe('FlightReservationService', () => {
 
       service.sendConciergeMessage(userMessage).subscribe(response => {
         expect(response).toEqual(mockResponse);
-        
+
         // Check that user message was added
         const messages = service.messages();
         expect(messages.length).toBe(initialMessageCount + 1);
-        
+
         const lastMessage = messages[messages.length - 1];
         expect(lastMessage.content).toBe(userMessage);
         expect(lastMessage.type).toBe(MessageType.USER);
-        
+
         done();
       });
 
@@ -206,7 +225,7 @@ describe('FlightReservationService', () => {
 
       const messages = service.messages();
       expect(messages.length).toBe(initialLength + 1);
-      
+
       const lastMessage = messages[messages.length - 1];
       expect(lastMessage.content).toBe(mockResponse.content);
       expect(lastMessage.type).toBe(MessageType.ASSISTANT);
@@ -222,7 +241,7 @@ describe('FlightReservationService', () => {
 
       const messages = service.messages();
       expect(messages.length).toBe(initialLength + 1);
-      
+
       const lastMessage = messages[messages.length - 1];
       expect(lastMessage.type).toBe(MessageType.ASSISTANT);
       expect(lastMessage.content).toContain('trouble connecting');
@@ -232,9 +251,9 @@ describe('FlightReservationService', () => {
   describe('refreshReservations', () => {
     it('should reload the reservations resource', () => {
       spyOn(service.reservationsResource, 'reload');
-      
+
       service.refreshReservations();
-      
+
       expect(service.reservationsResource.reload).toHaveBeenCalled();
     });
   });

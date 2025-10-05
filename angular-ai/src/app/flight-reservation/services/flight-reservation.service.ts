@@ -2,6 +2,7 @@ import { HttpClient, httpResource } from '@angular/common/http';
 import { effect, inject, Injectable, signal } from '@angular/core';
 import { Observable } from 'rxjs';
 import { LoggingService } from '../../shared/logging.service';
+import { ResourceErrorHandler, DEFAULT_RETRY_CONFIG } from '../../shared/resource-error-handler';
 import { FlightReservation, CancellationRequest, CancellationResponse } from '../models/flight-reservation';
 import { ConciergeMessage, ConciergeResponse, MessageType } from '../models/concierge-message';
 
@@ -21,8 +22,13 @@ export class FlightReservationService {
   private readonly logger = inject(LoggingService);
 
   /**
+   * Error handler for reservations resource with retry logic
+   */
+  readonly reservationsErrorHandler = new ResourceErrorHandler(DEFAULT_RETRY_CONFIG);
+
+  /**
    * The currently selected flight reservation.
-   * 
+   *
    * @remarks
    * When a user selects a reservation from the list, this signal is updated.
    * The concierge chat can use this information to provide context-aware assistance.
@@ -51,6 +57,20 @@ export class FlightReservationService {
       const selected = this.selectedReservation();
       if (selected) {
         this.logger.debug('Selected reservation', selected.number);
+      }
+    });
+
+    // Effect to monitor resource errors and trigger error handler
+    effect(() => {
+      const status = this.reservationsResource.status();
+      const error = this.reservationsResource.error();
+
+      if (status === 'error' && error) {
+        this.logger.error('Error loading reservations', error);
+        this.reservationsErrorHandler.handleError(error);
+      } else if (status === 'resolved') {
+        // Clear errors on successful load
+        this.reservationsErrorHandler.reset();
       }
     });
   }
@@ -104,5 +124,14 @@ export class FlightReservationService {
 
   refreshReservations(): void {
     this.reservationsResource.reload();
+  }
+
+  /**
+   * Retry loading reservations using error handler's retry logic
+   */
+  retryLoadReservations(): void {
+    this.reservationsErrorHandler.retry(() => {
+      this.refreshReservations();
+    });
   }
 }
