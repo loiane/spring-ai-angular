@@ -1,4 +1,14 @@
 <mat-card class="chat-container">
+  @if (messagesResource.status() === 'error') {
+    <app-resource-error
+      [error]="messagesErrorHandler.error()"
+      [retryCount]="messagesErrorHandler.retryCount()"
+      [maxRetries]="3"
+      [title]="'Error Loading Messages'"
+      (retry)="onRetryLoadMessages()">
+    </app-resource-error>
+  }
+
   <div class="chat-history" #chatHistory>
     <div class="messages">
     @for (message of messages(); track $index) {

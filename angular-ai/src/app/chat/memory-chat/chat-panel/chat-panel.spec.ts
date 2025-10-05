@@ -18,10 +18,18 @@ class MockMemoryChatService {
   selectedChatId = jasmine.createSpy().and.returnValue(undefined);
   chatMessagesResource = {
     value: jasmine.createSpy().and.returnValue([]),
+    status: jasmine.createSpy().and.returnValue('idle'),
+    error: jasmine.createSpy().and.returnValue(null),
     reload: jasmine.createSpy()
   };
   chatsResource = {
     reload: jasmine.createSpy()
+  };
+
+  messagesErrorHandler = {
+    error: jasmine.createSpy().and.returnValue(null),
+    retryCount: jasmine.createSpy().and.returnValue(0),
+    reset: jasmine.createSpy()
   };
 
   continueChat = jasmine.createSpy().and.returnValue(of({
@@ -36,6 +44,7 @@ class MockMemoryChatService {
   }));
 
   selectChat = jasmine.createSpy();
+  retryLoadMessages = jasmine.createSpy();
 }
 
 describe('ChatPanel', () => {

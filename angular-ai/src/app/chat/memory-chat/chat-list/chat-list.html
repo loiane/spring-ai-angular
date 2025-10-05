@@ -20,12 +20,13 @@
         }
 
         @if (chats.status() === 'error') {
-          <mat-list-item>
-            <span>Error loading chats</span>
-            <button mat-icon-button matListItemMeta (click)="chats.reload()">
-              <mat-icon>refresh</mat-icon>
-            </button>
-          </mat-list-item>
+          <app-resource-error
+            [error]="errorHandler.error()"
+            [retryCount]="errorHandler.retryCount()"
+            [maxRetries]="3"
+            [title]="'Error Loading Chats'"
+            (retry)="onRetry()">
+          </app-resource-error>
         }
 
         @if (chats.status() === 'resolved' && chats.value()) {

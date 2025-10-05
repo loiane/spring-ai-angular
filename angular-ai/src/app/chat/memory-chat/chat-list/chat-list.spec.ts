@@ -21,20 +21,37 @@ class MockMemoryChatService {
       { id: 'chat1', description: 'First chat' },
       { id: 'chat2', description: 'Second chat' }
     ]),
-    status: jasmine.createSpy().and.returnValue('success'),
+    status: jasmine.createSpy().and.returnValue('resolved'),
+    error: jasmine.createSpy().and.returnValue(null),
     isLoading: jasmine.createSpy().and.returnValue(false),
     reload: jasmine.createSpy()
   };
 
   chatMessagesResource = {
     value: jasmine.createSpy().and.returnValue([]),
+    status: jasmine.createSpy().and.returnValue('idle'),
+    error: jasmine.createSpy().and.returnValue(null),
     reload: jasmine.createSpy()
+  };
+
+  chatsErrorHandler = {
+    error: jasmine.createSpy().and.returnValue(null),
+    retryCount: jasmine.createSpy().and.returnValue(0),
+    reset: jasmine.createSpy()
+  };
+
+  messagesErrorHandler = {
+    error: jasmine.createSpy().and.returnValue(null),
+    retryCount: jasmine.createSpy().and.returnValue(0),
+    reset: jasmine.createSpy()
   };
 
   selectChat = jasmine.createSpy();
   clearSelection = jasmine.createSpy();
   continueChat = jasmine.createSpy().and.returnValue(of({}));
   startNewChat = jasmine.createSpy().and.returnValue(of({}));
+  retryLoadChats = jasmine.createSpy();
+  retryLoadMessages = jasmine.createSpy();
 }
 
 describe('ChatList', () => {

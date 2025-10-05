@@ -7,13 +7,22 @@ import { MatInputModule } from '@angular/material/input';
 import { catchError, of } from 'rxjs';
 import { LoggingService } from '../../../shared/logging.service';
 import { MarkdownToHtmlPipe } from '../../../shared/markdown-to-html.pipe';
+import { ResourceErrorComponent } from '../../../shared/resource-error';
 import { ChatStartResponse } from '../../chat';
 import { ChatMessage, ChatType } from '../../chat-message';
 import { MemoryChatService } from '../memory-chat.service';
 
 @Component({
   selector: 'app-chat-panel',
-  imports: [MatCardModule, MatInputModule, MatButtonModule, FormsModule, MatIconModule, MarkdownToHtmlPipe],
+  imports: [
+    MatCardModule,
+    MatInputModule,
+    MatButtonModule,
+    FormsModule,
+    MatIconModule,
+    MarkdownToHtmlPipe,
+    ResourceErrorComponent
+  ],
   templateUrl: './chat-panel.html',
   styleUrl: './chat-panel.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -32,6 +41,8 @@ export class ChatPanel {
   isLoading = false;
 
   messages = signal<ChatMessage[]>([]);
+  messagesResource = this.memoryChatService.chatMessagesResource;
+  messagesErrorHandler = this.memoryChatService.messagesErrorHandler;
 
   // Effect to sync messages from the service resource
   private readonly syncMessagesEffect = effect(() => {
@@ -128,6 +139,10 @@ export class ChatPanel {
           this.isLoading = false;
         });
     }
+  }
+
+  onRetryLoadMessages(): void {
+    this.memoryChatService.retryLoadMessages();
   }
 
 }
