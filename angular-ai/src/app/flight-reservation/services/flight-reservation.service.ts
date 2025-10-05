@@ -10,18 +10,33 @@ import { ConciergeMessage, ConciergeResponse, MessageType } from '../models/conc
 })
 export class FlightReservationService {
 
-  private readonly RESERVATIONS_API = '/api/reservations';
-  private readonly CONCIERGE_API = '/api/concierge';
+  /**
+   * API endpoints for flight reservation operations.
+   * Public to allow test files to reference these constants with full type safety.
+   */
+  public readonly RESERVATIONS_API = '/api/reservations';
+  public readonly CONCIERGE_API = '/api/concierge';
 
   private readonly http = inject(HttpClient);
   private readonly logger = inject(LoggingService);
 
+  /**
+   * The currently selected flight reservation.
+   * 
+   * @remarks
+   * When a user selects a reservation from the list, this signal is updated.
+   * The concierge chat can use this information to provide context-aware assistance.
+   */
   selectedReservation = signal<FlightReservation | null>(null);
 
-  // Using httpResource for reactive data fetching
+  /**
+   * Using httpResource for reactive data fetching of all reservations
+   */
   reservationsResource = httpResource<FlightReservation[]>(() => this.RESERVATIONS_API);
 
-  // Messages for concierge chat
+  /**
+   * Messages for concierge chat with initial greeting
+   */
   messages = signal<ConciergeMessage[]>([
     {
       content: 'Hello! I\'m your SpringFly Concierge. How can I assist you with your booking today?',

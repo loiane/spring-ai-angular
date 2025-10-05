@@ -42,7 +42,7 @@ describe('ChatService', () => {
         expect(response).toEqual(mockResponse);
       });
 
-      const req = httpMock.expectOne('/api/chat');
+      const req = httpMock.expectOne(service.API);
       expect(req.request.method).toBe('POST');
       expect(req.request.body).toEqual({ message: mockMessage });
       req.flush(mockResponse);
@@ -60,7 +60,7 @@ describe('ChatService', () => {
         }
       });
 
-      const req = httpMock.expectOne('/api/chat');
+      const req = httpMock.expectOne(service.API);
       expect(req.request.method).toBe('POST');
       req.flush(errorMessage, { status: 500, statusText: 'Server Error' });
     });
@@ -74,7 +74,7 @@ describe('ChatService', () => {
         expect(response).toEqual(mockChat);
       });
 
-      const req = httpMock.expectOne('/api/chat-memory');
+      const req = httpMock.expectOne(service.API_MEMORY);
       expect(req.request.method).toBe('POST');
       expect(req.request.body).toEqual({});
       req.flush(mockChat);
@@ -91,16 +91,24 @@ describe('ChatService', () => {
         expect(response).toEqual(mockMessage);
       });
 
-      const req = httpMock.expectOne(`/api/chat-memory/${chatId}`);
+      const req = httpMock.expectOne(`${service.API_MEMORY}/${chatId}`);
       expect(req.request.method).toBe('POST');
       expect(req.request.body).toEqual({ message: 'Test message' });
       req.flush(mockMessage);
     });
+
+    it('should throw error when no chat ID is selected', () => {
+      service.selectedChatId.set(undefined);
+
+      expect(() => {
+        service.sendChatMessageWithId('Test message');
+      }).toThrowError('No chat selected. Cannot send message without a chat ID.');
+    });
   });
 
   describe('selectedChatId signal', () => {
-    it('should have initial value', () => {
-      expect(service.selectedChatId()).toBe('1111111');
+    it('should have initial value of undefined', () => {
+      expect(service.selectedChatId()).toBeUndefined();
     });
 
     it('should update selectedChatId', () => {

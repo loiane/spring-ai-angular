@@ -42,7 +42,7 @@ describe('MemoryChatService', () => {
         expect(chatStartResponse).toEqual(mockChatStartResponse);
       });
 
-      const req = httpMock.expectOne('/api/chat-memory/start');
+      const req = httpMock.expectOne(`${service.API_MEMORY}/start`);
       expect(req.request.method).toBe('POST');
       expect(req.request.body).toEqual({ message });
       req.flush(mockChatStartResponse);
@@ -59,7 +59,7 @@ describe('MemoryChatService', () => {
         expect(response).toEqual(mockResponse);
       });
 
-      const req = httpMock.expectOne(`/api/chat-memory/${chatId}`);
+      const req = httpMock.expectOne(`${service.API_MEMORY}/${chatId}`);
       expect(req.request.method).toBe('POST');
       expect(req.request.body).toEqual({ message });
       req.flush(mockResponse);

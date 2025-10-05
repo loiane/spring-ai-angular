@@ -10,11 +10,25 @@ import { ChatMessage } from '../chat-message';
 })
 export class MemoryChatService {
 
-  private readonly API_MEMORY = '/api/chat-memory';
+  /**
+   * API endpoint for memory-based chat operations.
+   * Public to allow test files to reference this constant with full type safety.
+   */
+  public readonly API_MEMORY = '/api/chat-memory';
 
   private readonly http = inject(HttpClient);
   private readonly logger = inject(LoggingService);
 
+  /**
+   * The currently selected chat ID for conversation history.
+   * 
+   * @remarks
+   * - `undefined`: No chat is selected (initial state or after clearing selection)
+   * - `string`: A valid chat ID is selected, and the chat history will be loaded
+   * 
+   * When this signal changes, the `chatMessagesResource` will automatically
+   * reload the message history for the newly selected chat.
+   */
   selectedChatId = signal<string | undefined>(undefined);
 
   private readonly chatIdEffect = effect(() =>
@@ -28,6 +42,10 @@ export class MemoryChatService {
 
   /**
    * Get chat history: GET /api/chat-memory/{chatId}
+   * 
+   * @remarks
+   * This resource will automatically reload when `selectedChatId` changes.
+   * If no chat is selected (undefined), the resource will not make a request.
    */
   chatMessagesResource = httpResource<ChatMessage[]>(() => {
     const chatId = this.selectedChatId();
