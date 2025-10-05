@@ -50,10 +50,11 @@ export class ChatPanel {
    * Combines message sync and auto-scroll for better performance:
    * - Reads chatMessagesResource.value() to track resource changes
    * - Updates local messages signal when resource data changes
-   * - Triggerss auto-scroll after DOM updates via setTimeout
+   * - Triggers auto-scroll after DOM updates via setTimeout
    *
-   * Uses allowSignalWrites to safely update the messages signal within the effect.
    * The setTimeout ensures DOM is updated before scrolling.
+   *
+   * @see https://angular.dev/guide/signals#effects
    */
   private readonly syncAndScrollEffect = effect(() => {
     const resourceMessages = this.memoryChatService.chatMessagesResource.value();
@@ -62,15 +63,13 @@ export class ChatPanel {
       // Schedule scroll after DOM update
       setTimeout(() => this.scrollToBottom(), 0);
     }
-  }, { allowSignalWrites: true });
+  });
 
   /**
    * Effect to clear messages when chat selection changes.
    *
    * Monitors selectedChatId changes to reset the message list.
    * This ensures a clean state when switching between chats.
-   *
-   * Uses allowSignalWrites to safely clear the messages signal.
    *
    * Dependencies:
    * - memoryChatService.selectedChatId() - triggers on chat selection change
@@ -82,7 +81,7 @@ export class ChatPanel {
   private readonly clearMessagesEffect = effect(() => {
     this.memoryChatService.selectedChatId();
     this.messages.set([]);
-  }, { allowSignalWrites: true });
+  });
 
   sendMessage(): void {
     this.trimUserMessage();
