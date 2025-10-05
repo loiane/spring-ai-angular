@@ -6,7 +6,7 @@
   </div>
   <div class="chat-history" #chatHistory>
     <div class="messages">
-    @for (message of messages(); track message) {
+    @for (message of messages(); track $index) {
       <div class="message">
         <div class="message-bubble" [class.user]="!message.isBot">
           {{ message.message }}
