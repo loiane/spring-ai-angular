@@ -1,0 +1,54 @@
+@if (error()) {
+  <div class="error-container" role="alert" aria-live="polite">
+    <div class="error-content">
+      <mat-icon class="error-icon" color="warn" aria-hidden="true">error_outline</mat-icon>
+
+      <div class="error-details">
+        <h3 class="error-title">{{ title() }}</h3>
+        <p class="error-message">{{ error()!.message }}</p>
+
+        @if (retryCount() > 0) {
+          <p class="retry-info">
+            Retry attempt {{ retryCount() }} of {{ maxRetries() }}
+          </p>
+        }
+
+        @if (!error()!.isRetryable) {
+          <p class="non-retryable-info">
+            This error cannot be automatically retried. Please check the details and try again manually.
+          </p>
+        }
+      </div>
+    </div>
+
+    <div class="error-actions">
+      @if (showRetry() && canRetry) {
+        @if (retrying()) {
+          <button
+            mat-raised-button
+            color="primary"
+            [disabled]="true"
+            aria-label="Retrying...">
+            <mat-spinner diameter="20" aria-label="Retrying..."></mat-spinner>
+            <span>Retrying...</span>
+          </button>
+        } @else {
+          <button
+            mat-raised-button
+            color="primary"
+            (click)="onRetry()"
+            aria-label="Retry loading data">
+            <mat-icon>refresh</mat-icon>
+            <span>Try Again</span>
+          </button>
+        }
+      }
+
+      @if (!canRetry && error()!.isRetryable && retryCount() >= maxRetries()) {
+        <p class="max-retries-message">
+          Maximum retry attempts reached. Please try again later.
+        </p>
+      }
+    </div>
+  </div>
+}

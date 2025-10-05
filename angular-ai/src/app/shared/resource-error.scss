@@ -1,0 +1,76 @@
+.error-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 2rem;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  margin: 1rem 0;
+
+  .error-content {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+
+    .error-icon {
+      font-size: 2rem;
+      width: 2rem;
+      height: 2rem;
+      flex-shrink: 0;
+    }
+
+    .error-details {
+      flex: 1;
+
+      .error-title {
+        margin: 0 0 0.5rem 0;
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #991b1b;
+      }
+
+      .error-message {
+        margin: 0 0 0.5rem 0;
+        color: #7f1d1d;
+        line-height: 1.5;
+      }
+
+      .retry-info {
+        margin: 0.5rem 0 0 0;
+        font-size: 0.875rem;
+        color: #991b1b;
+      }
+
+      .non-retryable-info {
+        margin: 0.5rem 0 0 0;
+        font-size: 0.875rem;
+        color: #991b1b;
+        font-style: italic;
+      }
+    }
+  }
+
+  .error-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+
+    button {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      mat-spinner {
+        display: inline-block;
+      }
+    }
+
+    .max-retries-message {
+      margin: 0;
+      color: #991b1b;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+  }
+}
