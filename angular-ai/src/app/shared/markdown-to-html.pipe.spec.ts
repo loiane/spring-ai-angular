@@ -123,11 +123,23 @@ describe('MarkdownToHtmlPipe', () => {
   });
 
   it('should sanitize the output', () => {
+    // This test intentionally includes potentially malicious content to verify
+    // that Angular's DomSanitizer properly strips it out. The warning message
+    // "sanitizing HTML stripped some content" is EXPECTED behavior here.
+
+    // Temporarily suppress console warnings for this test since sanitization warning is expected
+    const originalWarn = console.warn;
+    console.warn = jasmine.createSpy('warn');
+
     const input = '**test** <script>alert("xss")</script>';
     const result = pipe.transform(input);
     expect(result).toContain('<strong>test</strong>');
-    // The script tag should be sanitized out
+    // The script tag should be sanitized out by Angular's built-in XSS protection
     expect(result).not.toContain('<script>');
+    expect(result).not.toContain('alert');
+
+    // Restore console.warn
+    console.warn = originalWarn;
   });
 
   it('should handle blockquotes', () => {
