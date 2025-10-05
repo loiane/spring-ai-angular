@@ -157,4 +157,21 @@ describe('MarkdownToHtmlPipe', () => {
     expect(result).toContain('<thead>');
     expect(result).toContain('<tbody>');
   });
+
+  it('should handle code blocks with invalid language gracefully', () => {
+    // Test the fallback to auto-detection when language highlighting fails
+    const input = '```invalidlang123\nsome code\n```';
+    const result = pipe.transform(input);
+    // Should still generate code block even if language is invalid
+    expect(result).toContain('<pre><code class="hljs">');
+    expect(result).toContain('</code></pre>');
+  });
+
+  it('should handle mixed markdown with code blocks', () => {
+    const input = '## Heading\n\n```javascript\nconst x = 1;\n```\n\nSome **bold** text';
+    const result = pipe.transform(input);
+    expect(result).toContain('<h2>Heading</h2>');
+    expect(result).toContain('<pre><code class="hljs language-javascript">');
+    expect(result).toContain('<strong>bold</strong>');
+  });
 });

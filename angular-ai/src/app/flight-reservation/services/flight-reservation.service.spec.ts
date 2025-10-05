@@ -53,10 +53,6 @@ describe('FlightReservationService', () => {
     it('should expose retryLoadReservations method', () => {
       expect(service.retryLoadReservations).toBeDefined();
     });
-
-    // Note: The effects that monitor resource status are tested through integration/E2E tests
-    // Unit testing effects is complex due to their reactive nature and async timing
-    // The error handling infrastructure (ResourceErrorHandler) is thoroughly unit tested
   });
 
   describe('selectedReservation signal', () => {
