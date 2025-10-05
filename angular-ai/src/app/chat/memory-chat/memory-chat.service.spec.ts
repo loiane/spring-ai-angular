@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { MemoryChatService } from './memory-chat.service';
 import { ChatStartResponse } from '../chat';
 import { ChatMessage, ChatType } from '../chat-message';
@@ -11,10 +12,11 @@ describe('MemoryChatService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [HttpClientTestingModule],
       providers: [
-        provideZonelessChangeDetection(),
-        MemoryChatService
+        MemoryChatService,
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideZonelessChangeDetection()
       ]
     });
     service = TestBed.inject(MemoryChatService);
@@ -53,9 +55,17 @@ describe('MemoryChatService', () => {
       expect(service.retryLoadMessages).toBeDefined();
     });
 
-    // Note: The effects that monitor resource status are tested through integration/E2E tests
-    // Unit testing effects is complex due to their reactive nature and async timing
-    // The error handling infrastructure (ResourceErrorHandler) is thoroughly unit tested
+    it('should call retry on chatsErrorHandler when retryLoadChats is called', () => {
+      spyOn(service.chatsErrorHandler, 'retry');
+      service.retryLoadChats();
+      expect(service.chatsErrorHandler.retry).toHaveBeenCalled();
+    });
+
+    it('should call retry on messagesErrorHandler when retryLoadMessages is called', () => {
+      spyOn(service.messagesErrorHandler, 'retry');
+      service.retryLoadMessages();
+      expect(service.messagesErrorHandler.retry).toHaveBeenCalled();
+    });
   });
 
   describe('startNewChat', () => {
