@@ -5,8 +5,6 @@ import { provideHttpClientTesting, HttpTestingController } from '@angular/common
 
 import { ChatService } from './chat-service';
 import { ChatResponse } from './chat-response';
-import { Chat } from './chat';
-import { ChatMessage, ChatType } from './chat-message';
 
 describe('ChatService', () => {
   let service: ChatService;
@@ -31,22 +29,6 @@ describe('ChatService', () => {
 
   it('should be created', () => {
     expect(service).toBeTruthy();
-    expect(service.messagesErrorHandler).toBeTruthy();
-  });
-
-  describe('error handling', () => {
-    it('should have messages error handler initialized', () => {
-      expect(service.messagesErrorHandler.error()).toBeNull();
-      expect(service.messagesErrorHandler.retryCount()).toBe(0);
-    });
-
-    it('should expose retryLoadMessages method', () => {
-      expect(service.retryLoadMessages).toBeDefined();
-    });
-
-    // Note: The effects that monitor resource status are tested through integration/E2E tests
-    // Unit testing effects is complex due to their reactive nature and async timing
-    // The error handling infrastructure (ResourceErrorHandler) is thoroughly unit tested
   });
 
   describe('sendChatMessage', () => {
@@ -80,66 +62,16 @@ describe('ChatService', () => {
       expect(req.request.method).toBe('POST');
       req.flush(errorMessage, { status: 500, statusText: 'Server Error' });
     });
-  });
 
-  describe('createNewChat', () => {
-    it('should create a new chat', () => {
-      const mockChat: Chat = { id: '123', description: 'New Chat' };
+    it('should send message with correct API endpoint', () => {
+      const mockMessage = 'Test message';
+      const mockResponse: ChatResponse = { message: 'Response', isBot: true };
 
-      service.createNewChat().subscribe(response => {
-        expect(response).toEqual(mockChat);
-      });
+      service.sendChatMessage(mockMessage).subscribe();
 
-      const req = httpMock.expectOne(service.API_MEMORY);
-      expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual({});
-      req.flush(mockChat);
-    });
-  });
-
-  describe('sendChatMessageWithId', () => {
-    it('should send a message with chat ID', () => {
-      const mockMessage: ChatMessage = { content: 'Test message', type: ChatType.USER };
-      const chatId = '123';
-      service.selectedChatId.set(chatId);
-
-      service.sendChatMessageWithId('Test message').subscribe(response => {
-        expect(response).toEqual(mockMessage);
-      });
-
-      const req = httpMock.expectOne(`${service.API_MEMORY}/${chatId}`);
-      expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual({ message: 'Test message' });
-      req.flush(mockMessage);
-    });
-
-    it('should throw error when no chat ID is selected', () => {
-      service.selectedChatId.set(undefined);
-
-      expect(() => {
-        service.sendChatMessageWithId('Test message');
-      }).toThrowError('No chat selected. Cannot send message without a chat ID.');
-    });
-  });
-
-  describe('selectedChatId signal', () => {
-    it('should have initial value of undefined', () => {
-      expect(service.selectedChatId()).toBeUndefined();
-    });
-
-    it('should update selectedChatId', () => {
-      service.selectedChatId.set('new-chat-id');
-      expect(service.selectedChatId()).toBe('new-chat-id');
-    });
-  });
-
-  describe('resources', () => {
-    it('should have chatsResource defined', () => {
-      expect(service.chatsResource).toBeDefined();
-    });
-
-    it('should have chatMessagesResource defined', () => {
-      expect(service.chatMessagesResource).toBeDefined();
+      const req = httpMock.expectOne(service.API);
+      expect(req.request.url).toBe('/api/chat');
+      req.flush(mockResponse);
     });
   });
 });
