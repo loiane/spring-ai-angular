@@ -37,7 +37,7 @@ export class ConciergeChat {
 
   MessageType = MessageType;
 
-  sendMessage() {
+  sendMessage(): void {
     const message = this.currentMessage();
     if (message.trim()) {
       this.flightService.sendConciergeMessage(message).subscribe({
@@ -48,7 +48,7 @@ export class ConciergeChat {
     }
   }
 
-  onKeyPress(event: KeyboardEvent) {
+  onKeyPress(event: KeyboardEvent): void {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
       this.sendMessage();

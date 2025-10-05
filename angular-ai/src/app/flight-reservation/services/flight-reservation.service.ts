@@ -1,5 +1,6 @@
 import { HttpClient, httpResource } from '@angular/common/http';
 import { effect, inject, Injectable, signal } from '@angular/core';
+import { Observable } from 'rxjs';
 import { LoggingService } from '../../shared/logging.service';
 import { FlightReservation, CancellationRequest, CancellationResponse } from '../models/flight-reservation';
 import { ConciergeMessage, ConciergeResponse, MessageType } from '../models/concierge-message';
@@ -39,11 +40,11 @@ export class FlightReservationService {
     });
   }
 
-  selectReservation(reservation: FlightReservation) {
+  selectReservation(reservation: FlightReservation): void {
     this.selectedReservation.set(reservation);
   }
 
-  sendConciergeMessage(message: string) {
+  sendConciergeMessage(message: string): Observable<ConciergeResponse> {
     // Add user message
     const userMessage: ConciergeMessage = {
       content: message,
@@ -60,7 +61,7 @@ export class FlightReservationService {
   /**
    * Handles the response from sending a concierge message
    */
-  handleConciergeResponse(response: ConciergeResponse) {
+  handleConciergeResponse(response: ConciergeResponse): void {
     const assistantMessage: ConciergeMessage = {
       content: response.content,
       type: MessageType.ASSISTANT,
@@ -72,7 +73,7 @@ export class FlightReservationService {
   /**
    * Handles errors when sending a concierge message
    */
-  handleConciergeError(error: unknown) {
+  handleConciergeError(error: unknown): void {
     this.logger.error('Error sending concierge message', error);
     const errorMessage: ConciergeMessage = {
       content: 'I apologize, but I\'m having trouble connecting right now. Please try again in a moment.',
@@ -82,11 +83,11 @@ export class FlightReservationService {
     this.messages.update(messages => [...messages, errorMessage]);
   }
 
-  cancelReservation(request: CancellationRequest) {
+  cancelReservation(request: CancellationRequest): Observable<CancellationResponse> {
     return this.http.post<CancellationResponse>(`${this.RESERVATIONS_API}/cancel`, request);
   }
 
-  refreshReservations() {
+  refreshReservations(): void {
     this.reservationsResource.reload();
   }
 }

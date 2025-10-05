@@ -25,6 +25,9 @@ export class ChatPanel {
   private readonly memoryChatService = inject(MemoryChatService);
   private readonly logger = inject(LoggingService);
 
+  // Export ChatType for template usage
+  protected readonly ChatType = ChatType;
+
   userInput = '';
   isLoading = false;
 
@@ -59,11 +62,11 @@ export class ChatPanel {
     }
   }
 
-  private trimUserMessage() {
+  private trimUserMessage(): void {
     this.userInput = this.userInput.trim();
   }
 
-  private updateMessages(content: string, type: ChatType = ChatType.USER) {
+  private updateMessages(content: string, type: ChatType = ChatType.USER): void {
     this.messages.update((messages: ChatMessage[]) => [...messages, { content, type }]);
   }
 
@@ -78,7 +81,7 @@ export class ChatPanel {
     }
   }
 
-  private sendChatMessage() {
+  private sendChatMessage(): void {
     const currentChatId = this.memoryChatService.selectedChatId();
     const message = this.userInput;
 

@@ -34,7 +34,7 @@ export class ReservationList {
 
   ReservationStatus = ReservationStatus;
 
-  onSelectReservation(reservation: FlightReservation) {
+  onSelectReservation(reservation: FlightReservation): void {
     this.flightService.selectReservation(reservation);
   }
 
@@ -51,7 +51,7 @@ export class ReservationList {
     }
   }
 
-  onRefresh() {
+  onRefresh(): void {
     this.flightService.refreshReservations();
   }
 }

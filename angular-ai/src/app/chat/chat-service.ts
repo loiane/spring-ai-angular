@@ -1,6 +1,6 @@
 import { HttpClient, httpResource } from '@angular/common/http';
 import { effect, inject, Injectable, resource, signal } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, Observable } from 'rxjs';
 import { LoggingService } from '../shared/logging.service';
 import { Chat } from './chat';
 import { ChatMessage } from './chat-message';
@@ -28,15 +28,15 @@ export class ChatService {
 
   chatMessagesResource = httpResource<ChatMessage[]>(() => `${this.API_MEMORY}/${this.selectedChatId()}`);
 
-  sendChatMessage(message: string) {
+  sendChatMessage(message: string): Observable<ChatResponse> {
     return this.http.post<ChatResponse>(this.API, { message });
   }
 
-  createNewChat() {
+  createNewChat(): Observable<Chat> {
     return this.http.post<Chat>(this.API_MEMORY, {});
   }
 
-  sendChatMessageWithId(message: string) {
+  sendChatMessageWithId(message: string): Observable<ChatMessage> {
     return this.http.post<ChatMessage>(`${this.API_MEMORY}/${this.selectedChatId()}`, { message });
   }
 }

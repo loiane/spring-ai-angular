@@ -1,5 +1,6 @@
 import { HttpClient, httpResource } from '@angular/common/http';
 import { effect, inject, Injectable, signal } from '@angular/core';
+import { Observable } from 'rxjs';
 import { LoggingService } from '../../shared/logging.service';
 import { Chat, ChatStartResponse } from '../chat';
 import { ChatMessage } from '../chat-message';
@@ -36,28 +37,28 @@ export class MemoryChatService {
   /**
    * Start new chat: POST /api/chat-memory/start with first message
    */
-  startNewChat(message: string) {
+  startNewChat(message: string): Observable<ChatStartResponse> {
     return this.http.post<ChatStartResponse>(`${this.API_MEMORY}/start`, { message });
   }
 
   /**
    * Continue chat: POST /api/chat-memory/{chatId} with subsequent messages
    */
-  continueChat(chatId: string, message: string) {
+  continueChat(chatId: string, message: string): Observable<ChatMessage> {
     return this.http.post<ChatMessage>(`${this.API_MEMORY}/${chatId}`, { message });
   }
 
   /**
    * Set the selected chat and reload messages
    */
-  selectChat(chatId: string) {
+  selectChat(chatId: string): void {
     this.selectedChatId.set(chatId);
   }
 
   /**
    * Clear selected chat
    */
-  clearSelection() {
+  clearSelection(): void {
     this.selectedChatId.set(undefined);
   }
 }

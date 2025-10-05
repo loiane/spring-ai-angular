@@ -52,15 +52,15 @@ export class SimpleChat {
     }
   }
 
-  private trimUserMessage() {
+  private trimUserMessage(): void {
     this.userInput = this.userInput.trim();
   }
 
-  private updateMessages(message: string, isBot = false) {
+  private updateMessages(message: string, isBot = false): void {
     this.messages.update(messages => [...messages, { message, isBot }]);
   }
 
-  private getResponse() {
+  private getResponse(): void {
     setTimeout(() => {
       const response = 'This is a simulated response from the AI model.';
       this.updateMessages(response, true);
@@ -68,7 +68,7 @@ export class SimpleChat {
     }, 2000);
   }
 
-  private simulateResponse() {
+  private simulateResponse(): void {
     this.getResponse();
     this.userInput = '';
   }
@@ -84,7 +84,7 @@ export class SimpleChat {
     }
   }
 
-  private sendChatMessage() {
+  private sendChatMessage(): void {
     this.chatService.sendChatMessage(this.userInput)
     .pipe(
       catchError(() => {

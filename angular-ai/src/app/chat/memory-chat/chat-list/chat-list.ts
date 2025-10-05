@@ -23,15 +23,15 @@ export class ChatList {
 
   chats = this.memoryChatService.chatsResource;
 
-  selectChat(chatId: string) {
+  selectChat(chatId: string): void {
     this.memoryChatService.selectChat(chatId);
   }
 
-  createNewChat() {
+  createNewChat(): void {
     this.memoryChatService.clearSelection();
   }
 
-  deleteChat(chatId: string, event: Event) {
+  deleteChat(chatId: string, event: Event): void {
     event.stopPropagation(); // Prevent chat selection when clicking delete
     this.logger.debug('Delete chat requested', chatId);
     // Delete functionality to be implemented

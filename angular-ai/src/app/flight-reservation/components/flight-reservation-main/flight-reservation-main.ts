@@ -25,7 +25,7 @@ import { ConciergeChat } from '../concierge-chat/concierge-chat';
 export class FlightReservationMain {
   sidenavOpened = true;
 
-  toggleSidenav() {
+  toggleSidenav(): void {
     this.sidenavOpened = !this.sidenavOpened;
   }
 }
