@@ -44,25 +44,45 @@ export class ChatPanel {
   messagesResource = this.memoryChatService.chatMessagesResource;
   messagesErrorHandler = this.memoryChatService.messagesErrorHandler;
 
-  // Effect to sync messages from the service resource
-  private readonly syncMessagesEffect = effect(() => {
+  /**
+   * Effect to synchronize messages from the service resource and auto-scroll.
+   *
+   * Combines message sync and auto-scroll for better performance:
+   * - Reads chatMessagesResource.value() to track resource changes
+   * - Updates local messages signal when resource data changes
+   * - Triggerss auto-scroll after DOM updates via setTimeout
+   *
+   * Uses allowSignalWrites to safely update the messages signal within the effect.
+   * The setTimeout ensures DOM is updated before scrolling.
+   */
+  private readonly syncAndScrollEffect = effect(() => {
     const resourceMessages = this.memoryChatService.chatMessagesResource.value();
     if (resourceMessages) {
       this.messages.set(resourceMessages);
+      // Schedule scroll after DOM update
+      setTimeout(() => this.scrollToBottom(), 0);
     }
-  });
+  }, { allowSignalWrites: true });
 
-  // Effect to auto-scroll when messages change
-  private readonly autoScrollEffect = effect(() => {
-    this.messages(); // Read the signal to track changes
-    setTimeout(() => this.scrollToBottom(), 0); // Use setTimeout to ensure DOM is updated
-  });
-
-  // Effect to clear messages when selectedChatId changes
+  /**
+   * Effect to clear messages when chat selection changes.
+   *
+   * Monitors selectedChatId changes to reset the message list.
+   * This ensures a clean state when switching between chats.
+   *
+   * Uses allowSignalWrites to safely clear the messages signal.
+   *
+   * Dependencies:
+   * - memoryChatService.selectedChatId() - triggers on chat selection change
+   *
+   * Side effects:
+   * - Clears messages signal (sets to empty array)
+   * - Prepares component for new chat data
+   */
   private readonly clearMessagesEffect = effect(() => {
     this.memoryChatService.selectedChatId();
     this.messages.set([]);
-  });
+  }, { allowSignalWrites: true });
 
   sendMessage(): void {
     this.trimUserMessage();
