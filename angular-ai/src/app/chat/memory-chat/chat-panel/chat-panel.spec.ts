@@ -83,19 +83,13 @@ describe('ChatPanel', () => {
   });
 
   it('should initialize with default values', () => {
-    expect(component.userInput).toBe('');
+    expect(component.userInput()).toBe('');
     expect(component.isLoading).toBe(false);
     expect(component.messages()).toEqual([]);
   });
 
-  it('should trim user message', () => {
-    component.userInput = '   hello world   ';
-    (component as any).trimUserMessage();
-    expect(component.userInput).toBe('hello world');
-  });
-
   it('should not send empty message', () => {
-    component.userInput = '   ';
+    component.userInput.set('   ');
     spyOn(component as any, 'sendChatMessage');
 
     component.sendMessage();
@@ -105,7 +99,7 @@ describe('ChatPanel', () => {
   });
 
   it('should not send message when loading', () => {
-    component.userInput = 'test message';
+    component.userInput.set('test message');
     component.isLoading = true;
     spyOn(component as any, 'sendChatMessage');
 
@@ -115,7 +109,7 @@ describe('ChatPanel', () => {
   });
 
   it('should send message when valid input and not loading', () => {
-    component.userInput = 'test message';
+    component.userInput.set('test message');
     component.isLoading = false;
     spyOn(component as any, 'sendChatMessage');
     spyOn(component as any, 'updateMessages');
@@ -153,18 +147,18 @@ describe('ChatPanel', () => {
 
   it('should start new chat when no chat selected', () => {
     mockMemoryChatService.selectedChatId.and.returnValue(undefined);
-    component.userInput = 'new chat message';
+    component.userInput.set('new chat message');
 
-    (component as any).sendChatMessage();
+    (component as any).sendChatMessage('new chat message');
 
     expect(mockMemoryChatService.startNewChat).toHaveBeenCalledWith('new chat message');
   });
 
   it('should continue existing chat when chat selected', () => {
     mockMemoryChatService.selectedChatId.and.returnValue('existing-chat-123');
-    component.userInput = 'continue message';
+    component.userInput.set('continue message');
 
-    (component as any).sendChatMessage();
+    (component as any).sendChatMessage('continue message');
 
     expect(mockMemoryChatService.continueChat).toHaveBeenCalledWith('existing-chat-123', 'continue message');
   });
@@ -176,12 +170,12 @@ describe('ChatPanel', () => {
       type: ChatType.ASSISTANT
     }));
     spyOn(component as any, 'updateMessages');
-    component.userInput = 'test message';
+    component.userInput.set('test message');
 
-    (component as any).sendChatMessage();
+    (component as any).sendChatMessage('test message');
 
     expect((component as any).updateMessages).toHaveBeenCalledWith('AI response', ChatType.ASSISTANT);
-    expect(component.userInput).toBe('');
+    expect(component.userInput()).toBe('');
     expect(component.isLoading).toBe(false);
   });
 
@@ -189,9 +183,9 @@ describe('ChatPanel', () => {
     mockMemoryChatService.selectedChatId.and.returnValue('chat-123');
     mockMemoryChatService.continueChat.and.returnValue(throwError(() => new Error('API Error')));
     spyOn(component as any, 'updateMessages');
-    component.userInput = 'test message';
+    component.userInput.set('test message');
 
-    (component as any).sendChatMessage();
+    (component as any).sendChatMessage('test message');
 
     expect((component as any).updateMessages).toHaveBeenCalledWith(
       'Sorry, I am unable to process your request at the moment.',
@@ -208,13 +202,13 @@ describe('ChatPanel', () => {
       description: 'New chat'
     };
     mockMemoryChatService.startNewChat.and.returnValue(of(mockResponse));
-    component.userInput = 'start new chat';
+    component.userInput.set('start new chat');
 
-    (component as any).sendChatMessage();
+    (component as any).sendChatMessage('start new chat');
 
     expect(mockMemoryChatService.selectChat).toHaveBeenCalledWith('new-chat-456');
     expect(mockMemoryChatService.chatsResource.reload).toHaveBeenCalled();
-    expect(component.userInput).toBe('');
+    expect(component.userInput()).toBe('');
     expect(component.isLoading).toBe(false);
   });
 
@@ -222,9 +216,9 @@ describe('ChatPanel', () => {
     mockMemoryChatService.selectedChatId.and.returnValue(undefined);
     mockMemoryChatService.startNewChat.and.returnValue(throwError(() => new Error('API Error')));
     spyOn(component as any, 'updateMessages');
-    component.userInput = 'test message';
+    component.userInput.set('test message');
 
-    (component as any).sendChatMessage();
+    (component as any).sendChatMessage('test message');
 
     expect((component as any).updateMessages).toHaveBeenCalledWith(
       'Sorry, I am unable to process your request at the moment.',
@@ -242,9 +236,9 @@ describe('ChatPanel', () => {
       content: 'AI response',
       type: ChatType.ASSISTANT
     }));
-    component.userInput = 'test message';
+    component.userInput.set('test message');
 
-    (component as any).sendChatMessage();
+    (component as any).sendChatMessage('test message');
 
     expect(mockMemoryChatService.chatsResource.reload).toHaveBeenCalled();
   });
@@ -260,10 +254,149 @@ describe('ChatPanel', () => {
       content: 'AI response',
       type: ChatType.ASSISTANT
     }));
-    component.userInput = 'test message';
+    component.userInput.set('test message');
 
-    (component as any).sendChatMessage();
+    (component as any).sendChatMessage('test message');
 
     expect(mockMemoryChatService.chatsResource.reload).not.toHaveBeenCalled();
+  });
+
+  describe('Input Validation', () => {
+    it('should return null validation error for empty input', () => {
+      component.userInput.set('');
+      fixture.detectChanges();
+      expect(component.validationError()).toBeNull();
+    });
+
+    it('should return null validation error for whitespace-only input', () => {
+      component.userInput.set('   ');
+      fixture.detectChanges();
+      expect(component.validationError()).toBeNull();
+    });
+
+    it('should return null validation error for valid input', () => {
+      component.userInput.set('Tell me about your memory');
+      fixture.detectChanges();
+      expect(component.validationError()).toBeNull();
+    });
+
+    it('should return error for message exceeding max length', () => {
+      component.userInput.set('a'.repeat(2001));
+      fixture.detectChanges();
+      const error = component.validationError();
+      expect(error).toBeTruthy();
+      expect(error).toContain('too long');
+      expect(error).toContain('2001/2000');
+    });
+
+    it('should return null validation error for message at max length', () => {
+      component.userInput.set('a'.repeat(2000));
+      fixture.detectChanges();
+      expect(component.validationError()).toBeNull();
+    });
+  });
+
+  describe('canSend()', () => {
+    it('should return false for empty input', () => {
+      component.userInput.set('');
+      component.isLoading = false;
+      expect(component.canSend()).toBe(false);
+    });
+
+    it('should return false for whitespace-only input', () => {
+      component.userInput.set('   ');
+      component.isLoading = false;
+      expect(component.canSend()).toBe(false);
+    });
+
+    it('should return false when loading', () => {
+      component.userInput.set('valid message');
+      component.isLoading = true;
+      expect(component.canSend()).toBe(false);
+    });
+
+    it('should return false for message exceeding max length', () => {
+      component.userInput.set('a'.repeat(2001));
+      component.isLoading = false;
+      expect(component.canSend()).toBe(false);
+    });
+
+    it('should return true for valid input when not loading', () => {
+      component.userInput.set('valid message');
+      component.isLoading = false;
+      expect(component.canSend()).toBe(true);
+    });
+  });
+
+  describe('sanitizeInput()', () => {
+    it('should remove script tags from input', () => {
+      const input = 'Hello <script>alert("xss")</script> world';
+      const result = (component as any).sanitizeInput(input);
+      expect(result).toBe('Hello  world');
+    });
+
+    it('should remove multiple script tags', () => {
+      const input = '<script>alert(1)</script>test<script>alert(2)</script>';
+      const result = (component as any).sanitizeInput(input);
+      expect(result).toBe('test');
+    });
+
+    it('should remove HTML tags', () => {
+      const input = 'Hello <b>world</b> <i>test</i>';
+      const result = (component as any).sanitizeInput(input);
+      expect(result).toBe('Hello world test');
+    });
+
+    it('should trim the result', () => {
+      const input = '  <b>test</b>  ';
+      const result = (component as any).sanitizeInput(input);
+      expect(result).toBe('test');
+    });
+
+    it('should handle clean input without modifications', () => {
+      const input = 'What do you remember about our conversation?';
+      const result = (component as any).sanitizeInput(input);
+      expect(result).toBe('What do you remember about our conversation?');
+    });
+  });
+
+  describe('sendMessage with validation', () => {
+    it('should not send message when canSend returns false', () => {
+      component.userInput.set('');
+      spyOn(component as any, 'sendChatMessage');
+      component.sendMessage();
+      expect((component as any).sendChatMessage).not.toHaveBeenCalled();
+    });
+
+    it('should sanitize input before sending to startNewChat', () => {
+      mockMemoryChatService.selectedChatId.and.returnValue(undefined);
+      const maliciousInput = 'Test <script>alert("xss")</script> message';
+      component.userInput.set(maliciousInput);
+      
+      const mockResponse: ChatStartResponse = {
+        chatId: 'new-chat-789',
+        message: 'Response',
+        description: 'New chat'
+      };
+      mockMemoryChatService.startNewChat.and.returnValue(of(mockResponse));
+      
+      component.sendMessage();
+      
+      expect(mockMemoryChatService.startNewChat).toHaveBeenCalledWith('Test  message');
+    });
+
+    it('should sanitize input before sending to continueChat', () => {
+      mockMemoryChatService.selectedChatId.and.returnValue('chat-123');
+      const maliciousInput = 'Continue <b>bold</b> <script>hack()</script>';
+      component.userInput.set(maliciousInput);
+      
+      mockMemoryChatService.continueChat.and.returnValue(
+        of({ content: 'Response', type: ChatType.ASSISTANT })
+      );
+      
+      component.sendMessage();
+      
+      expect(mockMemoryChatService.continueChat).toHaveBeenCalledWith('chat-123', 'Continue bold');
+    });
   });
 });

@@ -39,15 +39,20 @@
           matInput
           [(ngModel)]="currentMessage"
           (keydown)="onKeyPress($event)"
+          [maxlength]="MAX_LENGTH"
           placeholder="Ask about your booking, cancellations, or any travel assistance..."
           rows="3">
         </textarea>
+        <mat-hint align="end">{{currentMessage().length}}/{{MAX_LENGTH}}</mat-hint>
+        @if (validationError()) {
+          <mat-error>{{validationError()}}</mat-error>
+        }
       </mat-form-field>
       <button
         mat-fab
         color="primary"
         (click)="sendMessage()"
-        [disabled]="!currentMessage().trim()"
+        [disabled]="!canSend()"
         aria-label="Send message">
         <mat-icon>send</mat-icon>
       </button>

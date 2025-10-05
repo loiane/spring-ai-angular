@@ -36,24 +36,17 @@ describe('SimpleChat', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should trim user message', () => {
-    component.userInput = '   hello   ';
-    // @ts-ignore: access private method for test
-    component.trimUserMessage();
-    expect(component.userInput).toBe('hello');
-  });
-
   it('should add user message to messages and call sendChatMessage', () => {
     spyOn(component as any, 'updateMessages').and.callThrough();
     spyOn(component as any, 'sendChatMessage').and.callThrough();
-    component.userInput = 'test';
+    component.userInput.set('test');
     component.sendMessage();
     expect((component as any).updateMessages).toHaveBeenCalledWith('test');
     expect((component as any).sendChatMessage).toHaveBeenCalled();
   });
 
   it('should not send empty message', () => {
-    component.userInput = '   ';
+    component.userInput.set('   ');
     spyOn(component as any, 'updateMessages');
     component.sendMessage();
     expect((component as any).updateMessages).not.toHaveBeenCalled();
@@ -66,12 +59,12 @@ describe('SimpleChat', () => {
   });
 
   it('should initialize with correct default values', () => {
-    expect(component.userInput).toBe('');
+    expect(component.userInput()).toBe('');
     expect(component.isLoading).toBe(false);
   });
 
   it('should not send message when loading', () => {
-    component.userInput = 'test message';
+    component.userInput.set('test message');
     component.isLoading = true;
     spyOn(component as any, 'updateMessages');
     spyOn(component as any, 'sendChatMessage');
@@ -118,12 +111,12 @@ describe('SimpleChat', () => {
     );
     spyOn(component as any, 'updateMessages').and.callThrough();
 
-    component.userInput = 'test message';
-    (component as any).sendChatMessage();
+    component.userInput.set('test message');
+    (component as any).sendChatMessage('test message');
 
     expect(chatService.sendChatMessage).toHaveBeenCalledWith('test message');
     expect((component as any).updateMessages).toHaveBeenCalledWith('Test response', true);
-    expect(component.userInput).toBe('');
+    expect(component.userInput()).toBe('');
     expect(component.isLoading).toBe(false);
   });
 
@@ -133,9 +126,9 @@ describe('SimpleChat', () => {
     );
     spyOn(component as any, 'updateMessages').and.callThrough();
 
-    component.userInput = 'test message';
+    component.userInput.set('test message');
     component.isLoading = true;
-    (component as any).sendChatMessage();
+    (component as any).sendChatMessage('test message');
 
     expect(chatService.sendChatMessage).toHaveBeenCalledWith('test message');
     expect((component as any).updateMessages).toHaveBeenCalledWith(
@@ -149,12 +142,12 @@ describe('SimpleChat', () => {
     spyOn(chatService, 'sendChatMessage').and.returnValue(of(null as any));
     spyOn(component as any, 'updateMessages').and.callThrough();
 
-    component.userInput = 'test message';
-    (component as any).sendChatMessage();
+    component.userInput.set('test message');
+    (component as any).sendChatMessage('test message');
 
     expect(chatService.sendChatMessage).toHaveBeenCalledWith('test message');
     expect((component as any).updateMessages).not.toHaveBeenCalledWith(jasmine.any(String), true);
-    expect(component.userInput).toBe('');
+    expect(component.userInput()).toBe('');
     expect(component.isLoading).toBe(false);
   });
 
@@ -163,7 +156,7 @@ describe('SimpleChat', () => {
     // Set local to true by accessing private property
     (component as any).local = true;
 
-    component.userInput = 'test message';
+    component.userInput.set('test message');
     component.sendMessage();
 
     expect((component as any).simulateResponse).toHaveBeenCalled();
@@ -175,7 +168,7 @@ describe('SimpleChat', () => {
     (component as any).simulateResponse();
 
     expect((component as any).getResponse).toHaveBeenCalled();
-    expect(component.userInput).toBe('');
+    expect(component.userInput()).toBe('');
   });
 
   it('should simulate response with timeout in getResponse', (done) => {
@@ -194,7 +187,7 @@ describe('SimpleChat', () => {
   });
 
   it('should set loading state when sending message', () => {
-    component.userInput = 'test message';
+    component.userInput.set('test message');
     component.isLoading = false;
     spyOn(component as any, 'sendChatMessage');
 
@@ -203,18 +196,8 @@ describe('SimpleChat', () => {
     expect(component.isLoading).toBe(true);
   });
 
-  it('should trim message before processing', () => {
-    component.userInput = '   test message   ';
-    spyOn(component as any, 'trimUserMessage').and.callThrough();
-    spyOn(component as any, 'sendChatMessage');
-
-    component.sendMessage();
-
-    expect((component as any).trimUserMessage).toHaveBeenCalled();
-  });
-
   it('should not process empty string after trimming', () => {
-    component.userInput = '   ';
+    component.userInput.set('   ');
     spyOn(component as any, 'sendChatMessage');
 
     component.sendMessage();
@@ -228,10 +211,154 @@ describe('SimpleChat', () => {
       of({ message: 'Response', isBot: true })
     );
 
-    component.userInput = 'test message';
-    (component as any).sendChatMessage();
+    component.userInput.set('test message');
+    (component as any).sendChatMessage('test message');
 
-    expect(component.userInput).toBe('');
+    expect(component.userInput()).toBe('');
+  });
+
+  describe('Input Validation', () => {
+    it('should return null validation error for empty input', () => {
+      component.userInput.set('');
+      fixture.detectChanges();
+      expect(component.validationError()).toBeNull();
+    });
+
+    it('should return null validation error for whitespace-only input', () => {
+      component.userInput.set('   ');
+      fixture.detectChanges();
+      expect(component.validationError()).toBeNull();
+    });
+
+    it('should return null validation error for valid input', () => {
+      component.userInput.set('Hello, this is a valid message');
+      fixture.detectChanges();
+      expect(component.validationError()).toBeNull();
+    });
+
+    it('should return error for message exceeding max length', () => {
+      component.userInput.set('a'.repeat(2001));
+      fixture.detectChanges();
+      const error = component.validationError();
+      expect(error).toBeTruthy();
+      expect(error).toContain('too long');
+      expect(error).toContain('2001/2000');
+    });
+
+    it('should return null validation error for message at max length', () => {
+      component.userInput.set('a'.repeat(2000));
+      fixture.detectChanges();
+      expect(component.validationError()).toBeNull();
+    });
+  });
+
+  describe('canSend()', () => {
+    it('should return false for empty input', () => {
+      component.userInput.set('');
+      component.isLoading = false;
+      expect(component.canSend()).toBe(false);
+    });
+
+    it('should return false for whitespace-only input', () => {
+      component.userInput.set('   ');
+      component.isLoading = false;
+      expect(component.canSend()).toBe(false);
+    });
+
+    it('should return false when loading', () => {
+      component.userInput.set('valid message');
+      component.isLoading = true;
+      expect(component.canSend()).toBe(false);
+    });
+
+    it('should return false for message exceeding max length', () => {
+      component.userInput.set('a'.repeat(2001));
+      component.isLoading = false;
+      expect(component.canSend()).toBe(false);
+    });
+
+    it('should return true for valid input when not loading', () => {
+      component.userInput.set('valid message');
+      component.isLoading = false;
+      expect(component.canSend()).toBe(true);
+    });
+  });
+
+  describe('sanitizeInput()', () => {
+    it('should remove script tags from input', () => {
+      const input = 'Hello <script>alert("xss")</script> world';
+      const result = (component as any).sanitizeInput(input);
+      expect(result).toBe('Hello  world');
+    });
+
+    it('should remove multiple script tags', () => {
+      const input = '<script>alert(1)</script>test<script>alert(2)</script>';
+      const result = (component as any).sanitizeInput(input);
+      expect(result).toBe('test');
+    });
+
+    it('should remove HTML tags', () => {
+      const input = 'Hello <b>world</b> <i>test</i>';
+      const result = (component as any).sanitizeInput(input);
+      expect(result).toBe('Hello world test');
+    });
+
+    it('should remove nested tags', () => {
+      const input = '<div><span>test</span></div>';
+      const result = (component as any).sanitizeInput(input);
+      expect(result).toBe('test');
+    });
+
+    it('should trim the result', () => {
+      const input = '  <b>test</b>  ';
+      const result = (component as any).sanitizeInput(input);
+      expect(result).toBe('test');
+    });
+
+    it('should handle clean input without modifications', () => {
+      const input = 'This is clean text';
+      const result = (component as any).sanitizeInput(input);
+      expect(result).toBe('This is clean text');
+    });
+
+    it('should handle empty input', () => {
+      const input = '';
+      const result = (component as any).sanitizeInput(input);
+      expect(result).toBe('');
+    });
+  });
+
+  describe('sendMessage with validation', () => {
+    it('should not send message when canSend returns false', () => {
+      component.userInput.set('');
+      spyOn(component as any, 'sendChatMessage');
+      component.sendMessage();
+      expect((component as any).sendChatMessage).not.toHaveBeenCalled();
+    });
+
+    it('should sanitize input before sending', () => {
+      component.userInput.set('Hello <script>alert("xss")</script> world');
+      spyOn(component as any, 'sendChatMessage');
+      spyOn(component as any, 'updateMessages');
+      
+      component.sendMessage();
+      
+      expect((component as any).updateMessages).toHaveBeenCalledWith('Hello  world');
+      expect((component as any).sendChatMessage).toHaveBeenCalledWith('Hello  world');
+    });
+
+    it('should send sanitized message to chat service', () => {
+      const maliciousInput = 'Test <b>bold</b> <script>hack()</script>';
+      component.userInput.set(maliciousInput);
+      
+      spyOn(chatService, 'sendChatMessage').and.returnValue(
+        of({ message: 'Response', isBot: true })
+      );
+      
+      component.sendMessage();
+      
+      expect(chatService.sendChatMessage).toHaveBeenCalledWith('Test bold');
+    });
   });
 
 });

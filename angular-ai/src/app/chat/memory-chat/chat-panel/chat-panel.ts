@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, effect, ElementRef, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -11,6 +11,8 @@ import { ResourceErrorComponent } from '../../../shared/resource-error';
 import { ChatStartResponse } from '../../chat';
 import { ChatMessage, ChatType } from '../../chat-message';
 import { MemoryChatService } from '../memory-chat.service';
+
+const MAX_MESSAGE_LENGTH = 2000;
 
 @Component({
   selector: 'app-chat-panel',
@@ -36,13 +38,33 @@ export class ChatPanel {
 
   // Export ChatType for template usage
   protected readonly ChatType = ChatType;
+  readonly MAX_LENGTH = MAX_MESSAGE_LENGTH;
 
-  userInput = '';
+  userInput = signal('');
   isLoading = false;
 
   messages = signal<ChatMessage[]>([]);
   messagesResource = this.memoryChatService.chatMessagesResource;
   messagesErrorHandler = this.memoryChatService.messagesErrorHandler;
+
+  // Computed validation state
+  readonly validationError = computed(() => {
+    const input = this.userInput().trim();
+    if (input.length === 0) {
+      return null; // No error for empty input
+    }
+    if (input.length > MAX_MESSAGE_LENGTH) {
+      return `Message is too long (${input.length}/${MAX_MESSAGE_LENGTH} characters)`;
+    }
+    return null;
+  });
+
+  readonly canSend = computed(() => {
+    const input = this.userInput().trim();
+    return input.length > 0 && 
+           input.length <= MAX_MESSAGE_LENGTH && 
+           !this.isLoading;
+  });
 
   /**
    * Effect to synchronize messages from the service resource and auto-scroll.
@@ -84,16 +106,22 @@ export class ChatPanel {
   });
 
   sendMessage(): void {
-    this.trimUserMessage();
-    if (this.userInput !== '' && !this.isLoading) {
-      this.updateMessages(this.userInput);
-      this.isLoading = true;
-      this.sendChatMessage();
+    if (!this.canSend()) {
+      return;
     }
+
+    const sanitizedInput = this.sanitizeInput(this.userInput().trim());
+    this.updateMessages(sanitizedInput);
+    this.isLoading = true;
+    this.sendChatMessage(sanitizedInput);
   }
 
-  private trimUserMessage(): void {
-    this.userInput = this.userInput.trim();
+  private sanitizeInput(input: string): string {
+    // Remove any potential script tags and sanitize the input
+    return input
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+      .replace(/<[^>]+>/g, '')
+      .trim();
   }
 
   private updateMessages(content: string, type: ChatType = ChatType.USER): void {
@@ -111,9 +139,8 @@ export class ChatPanel {
     }
   }
 
-  private sendChatMessage(): void {
+  private sendChatMessage(message: string): void {
     const currentChatId = this.memoryChatService.selectedChatId();
-    const message = this.userInput;
 
     if (currentChatId) {
       // Continue existing chat
@@ -129,7 +156,7 @@ export class ChatPanel {
           if (response) {
             this.updateMessages(response.content, ChatType.ASSISTANT);
           }
-          this.userInput = '';
+          this.userInput.set('');
           this.isLoading = false;
 
           // Reload chat list if this was one of the first messages
@@ -154,7 +181,7 @@ export class ChatPanel {
             this.memoryChatService.selectChat(response.chatId);
             this.memoryChatService.chatsResource.reload();
           }
-          this.userInput = '';
+          this.userInput.set('');
           this.isLoading = false;
         });
     }

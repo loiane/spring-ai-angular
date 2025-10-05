@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, effect, ElementRef, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -9,6 +9,8 @@ import { catchError, of } from 'rxjs';
 import { LoggingService } from '../../shared/logging.service';
 import { ChatResponse } from '../chat-response';
 import { ChatService } from '../chat-service';
+
+const MAX_MESSAGE_LENGTH = 2000;
 
 @Component({
   selector: 'app-simple-chat',
@@ -26,12 +28,33 @@ export class SimpleChat {
 
   private readonly local = false;
 
-  userInput = '';
+  readonly MAX_LENGTH = MAX_MESSAGE_LENGTH;
+
+  userInput = signal('');
   isLoading = false;
 
   messages = signal<ChatResponse[]>([
     { message: 'Hello, how can I help you today?', isBot: true },
   ]);
+
+  // Computed validation state
+  readonly validationError = computed(() => {
+    const input = this.userInput().trim();
+    if (input.length === 0) {
+      return null; // No error for empty input
+    }
+    if (input.length > MAX_MESSAGE_LENGTH) {
+      return `Message is too long (${input.length}/${MAX_MESSAGE_LENGTH} characters)`;
+    }
+    return null;
+  });
+
+  readonly canSend = computed(() => {
+    const input = this.userInput().trim();
+    return input.length > 0 && 
+           input.length <= MAX_MESSAGE_LENGTH && 
+           !this.isLoading;
+  });
 
   // Effect to auto-scroll when messages change
   private readonly autoScrollEffect = effect(() => {
@@ -40,20 +63,26 @@ export class SimpleChat {
   });
 
   sendMessage(): void {
-    this.trimUserMessage();
-    if (this.userInput !== '' && !this.isLoading) {
-      this.updateMessages(this.userInput);
-      this.isLoading = true;
-      if (this.local) {
-        this.simulateResponse();
-      } else {
-        this.sendChatMessage();
-      }
+    if (!this.canSend()) {
+      return;
     }
-  }
 
-  private trimUserMessage(): void {
-    this.userInput = this.userInput.trim();
+    const sanitizedInput = this.sanitizeInput(this.userInput().trim());
+    
+    this.updateMessages(sanitizedInput);
+    this.isLoading = true;
+
+    if (this.local) {
+      this.simulateResponse();
+    } else {
+      this.sendChatMessage(sanitizedInput);
+    }
+  }  private sanitizeInput(input: string): string {
+    // Remove any potential script tags and sanitize the input
+    return input
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+      .replace(/<[^>]+>/g, '')
+      .trim();
   }
 
   private updateMessages(message: string, isBot = false): void {
@@ -70,7 +99,7 @@ export class SimpleChat {
 
   private simulateResponse(): void {
     this.getResponse();
-    this.userInput = '';
+    this.userInput.set('');
   }
 
   private scrollToBottom(): void {
@@ -84,8 +113,8 @@ export class SimpleChat {
     }
   }
 
-  private sendChatMessage(): void {
-    this.chatService.sendChatMessage(this.userInput)
+  private sendChatMessage(message: string): void {
+    this.chatService.sendChatMessage(message)
     .pipe(
       catchError(() => {
         this.updateMessages('Sorry, I am unable to process your request at the moment.', true);
@@ -97,7 +126,7 @@ export class SimpleChat {
       if (response) {
         this.updateMessages(response.message, true);
       }
-      this.userInput = '';
+      this.userInput.set('');
       this.isLoading = false;
     });
   }

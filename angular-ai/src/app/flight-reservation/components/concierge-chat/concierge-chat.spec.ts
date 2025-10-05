@@ -155,4 +155,123 @@ describe('ConciergeChat', () => {
       expect(morningFormatted).not.toBe(eveningFormatted);
     });
   });
+
+  describe('Input Validation', () => {
+    it('should return null validation error for empty input', () => {
+      component.currentMessage.set('');
+      expect(component.validationError()).toBeNull();
+    });
+
+    it('should return null validation error for whitespace-only input', () => {
+      component.currentMessage.set('   ');
+      expect(component.validationError()).toBeNull();
+    });
+
+    it('should return null validation error for valid input', () => {
+      component.currentMessage.set('I need to book a flight');
+      expect(component.validationError()).toBeNull();
+    });
+
+    it('should return error for message exceeding max length', () => {
+      component.currentMessage.set('a'.repeat(2001));
+      const error = component.validationError();
+      expect(error).toBeTruthy();
+      expect(error).toContain('too long');
+      expect(error).toContain('2001/2000');
+    });
+
+    it('should return null validation error for message at max length', () => {
+      component.currentMessage.set('a'.repeat(2000));
+      expect(component.validationError()).toBeNull();
+    });
+  });
+
+  describe('canSend()', () => {
+    it('should return false for empty input', () => {
+      component.currentMessage.set('');
+      expect(component.canSend()).toBe(false);
+    });
+
+    it('should return false for whitespace-only input', () => {
+      component.currentMessage.set('   ');
+      expect(component.canSend()).toBe(false);
+    });
+
+    it('should return false for message exceeding max length', () => {
+      component.currentMessage.set('a'.repeat(2001));
+      expect(component.canSend()).toBe(false);
+    });
+
+    it('should return true for valid input', () => {
+      component.currentMessage.set('valid message');
+      expect(component.canSend()).toBe(true);
+    });
+  });
+
+  describe('sanitizeInput()', () => {
+    it('should remove script tags from input', () => {
+      const input = 'Hello <script>alert("xss")</script> world';
+      const result = (component as any).sanitizeInput(input);
+      expect(result).toBe('Hello  world');
+    });
+
+    it('should remove multiple script tags', () => {
+      const input = '<script>alert(1)</script>test<script>alert(2)</script>';
+      const result = (component as any).sanitizeInput(input);
+      expect(result).toBe('test');
+    });
+
+    it('should remove HTML tags', () => {
+      const input = 'Hello <b>world</b> <i>test</i>';
+      const result = (component as any).sanitizeInput(input);
+      expect(result).toBe('Hello world test');
+    });
+
+    it('should trim the result', () => {
+      const input = '  <b>test</b>  ';
+      const result = (component as any).sanitizeInput(input);
+      expect(result).toBe('test');
+    });
+
+    it('should handle clean input without modifications', () => {
+      const input = 'I need a flight to Paris';
+      const result = (component as any).sanitizeInput(input);
+      expect(result).toBe('I need a flight to Paris');
+    });
+  });
+
+  describe('sendMessage with validation', () => {
+    it('should not send message when canSend returns false', () => {
+      component.currentMessage.set('');
+      spyOn(service, 'sendConciergeMessage');
+      component.sendMessage();
+      expect(service.sendConciergeMessage).not.toHaveBeenCalled();
+    });
+
+    it('should sanitize input before sending', () => {
+      const maliciousInput = 'Book flight <script>alert("xss")</script> to NYC';
+      component.currentMessage.set(maliciousInput);
+
+      spyOn(service, 'sendConciergeMessage').and.returnValue(
+        of({ content: 'OK', requiresAction: false })
+      );
+
+      component.sendMessage();
+
+      expect(service.sendConciergeMessage).toHaveBeenCalledWith('Book flight  to NYC');
+    });
+
+    it('should respect canSend when using Enter key', () => {
+      component.currentMessage.set('a'.repeat(2001)); // Too long
+      const event = new KeyboardEvent('keypress', { key: 'Enter', shiftKey: false });
+
+      spyOn(event, 'preventDefault');
+      spyOn(service, 'sendConciergeMessage');
+
+      component.onKeyPress(event);
+
+      expect(event.preventDefault).toHaveBeenCalled();
+      expect(service.sendConciergeMessage).not.toHaveBeenCalled();
+    });
+  });
 });

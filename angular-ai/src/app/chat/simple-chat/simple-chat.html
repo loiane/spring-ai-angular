@@ -26,9 +26,22 @@
   <div class="chat-input">
     <mat-form-field class="full-width">
       <mat-label>Ask anything</mat-label>
-      <input matInput [(ngModel)]="userInput" (keyup.enter)="sendMessage()">
-      @if (userInput) {
-        <button matSuffix mat-icon-button aria-label="Send" (click)="sendMessage()" [disabled]="isLoading">
+      <input matInput 
+             [ngModel]="userInput()" 
+             (ngModelChange)="userInput.set($event)"
+             (keyup.enter)="sendMessage()"
+             [maxlength]="MAX_LENGTH"
+             placeholder="Type your message...">
+      <mat-hint align="end">{{userInput().length}}/{{MAX_LENGTH}}</mat-hint>
+      @if (validationError()) {
+        <mat-error>{{validationError()}}</mat-error>
+      }
+      @if (userInput()) {
+        <button matSuffix 
+                mat-icon-button 
+                aria-label="Send" 
+                (click)="sendMessage()" 
+                [disabled]="!canSend()">
           <mat-icon>send</mat-icon>
         </button>
      }
