@@ -1,0 +1,11 @@
+{
+  "simpleChat": {
+    "userMessage": "Hello, AI assistant!",
+    "aiResponse": "Hello! I'm here to help you. How can I assist you today?"
+  },
+  "validationTest": {
+    "emptyMessage": "",
+    "tooLongMessage": "a",
+    "validMessage": "What is Angular?"
+  }
+}

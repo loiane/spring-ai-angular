@@ -7,7 +7,12 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test --browsers=ChromeHeadless",
-    "test:ci": "ng test --no-watch --no-progress --code-coverage --browsers=ChromeHeadless"
+    "test:ci": "ng test --no-watch --no-progress --code-coverage --browsers=ChromeHeadless",
+    "e2e": "playwright test",
+    "e2e:ui": "playwright test --ui",
+    "e2e:headed": "playwright test --headed",
+    "e2e:debug": "playwright test --debug",
+    "e2e:report": "playwright show-report"
   },
   "private": true,
   "dependencies": {
@@ -30,6 +35,7 @@
     "@angular/build": "^20.3.3",
     "@angular/cli": "^20.3.3",
     "@angular/compiler-cli": "^20.3.2",
+    "@playwright/test": "^1.55.1",
     "@types/jasmine": "~5.1.0",
     "@types/marked": "^5.0.2",
     "jasmine-core": "~5.7.0",
