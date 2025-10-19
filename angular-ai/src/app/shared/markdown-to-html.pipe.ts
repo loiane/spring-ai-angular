@@ -31,6 +31,11 @@ export class MarkdownToHtmlPipe implements PipeTransform {
       return `<pre><code class="hljs">${highlighted}</code></pre>`;
     };
 
+    // Remove paragraph wrapper for single-line content
+    renderer.paragraph = function(token: Tokens.Paragraph): string {
+      return token.text + '\n';
+    };
+
     // Configure marked options
     marked.setOptions({
       renderer,
