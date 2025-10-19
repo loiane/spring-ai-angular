@@ -46,12 +46,12 @@ public class DocumentRepository {
      * @param document The document to save
      * @return The saved document
      */
-    public Document save(Document document) {
+    public DocumentMetadata save(DocumentMetadata document) {
         String id = document.id() != null ? document.id() : UUID.randomUUID().toString();
         
         String sql = """
-            INSERT INTO documents (id, filename, content_type, file_size, upload_date, user_id, status, error_message)
-            VALUES (?, ?, ?, ?, ?, ?, ?::VARCHAR, ?)
+            INSERT INTO documents (id, filename, content_type, file_size, upload_date, status, error_message)
+            VALUES (?, ?, ?, ?, ?, ?::VARCHAR, ?)
             ON CONFLICT (id) DO UPDATE SET
                 filename = EXCLUDED.filename,
                 content_type = EXCLUDED.content_type,
@@ -67,20 +67,18 @@ public class DocumentRepository {
                 document.contentType(),
                 document.fileSize(),
                 Timestamp.valueOf(document.uploadDate()),
-                document.userId(),
                 document.status().name(),
                 document.errorMessage()
         );
 
         log.debug("Saved document: id={}, filename={}, status={}", id, document.filename(), document.status());
 
-        return new Document(
+        return new DocumentMetadata(
                 id,
                 document.filename(),
                 document.contentType(),
                 document.fileSize(),
                 document.uploadDate(),
-                document.userId(),
                 document.status(),
                 document.errorMessage()
         );
@@ -92,11 +90,11 @@ public class DocumentRepository {
      * @param id The document ID
      * @return Optional containing the document if found, empty otherwise
      */
-    public Optional<Document> findById(String id) {
+    public Optional<DocumentMetadata> findById(String id) {
         String sql = "SELECT * FROM documents WHERE id = ?";
         
         try {
-            Document document = jdbcTemplate.queryForObject(sql, documentRowMapper, id);
+            DocumentMetadata document = jdbcTemplate.queryForObject(sql, documentRowMapper, id);
             log.debug("Found document: id={}, filename={}", id, document.filename());
             return Optional.of(document);
         } catch (EmptyResultDataAccessException _) {
@@ -106,15 +104,14 @@ public class DocumentRepository {
     }
 
     /**
-     * Finds all documents for a specific user.
+     * Finds all documents ordered by upload date.
      * 
-     * @param userId The user ID
-     * @return List of documents owned by the user
+     * @return List of all documents
      */
-    public List<Document> findByUserId(String userId) {
-        String sql = "SELECT * FROM documents WHERE user_id = ? ORDER BY upload_date DESC";
-        List<Document> documents = jdbcTemplate.query(sql, documentRowMapper, userId);
-        log.debug("Found {} documents for user: {}", documents.size(), userId);
+    public List<DocumentMetadata> findAll() {
+        String sql = "SELECT * FROM documents ORDER BY upload_date DESC";
+        List<DocumentMetadata> documents = jdbcTemplate.query(sql, documentRowMapper);
+        log.debug("Found {} documents", documents.size());
         return documents;
     }
 
@@ -175,9 +172,9 @@ public class DocumentRepository {
      * @param status The document status to filter by
      * @return List of documents with the specified status
      */
-    public List<Document> findByStatus(DocumentStatus status) {
+    public List<DocumentMetadata> findByStatus(DocumentStatus status) {
         String sql = "SELECT * FROM documents WHERE status = ?::VARCHAR ORDER BY upload_date DESC";
-        List<Document> documents = jdbcTemplate.query(sql, documentRowMapper, status.name());
+        List<DocumentMetadata> documents = jdbcTemplate.query(sql, documentRowMapper, status.name());
         log.debug("Found {} documents with status: {}", documents.size(), status);
         return documents;
     }
@@ -194,30 +191,17 @@ public class DocumentRepository {
     }
 
     /**
-     * Counts documents for a specific user.
-     * 
-     * @param userId The user ID
-     * @return Number of documents owned by the user
+     * RowMapper for converting database rows to DocumentMetadata objects.
      */
-    public long countByUserId(String userId) {
-        String sql = "SELECT COUNT(*) FROM documents WHERE user_id = ?";
-        Long count = jdbcTemplate.queryForObject(sql, Long.class, userId);
-        return count != null ? count : 0L;
-    }
-
-    /**
-     * RowMapper for converting database rows to Document objects.
-     */
-    private static class DocumentRowMapper implements RowMapper<Document> {
+    private static class DocumentRowMapper implements RowMapper<DocumentMetadata> {
         @Override
-        public Document mapRow(ResultSet rs, int rowNum) throws SQLException {
-            return new Document(
+        public DocumentMetadata mapRow(ResultSet rs, int rowNum) throws SQLException {
+            return new DocumentMetadata(
                     rs.getString("id"),
                     rs.getString("filename"),
                     rs.getString("content_type"),
                     rs.getLong("file_size"),
                     rs.getTimestamp("upload_date").toLocalDateTime(),
-                    rs.getString("user_id"),
                     DocumentStatus.valueOf(rs.getString("status")),
                     rs.getString("error_message")
             );

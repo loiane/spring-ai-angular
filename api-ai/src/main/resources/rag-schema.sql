@@ -15,7 +15,6 @@ CREATE TABLE documents (
     content_type VARCHAR(100) NOT NULL,
     file_size BIGINT NOT NULL,
     upload_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    user_id VARCHAR(100),
     status VARCHAR(20) NOT NULL DEFAULT 'PROCESSING',
     error_message TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -25,7 +24,6 @@ CREATE TABLE documents (
 );
 
 -- Create indexes for efficient querying
-CREATE INDEX IF NOT EXISTS idx_documents_user_id ON documents(user_id);
 CREATE INDEX IF NOT EXISTS idx_documents_status ON documents(status);
 CREATE INDEX IF NOT EXISTS idx_documents_upload_date ON documents(upload_date DESC);
 
