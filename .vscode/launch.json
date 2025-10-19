@@ -8,7 +8,7 @@
       "mainClass": "com.loiane.api_ai.ApiAiApplication",
       "projectName": "api-ai",
       "args": "",
-      "envFile": "${workspaceFolder}/.env"
+      "envFile": "${workspaceFolder}/api-ai/.env"
     }
   ]
 }
