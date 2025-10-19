@@ -58,8 +58,8 @@ public class RagController {
     }
 
     @PostMapping("/ask")
-    public ResponseEntity<RagResponse> ask(@RequestBody String question) {
-        RagResponse response = ragService.askQuestion(question);
+    public ResponseEntity<RagService.RagResponse> ask(@RequestBody String question) {
+        RagService.RagResponse response = ragService.askQuestion(question);
         return ResponseEntity.ok(response);
     }
 }
