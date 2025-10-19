@@ -1,34 +1,65 @@
 package com.loiane.api_ai.rag;
 
-import com.loiane.api_ai.chat.ChatRequest;
-import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
-import org.springframework.ai.vectorstore.VectorStore;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.util.List;
 
 @RestController
-@RequestMapping("api/ai/rag")
+@RequestMapping("/api/rag")
 public class RagController {
 
-    private final VectorStore vectorStore;
+    private static final Logger log = LoggerFactory.getLogger(RagController.class);
 
-    private final ChatClient chatClient;
+    private final DocumentService documentService;
+    private final RagService ragService;
 
-    public RagController(ChatClient.Builder chatClientBuilder,  @Qualifier("simpleVectorStore") VectorStore vectorStore) {
-        this.vectorStore = vectorStore;
-        this.chatClient = chatClientBuilder.build();
+    public RagController(DocumentService documentService, RagService ragService) {
+        this.documentService = documentService;
+        this.ragService = ragService;
     }
 
-    @PostMapping
-    public String chat(@RequestBody ChatRequest request) {
-        return this.chatClient.prompt()
-                .user(request.message())
-                .advisors(new QuestionAnswerAdvisor(vectorStore))
-                .call()
-                .content();
+    @PostMapping("/upload")
+    public ResponseEntity<DocumentMetadata> upload(@RequestParam("file") MultipartFile file) {
+        try {
+            DocumentMetadata saved = documentService.processDocument(file);
+            return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+        } catch (IOException e) {
+            log.error("Upload failed", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/documents")
+    public List<DocumentMetadata> listDocuments() {
+        return documentService.getAllDocuments();
+    }
+
+    @GetMapping("/documents/{id}")
+    public ResponseEntity<DocumentMetadata> getDocument(@PathVariable String id) {
+        return documentService.getDocumentById(id)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/documents/{id}")
+    public ResponseEntity<Void> deleteDocument(@PathVariable String id) {
+        try {
+            documentService.deleteDocument(id);
+            return ResponseEntity.noContent().build();
+        } catch (DocumentNotFoundException _) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PostMapping("/ask")
+    public ResponseEntity<RagResponse> ask(@RequestBody String question) {
+        RagResponse response = ragService.askQuestion(question);
+        return ResponseEntity.ok(response);
     }
 }
