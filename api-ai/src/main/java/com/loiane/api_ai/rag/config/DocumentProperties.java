@@ -1,4 +1,4 @@
-package com.loiane.api_ai.rag;
+package com.loiane.api_ai.rag.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;

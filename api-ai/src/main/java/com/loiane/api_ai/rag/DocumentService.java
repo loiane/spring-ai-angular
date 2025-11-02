@@ -22,6 +22,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import com.loiane.api_ai.rag.config.DocumentProperties;
+import com.loiane.api_ai.rag.exception.DocumentNotFoundException;
+import com.loiane.api_ai.rag.exception.DocumentProcessingException;
+import com.loiane.api_ai.rag.model.DocumentMetadata;
+import com.loiane.api_ai.rag.model.DocumentStatus;
+
 /**
  * Service for managing document upload, processing, and retrieval in the RAG system.
  * 

@@ -14,6 +14,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.loiane.api_ai.rag.model.DocumentMetadata;
+import com.loiane.api_ai.rag.model.DocumentStatus;
+
 /**
  * Repository for managing document metadata in the RAG system.
  * 

@@ -1,4 +1,4 @@
-package com.loiane.api_ai.rag;
+package com.loiane.api_ai.rag.config;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

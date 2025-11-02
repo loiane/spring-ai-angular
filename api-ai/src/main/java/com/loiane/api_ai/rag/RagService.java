@@ -9,8 +9,15 @@ import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.loiane.api_ai.rag.model.RagResponse;
+import com.loiane.api_ai.rag.model.Source;
+
+import com.loiane.api_ai.rag.model.RagResponse;
+import com.loiane.api_ai.rag.model.Source;
 
 /**
  * RAG (Retrieval-Augmented Generation) service for answering questions using uploaded documents.
@@ -109,22 +116,17 @@ public class RagService {
                     ? content.substring(0, 200) + "..." 
                     : content;
             
+            // Create metadata map for the source
+            Map<String, Object> sourceMetadata = new HashMap<>();
+            sourceMetadata.put("document_id", documentId);
+            sourceMetadata.put("snippet", snippet);
+            
             // Add only if not already present (basic deduplication by documentId)
-            if (sources.stream().noneMatch(s -> s.documentId().equals(documentId))) {
-                sources.add(new Source(documentId, filename, snippet));
+            if (sources.stream().noneMatch(s -> s.metadata().get("document_id").equals(documentId))) {
+                sources.add(new Source(snippet, filename, sourceMetadata));
             }
         }
         
         return sources;
     }
-
-    /**
-     * Response object containing the answer and source documents.
-     */
-    public record RagResponse(String answer, List<Source> sources) {}
-
-    /**
-     * Source document information for attribution.
-     */
-    public record Source(String documentId, String filename, String snippet) {}
 }

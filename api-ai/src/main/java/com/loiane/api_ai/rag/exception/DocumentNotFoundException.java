@@ -1,4 +1,4 @@
-package com.loiane.api_ai.rag;
+package com.loiane.api_ai.rag.exception;
 
 /**
  * Exception thrown when a requested document is not found in the system.

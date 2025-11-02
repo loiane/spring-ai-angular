@@ -1,4 +1,4 @@
-package com.loiane.api_ai.rag;
+package com.loiane.api_ai.rag.config;
 
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.vectorstore.VectorStore;

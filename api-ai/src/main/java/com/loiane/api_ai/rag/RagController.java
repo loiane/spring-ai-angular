@@ -10,6 +10,10 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.List;
 
+import com.loiane.api_ai.rag.exception.DocumentNotFoundException;
+import com.loiane.api_ai.rag.model.DocumentMetadata;
+import com.loiane.api_ai.rag.model.RagResponse;
+
 @RestController
 @RequestMapping("/api/rag")
 public class RagController {
@@ -58,8 +62,8 @@ public class RagController {
     }
 
     @PostMapping("/ask")
-    public ResponseEntity<RagService.RagResponse> ask(@RequestBody String question) {
-        RagService.RagResponse response = ragService.askQuestion(question);
+    public ResponseEntity<RagResponse> ask(@RequestBody String question) {
+        RagResponse response = ragService.askQuestion(question);
         return ResponseEntity.ok(response);
     }
 }
