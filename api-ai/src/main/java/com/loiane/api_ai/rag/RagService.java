@@ -1,5 +1,10 @@
 package com.loiane.api_ai.rag;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
@@ -7,14 +12,6 @@ import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvi
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import com.loiane.api_ai.rag.model.RagResponse;
-import com.loiane.api_ai.rag.model.Source;
 
 import com.loiane.api_ai.rag.model.RagResponse;
 import com.loiane.api_ai.rag.model.Source;
