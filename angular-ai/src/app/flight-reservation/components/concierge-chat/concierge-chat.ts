@@ -72,8 +72,8 @@ export class ConciergeChat {
   private sanitizeInput(input: string): string {
     // Remove any potential script tags and sanitize the input
     return input
-      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-      .replace(/<[^>]+>/g, '')
+      .replaceAll(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+      .replaceAll(/<[^>]+>/g, '')
       .trim();
   }
 
