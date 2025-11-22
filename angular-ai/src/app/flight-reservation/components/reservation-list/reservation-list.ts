@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { MatTableModule } from '@angular/material/table';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -13,7 +13,6 @@ import { ResourceErrorComponent } from '../../../shared/resource-error';
 @Component({
   selector: 'app-reservation-list',
   imports: [
-    CommonModule,
     MatTableModule,
     MatCardModule,
     MatIconModule,
@@ -21,7 +20,7 @@ import { ResourceErrorComponent } from '../../../shared/resource-error';
     MatChipsModule,
     MatProgressSpinnerModule,
     ResourceErrorComponent
-  ],
+],
   templateUrl: './reservation-list.html',
   styleUrl: './reservation-list.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

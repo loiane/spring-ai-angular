@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -16,7 +16,6 @@ const MAX_MESSAGE_LENGTH = 2000;
 @Component({
   selector: 'app-concierge-chat',
   imports: [
-    CommonModule,
     FormsModule,
     MatCardModule,
     MatButtonModule,
@@ -25,7 +24,7 @@ const MAX_MESSAGE_LENGTH = 2000;
     MatFormFieldModule,
     MatListModule,
     MarkdownToHtmlPipe
-  ],
+],
   templateUrl: './concierge-chat.html',
   styleUrl: './concierge-chat.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
