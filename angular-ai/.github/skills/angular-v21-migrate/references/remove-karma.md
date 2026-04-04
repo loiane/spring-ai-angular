@@ -14,24 +14,23 @@ Remove if they exist:
 rm -f karma.conf.js karma.conf.ts
 ```
 
-## 2. Remove Karma Test Target from angular.json
+## 2. Replace Karma Test Target in angular.json
 
 **File: `angular.json`**
 
-Delete the entire `"test"` target under `architect` that references the Karma builder:
+Replace the Karma target with Angular's unit test builder:
 
 ```json
 "architect": {
   "build": { ... },
   "serve": { ... },
-  "test": {            // ← DELETE THIS ENTIRE BLOCK
-    "builder": "@angular/build:karma",
-    "options": { ... }
+  "test": {
+    "builder": "@angular/build:unit-test"
   }
 }
 ```
 
-> **Important**: Only remove the Karma-based test target. If there's a Vitest or other test target, keep it.
+> **Important**: Do not leave the project without a `test` target.
 
 ## 3. Clean tsconfig.spec.json
 
@@ -48,7 +47,7 @@ Before:
 }
 ```
 
-After:
+After (temporary state before Vitest phase):
 ```json
 {
   "compilerOptions": {
@@ -88,18 +87,18 @@ Other Karma plugins to check for and remove:
 
 ## 6. Update package.json Scripts
 
-Remove or comment out scripts that use `ng test` with Karma:
+Remove old Karma-specific scripts and flags. Keep `ng test` scripts that do not reference browser flags:
 
 ```json
 {
   "scripts": {
-    "test": "ng test --browsers=ChromeHeadless",           // ← remove
-    "test:ci": "ng test --no-watch --code-coverage ...",   // ← remove
+    "test": "ng test",                                     // keep
+    "test:ci": "ng test --watch=false --progress=false"    // recommended
   }
 }
 ```
 
-These will be replaced in the Vitest migration phase.
+These will be finalized in the Vitest migration phase.
 
 ## 7. Verify
 

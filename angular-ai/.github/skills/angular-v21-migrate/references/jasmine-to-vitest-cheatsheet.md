@@ -142,6 +142,8 @@ it('async test', async () => {
 });
 ```
 
+For Angular v21 `@angular/build:unit-test`, avoid callback parameter style (`(done) => {}`) because it can be typed as `TestContext` and fail compilation. Prefer `async/await` or fake timers.
+
 ## Timers
 
 ```typescript

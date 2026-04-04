@@ -111,6 +111,12 @@ if [[ -f "$ROOT/angular.json" ]]; then
   else
     ok "No Karma references in angular.json"
   fi
+
+  if grep -q '"builder": "@angular/build:unit-test"' "$ROOT/angular.json"; then
+    ok "Angular unit-test builder is configured"
+  else
+    warn "Angular unit-test builder not found in angular.json test target"
+  fi
 fi
 
 # Jasmine types in tsconfig
@@ -136,8 +142,10 @@ else
 fi
 
 # ng test scripts
-if grep -q '"ng test' "$ROOT/package.json" 2>/dev/null; then
-  warn "package.json scripts reference 'ng test' (Karma) — update to Vitest"
+if grep -q '"test": *"ng test"' "$ROOT/package.json" 2>/dev/null; then
+  ok "package.json test script uses ng test"
+else
+  warn "package.json test script is not 'ng test'"
 fi
 echo ""
 
@@ -150,16 +158,20 @@ else
   info "Vitest not yet installed"
 fi
 
-if grep -q '"@analogjs/vitest-angular"' "$ROOT/package.json" 2>/dev/null; then
-  ok "@analogjs/vitest-angular is installed"
+if grep -q '"jsdom"' "$ROOT/package.json" 2>/dev/null; then
+  ok "jsdom is installed"
 else
-  info "@analogjs/vitest-angular not yet installed"
+  warn "jsdom not found — Angular unit-test builder requires a DOM environment"
+fi
+
+if grep -q '"@analogjs/vitest-angular"' "$ROOT/package.json" 2>/dev/null; then
+  info "@analogjs/vitest-angular is installed (optional, not required for this setup)"
 fi
 
 if [[ -f "$ROOT/vitest.config.ts" ]] || [[ -f "$ROOT/vitest.config.mts" ]]; then
-  ok "Vitest config file exists"
+  info "vitest config file exists (optional in Angular unit-test builder setup)"
 else
-  info "No vitest.config.ts found"
+  ok "No vitest config file (expected for this setup)"
 fi
 
 if [[ -f "$ROOT/tsconfig.spec.json" ]] && grep -q '"vitest/globals"' "$ROOT/tsconfig.spec.json" 2>/dev/null; then
@@ -173,9 +185,18 @@ SPEC_COUNT=$(find "$ROOT/src" -name "*.spec.ts" 2>/dev/null | wc -l | tr -d ' ')
 info "${SPEC_COUNT} spec files found to migrate"
 
 # Check for Jasmine-specific syntax in spec files
-JASMINE_SYNTAX=$(grep -rn "jasmine\.\|spyOn(" --include="*.spec.ts" "$ROOT/src/" 2>/dev/null | wc -l | tr -d ' ')
+JASMINE_SYNTAX=$(grep -rn "jasmine\.\|spyOn(" --include="*.spec.ts" "$ROOT/src/" 2>/dev/null | grep -v "vi.spyOn(" | wc -l | tr -d ' ' || true)
 if [[ "$JASMINE_SYNTAX" -gt 0 ]]; then
   info "${JASMINE_SYNTAX} lines with Jasmine-specific syntax (spyOn, jasmine.*) need conversion"
+else
+  ok "No Jasmine-specific syntax found in spec files"
+fi
+
+DONE_CALLBACKS=$(grep -rn "(done)|\bdone\(\)" --include="*.spec.ts" "$ROOT/src/" 2>/dev/null | wc -l | tr -d ' ' || true)
+if [[ "$DONE_CALLBACKS" -gt 0 ]]; then
+  warn "${DONE_CALLBACKS} done-callback occurrences found — prefer async/await or fake timers"
+else
+  ok "No done-callback style tests found"
 fi
 echo ""
 

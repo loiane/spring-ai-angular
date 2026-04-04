@@ -73,11 +73,12 @@ Follow the [Karma removal checklist](./references/remove-karma.md):
 
 1. **Delete config files**:
    - `karma.conf.js` or `karma.conf.ts` (if they exist)
-2. **Remove the Karma test architect target** from `angular.json`:
-   - Delete the entire `"test"` target under `architect` that uses `@angular/build:karma`
+2. **Replace the Karma test architect target** in `angular.json`:
+   - Remove `@angular/build:karma`
+   - Add `"test": { "builder": "@angular/build:unit-test" }`
 3. **Clean `tsconfig.spec.json`**:
    - Remove `"jasmine"` from `compilerOptions.types`
-   - This file will be repurposed or replaced in Phase 3
+   - Keep the file for Angular unit-test builder and update it in Phase 3
 4. **Uninstall Jasmine/Karma packages**:
    ```bash
    npm uninstall karma karma-chrome-launcher karma-coverage karma-jasmine karma-jasmine-html-reporter jasmine-core @types/jasmine
@@ -88,12 +89,20 @@ Follow the [Karma removal checklist](./references/remove-karma.md):
 
 Follow the [Vitest migration guide](./references/migrate-vitest.md):
 
-1. **Install Vitest and Angular Vitest support**:
+1. **Install Vitest dependencies**:
    ```bash
-   npm install -D vitest @analogjs/vitest-angular jsdom
+    npm install -D vitest jsdom
    ```
-2. **Create `vitest.config.ts`** at project root — see [reference config](./references/migrate-vitest.md#vitest-config)
-3. **Update `tsconfig.spec.json`**:
+2. **Use Angular's built-in unit test builder** (no `vitest.config.ts` required):
+    - In `angular.json`, set:
+    ```json
+    {
+       "test": {
+          "builder": "@angular/build:unit-test"
+       }
+    }
+    ```
+3. **Update `tsconfig.spec.json`** to Angular v21 pattern:
    - Set types to include vitest globals:
    ```json
    {
@@ -102,16 +111,14 @@ Follow the [Vitest migration guide](./references/migrate-vitest.md):
        "outDir": "./out-tsc/spec",
        "types": ["vitest/globals"]
      },
-     "include": ["src/**/*.ts"]
+       "include": ["src/**/*.d.ts", "src/**/*.spec.ts"]
    }
    ```
 4. **Update `package.json` scripts**:
    ```json
    {
-     "test": "vitest run",
-     "test:watch": "vitest",
-     "test:ci": "vitest run --coverage",
-     "test:ui": "vitest --ui"
+       "test": "ng test",
+       "test:ci": "ng test --watch=false --progress=false"
    }
    ```
 5. **Convert test files** — apply syntax transformations from the [Jasmine-to-Vitest cheatsheet](./references/jasmine-to-vitest-cheatsheet.md):
@@ -124,16 +131,13 @@ Follow the [Vitest migration guide](./references/migrate-vitest.md):
    - Replace `.and.callThrough()` → (default behavior in Vitest, remove the call)
    - Replace `.toHaveBeenCalledTimes(n)` → same (compatible)
    - Replace `.toHaveBeenCalledWith(...)` → same (compatible)
-   - Replace `fail('msg')` → `expect.fail('msg')` or `throw new Error('msg')`
+   - Replace `fail('msg')` → `expect.unreachable('msg')` or `throw new Error('msg')`
+   - Replace `done` callbacks with `async/await` or fake timers (`vi.useFakeTimers`) to avoid `TestContext` callback typing issues
    - `describe`, `it`, `expect`, `beforeEach`, `afterEach` — same API, no changes needed
-   - Remove `import { TestBed } from '@angular/core/testing'` — keep as-is, TestBed works with Vitest via `@analogjs/vitest-angular`
+   - Keep `TestBed` imports as-is
 6. **Run tests**:
    ```bash
    npm test
-   ```
-7. **Install coverage provider** (optional):
-   ```bash
-   npm install -D @vitest/coverage-v8
    ```
 
 ### Phase 4 — Final Verification
@@ -156,3 +160,4 @@ Follow the [Vitest migration guide](./references/migrate-vitest.md):
 - **Third-party libraries depending on zone.js**: Check if any imported libraries rely on Zone.js patching (e.g., some older Material components). Angular Material v21+ is fully zoneless-compatible.
 - **`HttpClientTestingModule` is deprecated**: Use `provideHttpClient()` + `provideHttpClientTesting()` with `HttpTestingController` instead.
 - **Test files with `jasmine.clock()`**: Replace with `vi.useFakeTimers()` / `vi.useRealTimers()`.
+- **`done` callback parameter errors (`TestContext` has no call signatures)**: Replace callback-style tests with `async/await` (`firstValueFrom`) or fake timers.
