@@ -212,7 +212,8 @@ public class DocumentService {
                 documentProperties.getChunkOverlap(),
                 documentProperties.getMinChunkSize(),
                 10000, // maxChunkSize
-                true // keepSeparator
+                true, // keepSeparator
+                null // default separator characters
         );
         
         List<Document> chunks = textSplitter.apply(documents);

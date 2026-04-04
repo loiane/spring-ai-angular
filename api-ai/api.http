@@ -17,7 +17,7 @@ Content-Type: application/json
 }
 
 ### Continue conversation with existing chat ID (auto-creates if doesn't exist)
-POST http://localhost:8080/api/chat-memory/60724568-a49e-437d-8705-e2508bf12a1
+POST http://localhost:8080/api/chat-memory/836a9890-95c1-44ce-b851-8bd62cd92f60
 Content-Type: application/json
 
 {
@@ -25,7 +25,7 @@ Content-Type: application/json
 }
 
 ### Get all chats for a specific chat memory ID
-GET http://localhost:8080/api/chat-memory/60dc3851-ab70-42ed-9e75-52ff21517144
+GET http://localhost:8080/api/chat-memory/836a9890-95c1-44ce-b851-8bd62cd92f60
 
 ### RAG
 GET http://localhost:8080/api/ai/rag/load-pdf
