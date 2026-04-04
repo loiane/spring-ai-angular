@@ -59,7 +59,7 @@ describe('ReservationList', () => {
         class: 'Economy'
       };
 
-      spyOn(service, 'selectReservation');
+      vi.spyOn(service, 'selectReservation');
       component.onSelectReservation(mockReservation);
       expect(service.selectReservation).toHaveBeenCalledWith(mockReservation);
     });
@@ -85,7 +85,7 @@ describe('ReservationList', () => {
 
   describe('onRefresh', () => {
     it('should call service to refresh reservations', () => {
-      spyOn(service, 'refreshReservations');
+      vi.spyOn(service, 'refreshReservations');
       component.onRefresh();
       expect(service.refreshReservations).toHaveBeenCalled();
     });

@@ -4,10 +4,10 @@ import { LoggingService } from './logging.service';
 
 describe('LoggingService', () => {
   let service: LoggingService;
-  let consoleLogSpy: jasmine.Spy;
-  let consoleWarnSpy: jasmine.Spy;
-  let consoleErrorSpy: jasmine.Spy;
-  let consoleDebugSpy: jasmine.Spy;
+  let consoleLogSpy: ReturnType<typeof vi.spyOn>;
+  let consoleWarnSpy: ReturnType<typeof vi.spyOn>;
+  let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
+  let consoleDebugSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -15,10 +15,10 @@ describe('LoggingService', () => {
     });
     service = TestBed.inject(LoggingService);
 
-    consoleLogSpy = spyOn(console, 'log');
-    consoleWarnSpy = spyOn(console, 'warn');
-    consoleErrorSpy = spyOn(console, 'error');
-    consoleDebugSpy = spyOn(console, 'debug');
+    consoleLogSpy = vi.spyOn(console, 'log');
+    consoleWarnSpy = vi.spyOn(console, 'warn');
+    consoleErrorSpy = vi.spyOn(console, 'error');
+    consoleDebugSpy = vi.spyOn(console, 'debug');
   });
 
   it('should be created', () => {

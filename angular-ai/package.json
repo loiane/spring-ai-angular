@@ -6,8 +6,8 @@
     "start": "ng serve --proxy-config proxy.conf.js -o",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test --browsers=ChromeHeadless",
-    "test:ci": "ng test --no-watch --no-progress --code-coverage --browsers=ChromeHeadless",
+    "test": "ng test",
+    "test:ci": "ng test --watch=false --progress=false",
     "e2e": "playwright test",
     "e2e:ui": "playwright test --ui",
     "e2e:headed": "playwright test --headed",
@@ -28,22 +28,16 @@
     "highlight.js": "^11.11.1",
     "marked": "^16.3.0",
     "rxjs": "~7.8.0",
-    "tslib": "^2.3.0",
-    "zone.js": "~0.16.1"
+    "tslib": "^2.3.0"
   },
   "devDependencies": {
     "@angular/build": "^21.2.6",
     "@angular/cli": "^21.2.6",
     "@angular/compiler-cli": "^21.2.7",
     "@playwright/test": "^1.59.1",
-    "@types/jasmine": "~5.1.0",
     "@types/marked": "^5.0.2",
-    "jasmine-core": "~6.1.0",
-    "karma": "~6.4.0",
-    "karma-chrome-launcher": "~3.2.0",
-    "karma-coverage": "~2.2.0",
-    "karma-jasmine": "~5.1.0",
-    "karma-jasmine-html-reporter": "~2.1.0",
-    "typescript": "~5.9.2"
+    "jsdom": "^27.1.0",
+    "typescript": "~5.9.2",
+    "vitest": "^4.1.2"
   }
 }

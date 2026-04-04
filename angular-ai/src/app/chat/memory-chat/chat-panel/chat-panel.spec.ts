@@ -15,36 +15,36 @@ import { ChatType } from '../../chat-message';
 import { ChatStartResponse } from '../../chat';
 
 class MockMemoryChatService {
-  selectedChatId = jasmine.createSpy().and.returnValue(undefined);
+  selectedChatId = vi.fn().mockReturnValue(undefined);
   chatMessagesResource = {
-    value: jasmine.createSpy().and.returnValue([]),
-    status: jasmine.createSpy().and.returnValue('idle'),
-    error: jasmine.createSpy().and.returnValue(null),
-    reload: jasmine.createSpy()
+    value: vi.fn().mockReturnValue([]),
+    status: vi.fn().mockReturnValue('idle'),
+    error: vi.fn().mockReturnValue(null),
+    reload: vi.fn()
   };
   chatsResource = {
-    reload: jasmine.createSpy()
+    reload: vi.fn()
   };
 
   messagesErrorHandler = {
-    error: jasmine.createSpy().and.returnValue(null),
-    retryCount: jasmine.createSpy().and.returnValue(0),
-    reset: jasmine.createSpy()
+    error: vi.fn().mockReturnValue(null),
+    retryCount: vi.fn().mockReturnValue(0),
+    reset: vi.fn()
   };
 
-  continueChat = jasmine.createSpy().and.returnValue(of({
+  continueChat = vi.fn().mockReturnValue(of({
     content: 'Response from AI',
     type: ChatType.ASSISTANT
   }));
 
-  startNewChat = jasmine.createSpy().and.returnValue(of({
+  startNewChat = vi.fn().mockReturnValue(of({
     chatId: 'new-chat-123',
     message: 'AI response',
     description: 'New chat started'
   }));
 
-  selectChat = jasmine.createSpy();
-  retryLoadMessages = jasmine.createSpy();
+  selectChat = vi.fn();
+  retryLoadMessages = vi.fn();
 }
 
 describe('ChatPanel', () => {
@@ -90,7 +90,7 @@ describe('ChatPanel', () => {
 
   it('should not send empty message', () => {
     component.userInput.set('   ');
-    spyOn(component as any, 'sendChatMessage');
+    vi.spyOn(component as any, 'sendChatMessage');
 
     component.sendMessage();
 
@@ -101,7 +101,7 @@ describe('ChatPanel', () => {
   it('should not send message when loading', () => {
     component.userInput.set('test message');
     component.isLoading = true;
-    spyOn(component as any, 'sendChatMessage');
+    vi.spyOn(component as any, 'sendChatMessage');
 
     component.sendMessage();
 
@@ -111,8 +111,8 @@ describe('ChatPanel', () => {
   it('should send message when valid input and not loading', () => {
     component.userInput.set('test message');
     component.isLoading = false;
-    spyOn(component as any, 'sendChatMessage');
-    spyOn(component as any, 'updateMessages');
+    vi.spyOn(component as any, 'sendChatMessage').mockImplementation(() => undefined);
+    vi.spyOn(component as any, 'updateMessages');
 
     component.sendMessage();
 
@@ -146,7 +146,7 @@ describe('ChatPanel', () => {
   });
 
   it('should start new chat when no chat selected', () => {
-    mockMemoryChatService.selectedChatId.and.returnValue(undefined);
+    mockMemoryChatService.selectedChatId.mockReturnValue(undefined);
     component.userInput.set('new chat message');
 
     (component as any).sendChatMessage('new chat message');
@@ -155,7 +155,7 @@ describe('ChatPanel', () => {
   });
 
   it('should continue existing chat when chat selected', () => {
-    mockMemoryChatService.selectedChatId.and.returnValue('existing-chat-123');
+    mockMemoryChatService.selectedChatId.mockReturnValue('existing-chat-123');
     component.userInput.set('continue message');
 
     (component as any).sendChatMessage('continue message');
@@ -164,12 +164,12 @@ describe('ChatPanel', () => {
   });
 
   it('should handle continue chat success', () => {
-    mockMemoryChatService.selectedChatId.and.returnValue('chat-123');
-    mockMemoryChatService.continueChat.and.returnValue(of({
+    mockMemoryChatService.selectedChatId.mockReturnValue('chat-123');
+    mockMemoryChatService.continueChat.mockReturnValue(of({
       content: 'AI response',
       type: ChatType.ASSISTANT
     }));
-    spyOn(component as any, 'updateMessages');
+    vi.spyOn(component as any, 'updateMessages');
     component.userInput.set('test message');
 
     (component as any).sendChatMessage('test message');
@@ -180,9 +180,9 @@ describe('ChatPanel', () => {
   });
 
   it('should handle continue chat error', () => {
-    mockMemoryChatService.selectedChatId.and.returnValue('chat-123');
-    mockMemoryChatService.continueChat.and.returnValue(throwError(() => new Error('API Error')));
-    spyOn(component as any, 'updateMessages');
+    mockMemoryChatService.selectedChatId.mockReturnValue('chat-123');
+    mockMemoryChatService.continueChat.mockReturnValue(throwError(() => new Error('API Error')));
+    vi.spyOn(component as any, 'updateMessages');
     component.userInput.set('test message');
 
     (component as any).sendChatMessage('test message');
@@ -195,13 +195,13 @@ describe('ChatPanel', () => {
   });
 
   it('should handle start new chat success', () => {
-    mockMemoryChatService.selectedChatId.and.returnValue(undefined);
+    mockMemoryChatService.selectedChatId.mockReturnValue(undefined);
     const mockResponse: ChatStartResponse = {
       chatId: 'new-chat-456',
       message: 'Welcome!',
       description: 'New chat'
     };
-    mockMemoryChatService.startNewChat.and.returnValue(of(mockResponse));
+    mockMemoryChatService.startNewChat.mockReturnValue(of(mockResponse));
     component.userInput.set('start new chat');
 
     (component as any).sendChatMessage('start new chat');
@@ -213,9 +213,9 @@ describe('ChatPanel', () => {
   });
 
   it('should handle start new chat error', () => {
-    mockMemoryChatService.selectedChatId.and.returnValue(undefined);
-    mockMemoryChatService.startNewChat.and.returnValue(throwError(() => new Error('API Error')));
-    spyOn(component as any, 'updateMessages');
+    mockMemoryChatService.selectedChatId.mockReturnValue(undefined);
+    mockMemoryChatService.startNewChat.mockReturnValue(throwError(() => new Error('API Error')));
+    vi.spyOn(component as any, 'updateMessages');
     component.userInput.set('test message');
 
     (component as any).sendChatMessage('test message');
@@ -228,11 +228,11 @@ describe('ChatPanel', () => {
   });
 
   it('should reload chat list when continuing chat with few messages', () => {
-    mockMemoryChatService.selectedChatId.and.returnValue('chat-123');
-    mockMemoryChatService.chatMessagesResource.value.and.returnValue([
+    mockMemoryChatService.selectedChatId.mockReturnValue('chat-123');
+    mockMemoryChatService.chatMessagesResource.value.mockReturnValue([
       { content: 'First message', type: ChatType.USER }
     ]);
-    mockMemoryChatService.continueChat.and.returnValue(of({
+    mockMemoryChatService.continueChat.mockReturnValue(of({
       content: 'AI response',
       type: ChatType.ASSISTANT
     }));
@@ -244,13 +244,13 @@ describe('ChatPanel', () => {
   });
 
   it('should not reload chat list when continuing chat with many messages', () => {
-    mockMemoryChatService.selectedChatId.and.returnValue('chat-123');
-    mockMemoryChatService.chatMessagesResource.value.and.returnValue([
+    mockMemoryChatService.selectedChatId.mockReturnValue('chat-123');
+    mockMemoryChatService.chatMessagesResource.value.mockReturnValue([
       { content: 'First message', type: ChatType.USER },
       { content: 'Second message', type: ChatType.ASSISTANT },
       { content: 'Third message', type: ChatType.USER }
     ]);
-    mockMemoryChatService.continueChat.and.returnValue(of({
+    mockMemoryChatService.continueChat.mockReturnValue(of({
       content: 'AI response',
       type: ChatType.ASSISTANT
     }));
@@ -363,39 +363,39 @@ describe('ChatPanel', () => {
   describe('sendMessage with validation', () => {
     it('should not send message when canSend returns false', () => {
       component.userInput.set('');
-      spyOn(component as any, 'sendChatMessage');
+      vi.spyOn(component as any, 'sendChatMessage');
       component.sendMessage();
       expect((component as any).sendChatMessage).not.toHaveBeenCalled();
     });
 
     it('should sanitize input before sending to startNewChat', () => {
-      mockMemoryChatService.selectedChatId.and.returnValue(undefined);
+      mockMemoryChatService.selectedChatId.mockReturnValue(undefined);
       const maliciousInput = 'Test <script>alert("xss")</script> message';
       component.userInput.set(maliciousInput);
-      
+
       const mockResponse: ChatStartResponse = {
         chatId: 'new-chat-789',
         message: 'Response',
         description: 'New chat'
       };
-      mockMemoryChatService.startNewChat.and.returnValue(of(mockResponse));
-      
+      mockMemoryChatService.startNewChat.mockReturnValue(of(mockResponse));
+
       component.sendMessage();
-      
+
       expect(mockMemoryChatService.startNewChat).toHaveBeenCalledWith('Test  message');
     });
 
     it('should sanitize input before sending to continueChat', () => {
-      mockMemoryChatService.selectedChatId.and.returnValue('chat-123');
+      mockMemoryChatService.selectedChatId.mockReturnValue('chat-123');
       const maliciousInput = 'Continue <b>bold</b> <script>hack()</script>';
       component.userInput.set(maliciousInput);
-      
-      mockMemoryChatService.continueChat.and.returnValue(
+
+      mockMemoryChatService.continueChat.mockReturnValue(
         of({ content: 'Response', type: ChatType.ASSISTANT })
       );
-      
+
       component.sendMessage();
-      
+
       expect(mockMemoryChatService.continueChat).toHaveBeenCalledWith('chat-123', 'Continue bold');
     });
   });

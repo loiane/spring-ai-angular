@@ -165,7 +165,7 @@ describe('ResourceErrorHandler', () => {
       expect(errorHandler.canRetry).toBe(false);
     });
 
-    it('should call operation with exponential backoff', (done) => {
+    it('should call operation with exponential backoff', () => {
       const networkError = new HttpErrorResponse({ status: 0, statusText: 'Unknown Error' });
       errorHandler.handleError(networkError);
 
@@ -174,6 +174,8 @@ describe('ResourceErrorHandler', () => {
         operationCalled = true;
       };
 
+      vi.useFakeTimers();
+
       const startTime = Date.now();
       errorHandler.retry(operation);
 
@@ -181,14 +183,13 @@ describe('ResourceErrorHandler', () => {
       expect(operationCalled).toBe(false);
       expect(errorHandler.retryCount()).toBe(1);
 
-      // Wait for the operation to be called
-      setTimeout(() => {
-        expect(operationCalled).toBe(true);
-        const elapsedTime = Date.now() - startTime;
-        // Should be approximately 1000ms (initialDelay)
-        expect(elapsedTime).toBeGreaterThanOrEqual(950);
-        done();
-      }, 1100);
+      vi.advanceTimersByTime(1100);
+
+      expect(operationCalled).toBe(true);
+      const elapsedTime = Date.now() - startTime;
+      // Should be approximately 1000ms (initialDelay)
+      expect(elapsedTime).toBeGreaterThanOrEqual(950);
+      vi.useRealTimers();
     });
 
     it('should calculate correct delay with backoff multiplier', () => {
@@ -280,31 +281,31 @@ describe('ResourceErrorHandler', () => {
   });
 
   describe('retry when canRetry is false', () => {
-    it('should not execute operation when canRetry is false', (done) => {
+    it('should not execute operation when canRetry is false', () => {
       const notFoundError = new HttpErrorResponse({ status: 404, statusText: 'Not Found' });
       errorHandler.handleError(notFoundError);
+      vi.useFakeTimers();
 
       let operationCalled = false;
       errorHandler.retry(() => { operationCalled = true; });
 
-      setTimeout(() => {
-        expect(operationCalled).toBe(false);
-        done();
-      }, 1500);
+      vi.advanceTimersByTime(1500);
+      expect(operationCalled).toBe(false);
+      vi.useRealTimers();
     });
 
-    it('should not execute operation when max retries reached', (done) => {
+    it('should not execute operation when max retries reached', () => {
       const networkError = new HttpErrorResponse({ status: 0, statusText: 'Unknown Error' });
       errorHandler.handleError(networkError);
       errorHandler.setRetryCount(3); // Max retries reached
+      vi.useFakeTimers();
 
       let operationCalled = false;
       errorHandler.retry(() => { operationCalled = true; });
 
-      setTimeout(() => {
-        expect(operationCalled).toBe(false);
-        done();
-      }, 1500);
+      vi.advanceTimersByTime(1500);
+      expect(operationCalled).toBe(false);
+      vi.useRealTimers();
     });
   });
 

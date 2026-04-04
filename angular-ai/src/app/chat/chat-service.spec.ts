@@ -51,7 +51,7 @@ describe('ChatService', () => {
       const errorMessage = 'Something went wrong';
 
       service.sendChatMessage(mockMessage).subscribe({
-        next: () => fail('should have failed with an error'),
+        next: () => expect.unreachable('should have failed with an error'),
         error: (error) => {
           expect(error.status).toBe(500);
           expect(error.statusText).toBe('Server Error');

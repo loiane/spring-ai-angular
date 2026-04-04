@@ -129,7 +129,7 @@ describe('MarkdownToHtmlPipe', () => {
 
     // Temporarily suppress console warnings for this test since sanitization warning is expected
     const originalWarn = console.warn;
-    console.warn = jasmine.createSpy('warn');
+    console.warn = vi.fn();
 
     const input = '**test** <script>alert("xss")</script>';
     const result = pipe.transform(input);

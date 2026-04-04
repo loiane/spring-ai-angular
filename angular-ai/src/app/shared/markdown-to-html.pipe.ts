@@ -33,7 +33,8 @@ export class MarkdownToHtmlPipe implements PipeTransform {
 
     // Remove paragraph wrapper for single-line content
     renderer.paragraph = function(token: Tokens.Paragraph): string {
-      return token.text + '\n';
+      const parser = (this as any).parser;
+      return parser.parseInline(token.tokens) + '\n';
     };
 
     // Configure marked options

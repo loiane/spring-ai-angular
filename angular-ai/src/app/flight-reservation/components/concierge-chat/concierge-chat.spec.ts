@@ -55,8 +55,8 @@ describe('ConciergeChat', () => {
 
       component.currentMessage.set(testMessage);
 
-      spyOn(service, 'sendConciergeMessage').and.returnValue(of(mockResponse));
-      spyOn(service, 'handleConciergeResponse');
+      vi.spyOn(service, 'sendConciergeMessage').mockReturnValue(of(mockResponse));
+      vi.spyOn(service, 'handleConciergeResponse');
 
       component.sendMessage();
 
@@ -68,7 +68,7 @@ describe('ConciergeChat', () => {
     it('should not send message when currentMessage is empty', () => {
       component.currentMessage.set('');
 
-      spyOn(service, 'sendConciergeMessage');
+      vi.spyOn(service, 'sendConciergeMessage');
 
       component.sendMessage();
 
@@ -78,7 +78,7 @@ describe('ConciergeChat', () => {
     it('should not send message when currentMessage is only whitespace', () => {
       component.currentMessage.set('   ');
 
-      spyOn(service, 'sendConciergeMessage');
+      vi.spyOn(service, 'sendConciergeMessage');
 
       component.sendMessage();
 
@@ -91,8 +91,8 @@ describe('ConciergeChat', () => {
 
       component.currentMessage.set(testMessage);
 
-      spyOn(service, 'sendConciergeMessage').and.returnValue(throwError(() => error));
-      spyOn(service, 'handleConciergeError');
+      vi.spyOn(service, 'sendConciergeMessage').mockReturnValue(throwError(() => error));
+      vi.spyOn(service, 'handleConciergeError');
 
       component.sendMessage();
 
@@ -105,8 +105,8 @@ describe('ConciergeChat', () => {
   describe('onKeyPress', () => {
     it('should send message on Enter key without Shift', () => {
       const event = new KeyboardEvent('keypress', { key: 'Enter', shiftKey: false });
-      spyOn(event, 'preventDefault');
-      spyOn(component, 'sendMessage');
+      vi.spyOn(event, 'preventDefault');
+      vi.spyOn(component, 'sendMessage');
 
       component.onKeyPress(event);
 
@@ -116,7 +116,7 @@ describe('ConciergeChat', () => {
 
     it('should not send message on Enter key with Shift', () => {
       const event = new KeyboardEvent('keypress', { key: 'Enter', shiftKey: true });
-      spyOn(component, 'sendMessage');
+      vi.spyOn(component, 'sendMessage');
 
       component.onKeyPress(event);
 
@@ -125,7 +125,7 @@ describe('ConciergeChat', () => {
 
     it('should not send message on other keys', () => {
       const event = new KeyboardEvent('keypress', { key: 'a' });
-      spyOn(component, 'sendMessage');
+      vi.spyOn(component, 'sendMessage');
 
       component.onKeyPress(event);
 
@@ -243,7 +243,7 @@ describe('ConciergeChat', () => {
   describe('sendMessage with validation', () => {
     it('should not send message when canSend returns false', () => {
       component.currentMessage.set('');
-      spyOn(service, 'sendConciergeMessage');
+      vi.spyOn(service, 'sendConciergeMessage');
       component.sendMessage();
       expect(service.sendConciergeMessage).not.toHaveBeenCalled();
     });
@@ -252,7 +252,7 @@ describe('ConciergeChat', () => {
       const maliciousInput = 'Book flight <script>alert("xss")</script> to NYC';
       component.currentMessage.set(maliciousInput);
 
-      spyOn(service, 'sendConciergeMessage').and.returnValue(
+      vi.spyOn(service, 'sendConciergeMessage').mockReturnValue(
         of({ content: 'OK', requiresAction: false })
       );
 
@@ -265,8 +265,8 @@ describe('ConciergeChat', () => {
       component.currentMessage.set('a'.repeat(2001)); // Too long
       const event = new KeyboardEvent('keypress', { key: 'Enter', shiftKey: false });
 
-      spyOn(event, 'preventDefault');
-      spyOn(service, 'sendConciergeMessage');
+      vi.spyOn(event, 'preventDefault');
+      vi.spyOn(service, 'sendConciergeMessage');
 
       component.onKeyPress(event);
 

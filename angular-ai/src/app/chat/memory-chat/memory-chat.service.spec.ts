@@ -56,13 +56,13 @@ describe('MemoryChatService', () => {
     });
 
     it('should call retry on chatsErrorHandler when retryLoadChats is called', () => {
-      spyOn(service.chatsErrorHandler, 'retry');
+      vi.spyOn(service.chatsErrorHandler, 'retry');
       service.retryLoadChats();
       expect(service.chatsErrorHandler.retry).toHaveBeenCalled();
     });
 
     it('should call retry on messagesErrorHandler when retryLoadMessages is called', () => {
-      spyOn(service.messagesErrorHandler, 'retry');
+      vi.spyOn(service.messagesErrorHandler, 'retry');
       service.retryLoadMessages();
       expect(service.messagesErrorHandler.retry).toHaveBeenCalled();
     });

@@ -15,43 +15,43 @@ import { ChatList } from './chat-list';
 import { MemoryChatService } from '../memory-chat.service';
 
 class MockMemoryChatService {
-  selectedChatId = jasmine.createSpy().and.returnValue(undefined);
+  selectedChatId = vi.fn().mockReturnValue(undefined);
   chatsResource = {
-    value: jasmine.createSpy().and.returnValue([
+    value: vi.fn().mockReturnValue([
       { id: 'chat1', description: 'First chat' },
       { id: 'chat2', description: 'Second chat' }
     ]),
-    status: jasmine.createSpy().and.returnValue('resolved'),
-    error: jasmine.createSpy().and.returnValue(null),
-    isLoading: jasmine.createSpy().and.returnValue(false),
-    reload: jasmine.createSpy()
+    status: vi.fn().mockReturnValue('resolved'),
+    error: vi.fn().mockReturnValue(null),
+    isLoading: vi.fn().mockReturnValue(false),
+    reload: vi.fn()
   };
 
   chatMessagesResource = {
-    value: jasmine.createSpy().and.returnValue([]),
-    status: jasmine.createSpy().and.returnValue('idle'),
-    error: jasmine.createSpy().and.returnValue(null),
-    reload: jasmine.createSpy()
+    value: vi.fn().mockReturnValue([]),
+    status: vi.fn().mockReturnValue('idle'),
+    error: vi.fn().mockReturnValue(null),
+    reload: vi.fn()
   };
 
   chatsErrorHandler = {
-    error: jasmine.createSpy().and.returnValue(null),
-    retryCount: jasmine.createSpy().and.returnValue(0),
-    reset: jasmine.createSpy()
+    error: vi.fn().mockReturnValue(null),
+    retryCount: vi.fn().mockReturnValue(0),
+    reset: vi.fn()
   };
 
   messagesErrorHandler = {
-    error: jasmine.createSpy().and.returnValue(null),
-    retryCount: jasmine.createSpy().and.returnValue(0),
-    reset: jasmine.createSpy()
+    error: vi.fn().mockReturnValue(null),
+    retryCount: vi.fn().mockReturnValue(0),
+    reset: vi.fn()
   };
 
-  selectChat = jasmine.createSpy();
-  clearSelection = jasmine.createSpy();
-  continueChat = jasmine.createSpy().and.returnValue(of({}));
-  startNewChat = jasmine.createSpy().and.returnValue(of({}));
-  retryLoadChats = jasmine.createSpy();
-  retryLoadMessages = jasmine.createSpy();
+  selectChat = vi.fn();
+  clearSelection = vi.fn();
+  continueChat = vi.fn().mockReturnValue(of({}));
+  startNewChat = vi.fn().mockReturnValue(of({}));
+  retryLoadChats = vi.fn();
+  retryLoadMessages = vi.fn();
 }
 
 describe('ChatList', () => {
@@ -110,7 +110,7 @@ describe('ChatList', () => {
   it('should call deleteChat and stop propagation', () => {
     const chatId = 'test-chat-id';
     const mockEvent = {
-      stopPropagation: jasmine.createSpy()
+      stopPropagation: vi.fn()
     } as any;
 
     component.deleteChat(chatId, mockEvent);
@@ -130,12 +130,12 @@ describe('ChatList', () => {
   });
 
   it('should handle loading state', () => {
-    mockMemoryChatService.chatsResource.status.and.returnValue('loading');
+    mockMemoryChatService.chatsResource.status.mockReturnValue('loading');
     expect(component.chats.status()).toBe('loading');
   });
 
   it('should handle error state', () => {
-    mockMemoryChatService.chatsResource.status.and.returnValue('error');
+    mockMemoryChatService.chatsResource.status.mockReturnValue('error');
     expect(component.chats.status()).toBe('error');
   });
 });

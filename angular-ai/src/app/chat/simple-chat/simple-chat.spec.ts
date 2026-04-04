@@ -37,8 +37,8 @@ describe('SimpleChat', () => {
   });
 
   it('should add user message to messages and call sendChatMessage', () => {
-    spyOn(component as any, 'updateMessages').and.callThrough();
-    spyOn(component as any, 'sendChatMessage').and.callThrough();
+    vi.spyOn(component as any, 'updateMessages');
+    vi.spyOn(component as any, 'sendChatMessage');
     component.userInput.set('test');
     component.sendMessage();
     expect((component as any).updateMessages).toHaveBeenCalledWith('test');
@@ -47,7 +47,7 @@ describe('SimpleChat', () => {
 
   it('should not send empty message', () => {
     component.userInput.set('   ');
-    spyOn(component as any, 'updateMessages');
+    vi.spyOn(component as any, 'updateMessages');
     component.sendMessage();
     expect((component as any).updateMessages).not.toHaveBeenCalled();
   });
@@ -66,8 +66,8 @@ describe('SimpleChat', () => {
   it('should not send message when loading', () => {
     component.userInput.set('test message');
     component.isLoading = true;
-    spyOn(component as any, 'updateMessages');
-    spyOn(component as any, 'sendChatMessage');
+    vi.spyOn(component as any, 'updateMessages');
+    vi.spyOn(component as any, 'sendChatMessage');
 
     component.sendMessage();
 
@@ -106,10 +106,10 @@ describe('SimpleChat', () => {
   });
 
   it('should call sendChatMessage and handle successful response', () => {
-    spyOn(chatService, 'sendChatMessage').and.returnValue(
+    vi.spyOn(chatService, 'sendChatMessage').mockReturnValue(
       of({ message: 'Test response', isBot: true })
     );
-    spyOn(component as any, 'updateMessages').and.callThrough();
+    vi.spyOn(component as any, 'updateMessages');
 
     component.userInput.set('test message');
     (component as any).sendChatMessage('test message');
@@ -121,10 +121,10 @@ describe('SimpleChat', () => {
   });
 
   it('should handle chat service error', () => {
-    spyOn(chatService, 'sendChatMessage').and.returnValue(
+    vi.spyOn(chatService, 'sendChatMessage').mockReturnValue(
       throwError(() => new Error('Service error'))
     );
-    spyOn(component as any, 'updateMessages').and.callThrough();
+    vi.spyOn(component as any, 'updateMessages');
 
     component.userInput.set('test message');
     component.isLoading = true;
@@ -139,20 +139,20 @@ describe('SimpleChat', () => {
   });
 
   it('should handle null/undefined response from chat service', () => {
-    spyOn(chatService, 'sendChatMessage').and.returnValue(of(null as any));
-    spyOn(component as any, 'updateMessages').and.callThrough();
+    vi.spyOn(chatService, 'sendChatMessage').mockReturnValue(of(null as any));
+    vi.spyOn(component as any, 'updateMessages');
 
     component.userInput.set('test message');
     (component as any).sendChatMessage('test message');
 
     expect(chatService.sendChatMessage).toHaveBeenCalledWith('test message');
-    expect((component as any).updateMessages).not.toHaveBeenCalledWith(jasmine.any(String), true);
+    expect((component as any).updateMessages).not.toHaveBeenCalledWith(expect.any(String), true);
     expect(component.userInput()).toBe('');
     expect(component.isLoading).toBe(false);
   });
 
   it('should handle local simulation mode', () => {
-    spyOn(component as any, 'simulateResponse');
+    vi.spyOn(component as any, 'simulateResponse');
     // Set local to true by accessing private property
     (component as any).local = true;
 
@@ -163,7 +163,7 @@ describe('SimpleChat', () => {
   });
 
   it('should simulate response in local mode', () => {
-    spyOn(component as any, 'getResponse');
+    vi.spyOn(component as any, 'getResponse');
 
     (component as any).simulateResponse();
 
@@ -171,25 +171,26 @@ describe('SimpleChat', () => {
     expect(component.userInput()).toBe('');
   });
 
-  it('should simulate response with timeout in getResponse', (done) => {
-    spyOn(component as any, 'updateMessages').and.callThrough();
+  it('should simulate response with timeout in getResponse', () => {
+    vi.spyOn(component as any, 'updateMessages');
+    vi.useFakeTimers();
 
     (component as any).getResponse();
 
-    setTimeout(() => {
-      expect((component as any).updateMessages).toHaveBeenCalledWith(
-        'This is a simulated response from the AI model.',
-        true
-      );
-      expect(component.isLoading).toBe(false);
-      done();
-    }, 2100); // Wait slightly longer than the 2000ms timeout
+    vi.advanceTimersByTime(2100);
+
+    expect((component as any).updateMessages).toHaveBeenCalledWith(
+      'This is a simulated response from the AI model.',
+      true
+    );
+    expect(component.isLoading).toBe(false);
+    vi.useRealTimers();
   });
 
   it('should set loading state when sending message', () => {
     component.userInput.set('test message');
     component.isLoading = false;
-    spyOn(component as any, 'sendChatMessage');
+    vi.spyOn(component as any, 'sendChatMessage').mockImplementation(() => undefined);
 
     component.sendMessage();
 
@@ -198,7 +199,7 @@ describe('SimpleChat', () => {
 
   it('should not process empty string after trimming', () => {
     component.userInput.set('   ');
-    spyOn(component as any, 'sendChatMessage');
+    vi.spyOn(component as any, 'sendChatMessage');
 
     component.sendMessage();
 
@@ -207,7 +208,7 @@ describe('SimpleChat', () => {
   });
 
   it('should clear user input after successful chat service call', () => {
-    spyOn(chatService, 'sendChatMessage').and.returnValue(
+    vi.spyOn(chatService, 'sendChatMessage').mockReturnValue(
       of({ message: 'Response', isBot: true })
     );
 
@@ -331,18 +332,18 @@ describe('SimpleChat', () => {
   describe('sendMessage with validation', () => {
     it('should not send message when canSend returns false', () => {
       component.userInput.set('');
-      spyOn(component as any, 'sendChatMessage');
+      vi.spyOn(component as any, 'sendChatMessage');
       component.sendMessage();
       expect((component as any).sendChatMessage).not.toHaveBeenCalled();
     });
 
     it('should sanitize input before sending', () => {
       component.userInput.set('Hello <script>alert("xss")</script> world');
-      spyOn(component as any, 'sendChatMessage');
-      spyOn(component as any, 'updateMessages');
-      
+      vi.spyOn(component as any, 'sendChatMessage');
+      vi.spyOn(component as any, 'updateMessages');
+
       component.sendMessage();
-      
+
       expect((component as any).updateMessages).toHaveBeenCalledWith('Hello  world');
       expect((component as any).sendChatMessage).toHaveBeenCalledWith('Hello  world');
     });
@@ -350,13 +351,13 @@ describe('SimpleChat', () => {
     it('should send sanitized message to chat service', () => {
       const maliciousInput = 'Test <b>bold</b> <script>hack()</script>';
       component.userInput.set(maliciousInput);
-      
-      spyOn(chatService, 'sendChatMessage').and.returnValue(
+
+      vi.spyOn(chatService, 'sendChatMessage').mockReturnValue(
         of({ message: 'Response', isBot: true })
       );
-      
+
       component.sendMessage();
-      
+
       expect(chatService.sendChatMessage).toHaveBeenCalledWith('Test bold');
     });
   });

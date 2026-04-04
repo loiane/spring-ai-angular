@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideZonelessChangeDetection } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
 import { FlightReservationService } from './flight-reservation.service';
 import { FlightReservation, CancellationRequest, CancellationResponse, ReservationStatus } from '../models/flight-reservation';
 import { ConciergeResponse, MessageType } from '../models/concierge-message';
@@ -105,7 +106,7 @@ describe('FlightReservationService', () => {
   });
 
   describe('sendConciergeMessage', () => {
-    it('should send a message and add user message to chat', (done) => {
+    it('should send a message and add user message to chat', async () => {
       const userMessage = 'I need help with my booking';
       const mockResponse: ConciergeResponse = {
         content: 'I can help you with that!',
@@ -114,45 +115,40 @@ describe('FlightReservationService', () => {
 
       const initialMessageCount = service.messages().length;
 
-      service.sendConciergeMessage(userMessage).subscribe(response => {
-        expect(response).toEqual(mockResponse);
-
-        // Check that user message was added
-        const messages = service.messages();
-        expect(messages.length).toBe(initialMessageCount + 1);
-
-        const lastMessage = messages[messages.length - 1];
-        expect(lastMessage.content).toBe(userMessage);
-        expect(lastMessage.type).toBe(MessageType.USER);
-
-        done();
-      });
+      const responsePromise = firstValueFrom(service.sendConciergeMessage(userMessage));
 
       const req = httpMock.expectOne(service.CONCIERGE_API);
       expect(req.request.method).toBe('POST');
       expect(req.request.body).toEqual({ message: userMessage });
       req.flush(mockResponse);
+
+      const response = await responsePromise;
+      expect(response).toEqual(mockResponse);
+
+      // Check that user message was added
+      const messages = service.messages();
+      expect(messages.length).toBe(initialMessageCount + 1);
+
+      const lastMessage = messages[messages.length - 1];
+      expect(lastMessage.content).toBe(userMessage);
+      expect(lastMessage.type).toBe(MessageType.USER);
     });
 
-    it('should handle errors when sending concierge message', (done) => {
+    it('should handle errors when sending concierge message', async () => {
       const userMessage = 'Test message';
       const errorMessage = 'Server error';
 
-      service.sendConciergeMessage(userMessage).subscribe({
-        next: () => fail('should have failed'),
-        error: (error) => {
-          expect(error.status).toBe(500);
-          done();
-        }
-      });
+      const responsePromise = firstValueFrom(service.sendConciergeMessage(userMessage));
 
       const req = httpMock.expectOne(service.CONCIERGE_API);
       req.flush(errorMessage, { status: 500, statusText: 'Server Error' });
+
+      await expect(responsePromise).rejects.toMatchObject({ status: 500 });
     });
   });
 
   describe('cancelReservation', () => {
-    it('should cancel a reservation successfully', (done) => {
+    it('should cancel a reservation successfully', async () => {
       const cancellationRequest: CancellationRequest = {
         reservationNumber: 'SA101',
         firstName: 'John',
@@ -165,18 +161,18 @@ describe('FlightReservationService', () => {
         cancellationFee: 50.00
       };
 
-      service.cancelReservation(cancellationRequest).subscribe(response => {
-        expect(response).toEqual(mockResponse);
-        done();
-      });
+      const responsePromise = firstValueFrom(service.cancelReservation(cancellationRequest));
 
       const req = httpMock.expectOne(`${service.RESERVATIONS_API}/cancel`);
       expect(req.request.method).toBe('POST');
       expect(req.request.body).toEqual(cancellationRequest);
       req.flush(mockResponse);
+
+      const response = await responsePromise;
+      expect(response).toEqual(mockResponse);
     });
 
-    it('should handle errors when cancelling reservation', (done) => {
+    it('should handle errors when cancelling reservation', async () => {
       const cancellationRequest: CancellationRequest = {
         reservationNumber: 'SA999',
         firstName: 'Test',
@@ -184,16 +180,12 @@ describe('FlightReservationService', () => {
         reason: 'Test'
       };
 
-      service.cancelReservation(cancellationRequest).subscribe({
-        next: () => fail('should have failed'),
-        error: (error) => {
-          expect(error.status).toBe(404);
-          done();
-        }
-      });
+      const responsePromise = firstValueFrom(service.cancelReservation(cancellationRequest));
 
       const req = httpMock.expectOne(`${service.RESERVATIONS_API}/cancel`);
       req.flush('Not found', { status: 404, statusText: 'Not Found' });
+
+      await expect(responsePromise).rejects.toMatchObject({ status: 404 });
     });
   });
 
@@ -246,7 +238,7 @@ describe('FlightReservationService', () => {
 
   describe('refreshReservations', () => {
     it('should reload the reservations resource', () => {
-      spyOn(service.reservationsResource, 'reload');
+      vi.spyOn(service.reservationsResource, 'reload');
 
       service.refreshReservations();
 
