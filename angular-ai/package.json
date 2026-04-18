@@ -38,6 +38,6 @@
     "@types/marked": "^5.0.2",
     "jsdom": "^29.0.1",
     "typescript": "~5.9.2",
-    "vitest": "^4.1.2"
+    "vitest": "^4.1.4"
   }
 }
