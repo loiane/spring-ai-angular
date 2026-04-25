@@ -33,7 +33,7 @@
   "devDependencies": {
     "@angular/build": "^21.2.7",
     "@angular/cli": "^21.2.7",
-    "@angular/compiler-cli": "^21.2.9",
+    "@angular/compiler-cli": "^21.2.10",
     "@playwright/test": "^1.59.1",
     "@types/marked": "^5.0.2",
     "jsdom": "^29.0.1",
