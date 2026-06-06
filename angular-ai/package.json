@@ -22,7 +22,7 @@
     "@angular/compiler": "^21.2.15",
     "@angular/core": "^21.2.15",
     "@angular/forms": "^21.2.15",
-    "@angular/material": "^21.2.13",
+    "@angular/material": "^22.0.0",
     "@angular/platform-browser": "^21.2.15",
     "@angular/router": "^21.2.15",
     "highlight.js": "^11.11.1",
