@@ -1,8 +1,8 @@
 # Spring AI API
 
-[![Java](https://img.shields.io/badge/Java-24-orange.svg)](https://openjdk.java.net/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.3-brightgreen.svg)](https://spring.io/projects/spring-boot)
-[![Spring AI](https://img.shields.io/badge/Spring%20AI-1.0.0-blue.svg)](https://docs.spring.io/spring-ai/reference/)
+[![Java](https://img.shields.io/badge/Java-25-orange.svg)](https://openjdk.java.net/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.0-brightgreen.svg)](https://spring.io/projects/spring-boot)
+[![Spring AI](https://img.shields.io/badge/Spring%20AI-2.0.0-blue.svg)](https://docs.spring.io/spring-ai/reference/)
 [![Maven](https://img.shields.io/badge/Maven-3.6+-red.svg)](https://maven.apache.org/)
 
 A comprehensive Spring AI demonstration application showcasing various AI capabilities including chat interactions, memory management, RAG (Retrieval-Augmented Generation), and document processing.
@@ -15,9 +15,13 @@ A comprehensive Spring AI demonstration application showcasing various AI capabi
 - **Book Recommendations**: AI-powered book suggestions by author
 
 ### 📚 RAG (Retrieval-Augmented Generation)
-- **PDF Document Processing**: Load and query PDF documents
-- **Vector Store Integration**: Semantic search capabilities
-- **Context-Aware Responses**: Enhanced AI responses with document context
+- **PDF Document Upload**: Upload, list, and delete PDF documents
+- **Vector Store Integration**: Semantic search capabilities with pgvector
+- **Context-Aware Responses**: Enhanced AI responses with document context and sources
+
+### ✈️ Flight Reservations
+- **Reservation Management**: Create, list, and search reservations
+- **Status Updates**: Cancel reservations and update reservation status
 
 ### 💾 Data Persistence
 - **PostgreSQL Integration**: Robust data storage for chat history
@@ -32,7 +36,7 @@ A comprehensive Spring AI demonstration application showcasing various AI capabi
 
 ## 📋 Prerequisites
 
-- **Java 24** or higher
+- **Java 25** or higher
 - **Maven 3.6+**
 - **Docker & Docker Compose** (for database)
 - **OpenAI API Key**
@@ -131,19 +135,49 @@ GET /api/books/by-author-formatted?author=Rebecca+Yarros
 
 ### 🔍 RAG Endpoints
 
-#### Load PDF Document
+#### Upload PDF Document
 ```http
-GET /api/ai/rag/load-pdf
+POST /api/rag/upload
+Content-Type: multipart/form-data
+
+file=<PDF file>
 ```
 
-#### Query Documents
+#### List / Get / Delete Documents
 ```http
-POST /api/ai/rag
+GET /api/rag/documents
+GET /api/rag/documents/{id}
+DELETE /api/rag/documents/{id}
+```
+
+#### Ask Questions Using Retrieved Context
+```http
+POST /api/rag/ask
 Content-Type: application/json
 
 {
     "message": "What is Spring AI?"
 }
+```
+
+### ✈️ Flight Reservation Endpoints
+
+#### List / Get / Create Reservations
+```http
+GET /api/flight-reservations
+GET /api/flight-reservations/{reservationId}
+POST /api/flight-reservations
+```
+
+#### Cancel / Update Status
+```http
+PUT /api/flight-reservations/{reservationId}/cancel
+PUT /api/flight-reservations/{reservationId}/status
+```
+
+#### Search by Passenger Email
+```http
+GET /api/flight-reservations/search?email=passenger@example.com
 ```
 
 ## 🏗️ Project Structure
@@ -168,13 +202,24 @@ src/
 │   │   │   ├── BookPromptService.java
 │   │   │   ├── Author.java (Record)
 │   │   │   └── Book.java (Record)
+│   │   ├── flightreservation/              # Flight reservations
+│   │   │   ├── FlightReservationController.java
+│   │   │   ├── FlightReservationService.java
+│   │   │   ├── FlightReservationRepository.java
+│   │   │   └── FlightReservation*.java
 │   │   └── rag/                            # RAG implementation
 │   │       ├── RagController.java
-│   │       ├── RagPDFReader.java
-│   │       └── RagReader.java
+│   │       ├── RagService.java
+│   │       ├── DocumentService.java
+│   │       ├── DocumentRepository.java
+│   │       ├── config/                     # Vector store and reader config
+│   │       ├── exception/                  # Document exceptions
+│   │       └── model/                      # Document and response models
 │   └── resources/
 │       ├── application.properties          # Main configuration
 │       ├── schema.sql                      # Database schema
+│       ├── rag-schema.sql                  # RAG document metadata schema
+│       ├── pgvector.sql                    # Vector store schema
 │       ├── docs/                           # PDF documents for RAG
 │       ├── data/                           # Sample data
 │       └── templates/                      # AI prompt templates
@@ -182,7 +227,8 @@ src/
     ├── java/com/loiane/api_ai/
     │   ├── ApiAiApplicationTests.java
     │   ├── chat/                           # Chat service tests
-    │   └── booksprompt/                    # Book service tests
+    │   ├── booksprompt/                    # Book service tests
+    │   └── flightreservation/              # Flight reservation tests
     └── resources/
         └── application-test.properties     # Test configuration
 ```
@@ -255,7 +301,7 @@ The project is ready for containerization with Spring Boot's built-in Docker sup
 ## 🔧 Development
 
 ### Prerequisites
-- IDE with Java 24 support (IntelliJ IDEA, Eclipse, VS Code)
+- IDE with Java 25 support (IntelliJ IDEA, Eclipse, VS Code)
 - Maven integration
 - Docker for local database
 
@@ -272,8 +318,8 @@ Use the included `api.http` file with HTTP clients like:
 ## 📖 Dependencies
 
 ### Core Dependencies
-- **Spring Boot 3.5.3**: Application framework
-- **Spring AI 1.0.0**: AI integration framework
+- **Spring Boot 4.1.0**: Application framework
+- **Spring AI 2.0.0**: AI integration framework
 - **OpenAI Integration**: Chat completion APIs
 - **PostgreSQL**: Production database
 - **H2**: Test database

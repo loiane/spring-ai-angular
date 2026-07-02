@@ -16,7 +16,7 @@ The project demonstrates practical AI application patterns end-to-end:
 - Spring AI 2.x
 - Maven Wrapper
 - PostgreSQL + pgvector
-- Angular 21
+- Angular 22
 - Angular Material
 - Playwright + Vitest/Karma tooling
 
