@@ -18,7 +18,7 @@ The project demonstrates practical AI application patterns end-to-end:
 - PostgreSQL + pgvector
 - Angular 22
 - Angular Material
-- Playwright + Vitest/Karma tooling
+- Playwright + Vitest tooling
 
 ## Repository Structure
 

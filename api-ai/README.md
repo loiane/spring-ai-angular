@@ -10,82 +10,75 @@ A comprehensive Spring AI demonstration application showcasing various AI capabi
 ## 🚀 Features
 
 ### 🤖 AI Chat Services
+
 - **Simple Chat**: Direct OpenAI integration for single-turn conversations
 - **Memory Chat**: Persistent conversation history with PostgreSQL storage
 - **Book Recommendations**: AI-powered book suggestions by author
 
 ### 📚 RAG (Retrieval-Augmented Generation)
+
 - **PDF Document Upload**: Upload, list, and delete PDF documents
 - **Vector Store Integration**: Semantic search capabilities with pgvector
 - **Context-Aware Responses**: Enhanced AI responses with document context and sources
 
 ### ✈️ Flight Reservations
+
 - **Reservation Management**: Create, list, and search reservations
 - **Status Updates**: Cancel reservations and update reservation status
 
 ### 💾 Data Persistence
+
 - **PostgreSQL Integration**: Robust data storage for chat history
 - **Vector Database Support**: pgvector for semantic search
 - **H2 Database**: In-memory database for testing
 
-### 🏗️ Architecture
-- **RESTful API**: Clean and well-documented endpoints
-- **Modular Design**: Organized by feature domains
-- **Comprehensive Testing**: Unit and integration tests
-- **Docker Support**: Container-ready with Docker Compose
-
 ## 📋 Prerequisites
 
 - **Java 25** or higher
-- **Maven 3.6+**
-- **Docker & Docker Compose** (for database)
+- **Docker & Docker Compose** (for the database)
 - **OpenAI API Key**
+
+Maven is not required — the project includes the Maven Wrapper (`./mvnw`).
 
 ## 🛠️ Installation & Setup
 
 ### 1. Clone the Repository
+
 ```bash
-git clone <repository-url>
-cd api-ai
+git clone https://github.com/loiane/spring-ai-angular.git
+cd spring-ai-angular/api-ai
 ```
 
 ### 2. Environment Configuration
-Create a `.env` file in the project root:
+
+Set your OpenAI API key:
+
 ```bash
-OPENAI_API_KEY=your_openai_api_key_here
+export OPENAI_API_KEY=your_openai_api_key_here
 ```
 
-### 3. Start Database Services
-```bash
-docker compose up -d
-```
+### 3. Run the Application
 
-This starts:
-- PostgreSQL database on port 5432
-- pgvector extension for vector operations
-
-### 4. Build the Application
-```bash
-./mvnw clean install
-```
-
-### 5. Run the Application
 ```bash
 ./mvnw spring-boot:run
 ```
 
-Or with environment variables:
-```bash
-source .env && ./mvnw spring-boot:run
-```
+Docker must be running: the project uses Spring Boot's Docker Compose integration
+(`spring-boot-docker-compose`), which automatically starts the PostgreSQL/pgvector
+container from `compose.yaml` when the application starts — no manual
+`docker compose up` needed.
 
 The application will start on `http://localhost:8080`
 
 ## 📚 API Documentation
 
+The file `api.http` contains ready-to-run examples for all endpoints
+(IntelliJ IDEA HTTP Client, VS Code REST Client, or similar).
+
 ### 🤖 Chat Endpoints
 
 #### Simple Chat
+
 ```http
 POST /api/chat
 Content-Type: application/json
@@ -96,6 +89,9 @@ Content-Type: application/json
 ```
 
 #### Memory Chat - Start New Conversation
+
+Returns a `chatId` along with the AI response — use it to continue the conversation.
+
 ```http
 POST /api/chat-memory/start
 Content-Type: application/json
@@ -106,8 +102,9 @@ Content-Type: application/json
 ```
 
 #### Memory Chat - Continue Conversation
+
 ```http
-POST /api/chat-memory/{conversationId}
+POST /api/chat-memory/{chatId}
 Content-Type: application/json
 
 {
@@ -115,20 +112,23 @@ Content-Type: application/json
 }
 ```
 
-#### Get Chat History
+#### Get Chats and Chat History
+
 ```http
 GET /api/chat-memory
-GET /api/chat-memory/{conversationId}
+GET /api/chat-memory/{chatId}
 ```
 
 ### 📖 Book Recommendation Endpoints
 
 #### Get Books by Author (String Response)
+
 ```http
 GET /api/books/by-author?author=Rebecca+Yarros
 ```
 
 #### Get Books by Author (Structured Response)
+
 ```http
 GET /api/books/by-author-formatted?author=Rebecca+Yarros
 ```
@@ -136,6 +136,7 @@ GET /api/books/by-author-formatted?author=Rebecca+Yarros
 ### 🔍 RAG Endpoints
 
 #### Upload PDF Document
+
 ```http
 POST /api/rag/upload
 Content-Type: multipart/form-data
@@ -144,6 +145,7 @@ file=<PDF file>
 ```
 
 #### List / Get / Delete Documents
+
 ```http
 GET /api/rag/documents
 GET /api/rag/documents/{id}
@@ -151,6 +153,7 @@ DELETE /api/rag/documents/{id}
 ```
 
 #### Ask Questions Using Retrieved Context
+
 ```http
 POST /api/rag/ask
 Content-Type: application/json
@@ -163,6 +166,7 @@ Content-Type: application/json
 ### ✈️ Flight Reservation Endpoints
 
 #### List / Get / Create Reservations
+
 ```http
 GET /api/flight-reservations
 GET /api/flight-reservations/{reservationId}
@@ -170,129 +174,71 @@ POST /api/flight-reservations
 ```
 
 #### Cancel / Update Status
+
 ```http
 PUT /api/flight-reservations/{reservationId}/cancel
 PUT /api/flight-reservations/{reservationId}/status
 ```
 
 #### Search by Passenger Email
+
 ```http
 GET /api/flight-reservations/search?email=passenger@example.com
 ```
 
 ## 🏗️ Project Structure
 
-```
-src/
-├── main/
-│   ├── java/com/loiane/api_ai/
-│   │   ├── ApiAiApplication.java           # Main application class
-│   │   ├── chat/                           # Simple chat functionality
-│   │   │   ├── ChatController.java
-│   │   │   ├── ChatRequest.java
-│   │   │   ├── ChatResponse.java
-│   │   │   └── SimpleChatService.java
-│   │   ├── memory/                         # Chat with memory
-│   │   │   ├── MemoryChatController.java
-│   │   │   ├── MemoryChatService.java
-│   │   │   ├── ChatMemoryIDRepository.java
-│   │   │   └── Chat*.java
-│   │   ├── booksprompt/                    # Book recommendations
-│   │   │   ├── BookController.java
-│   │   │   ├── BookPromptService.java
-│   │   │   ├── Author.java (Record)
-│   │   │   └── Book.java (Record)
-│   │   ├── flightreservation/              # Flight reservations
-│   │   │   ├── FlightReservationController.java
-│   │   │   ├── FlightReservationService.java
-│   │   │   ├── FlightReservationRepository.java
-│   │   │   └── FlightReservation*.java
-│   │   └── rag/                            # RAG implementation
-│   │       ├── RagController.java
-│   │       ├── RagService.java
-│   │       ├── DocumentService.java
-│   │       ├── DocumentRepository.java
-│   │       ├── config/                     # Vector store and reader config
-│   │       ├── exception/                  # Document exceptions
-│   │       └── model/                      # Document and response models
-│   └── resources/
-│       ├── application.properties          # Main configuration
-│       ├── schema.sql                      # Database schema
-│       ├── rag-schema.sql                  # RAG document metadata schema
-│       ├── pgvector.sql                    # Vector store schema
-│       ├── docs/                           # PDF documents for RAG
-│       ├── data/                           # Sample data
-│       └── templates/                      # AI prompt templates
-└── test/
-    ├── java/com/loiane/api_ai/
-    │   ├── ApiAiApplicationTests.java
-    │   ├── chat/                           # Chat service tests
-    │   ├── booksprompt/                    # Book service tests
-    │   └── flightreservation/              # Flight reservation tests
-    └── resources/
-        └── application-test.properties     # Test configuration
+```text
+src/main/java/com/loiane/api_ai/
+├── chat/               # Simple chat
+├── memory/             # Chat with persistent memory
+├── booksprompt/        # Book recommendation prompts
+├── flightreservation/  # Flight reservation management
+└── rag/                # RAG: document upload, vector store, Q&A
+
+src/main/resources/     # application.properties, SQL schemas,
+                        # prompt templates, sample PDF
 ```
 
 ## ⚙️ Configuration
 
-### Application Properties
-Key configuration options in `application.properties`:
+All configuration lives in `src/main/resources/application.properties`:
 
-```properties
-# Application
-spring.application.name=spring-ai-api
-
-# OpenAI Configuration
-spring.ai.openai.api-key=${OPENAI_API_KEY}
-
-# Database Configuration
-spring.datasource.url=jdbc:postgresql://localhost:5432/mydatabase
-spring.datasource.username=myuser
-spring.datasource.password=secret
-
-# JPA Configuration
-spring.jpa.hibernate.ddl-auto=none
-spring.jpa.show-sql=true
-
-# Logging
-logging.level.org.springframework.ai=debug
-```
+- **OpenAI**: API key and embedding model (`text-embedding-3-small`, 1536 dimensions)
+- **Database**: PostgreSQL connection settings (matching `compose.yaml`)
+- **Vector Store**: pgvector dimensions, distance type, and index type
+- **RAG**: document upload directory, chunking, and retrieval settings (`app.documents.*`)
+- **Uploads**: multipart file size limits
 
 ### Environment Variables
+
 - `OPENAI_API_KEY`: Your OpenAI API key (required)
 
 ## 🧪 Testing
 
-### Run All Tests
 ```bash
+# Run all tests
 ./mvnw test
+
+# Run a specific test class
+./mvnw test -Dtest=ChatControllerTest
 ```
 
-### Test Coverage
-The project includes comprehensive tests:
-- **Unit Tests**: Service and controller layer testing
-- **Integration Tests**: Full application context testing
-- **Mocking**: Extensive use of Mockito for isolation
+Tests use an H2 in-memory database with test-specific configuration in
+`src/test/resources/application-test.properties`.
 
-### Test Configuration
-Tests use H2 in-memory database with test-specific configuration in `application-test.properties`.
+## 🐳 Docker
 
-## 🐳 Docker Support
+The database container is managed automatically by Spring Boot's Docker Compose
+integration when running the application. To manage it manually:
 
-### Database Services
 ```bash
-# Start PostgreSQL and pgvector
-docker compose up -d
-
-# Stop services
-docker compose down
-
-# View logs
-docker compose logs -f
+docker compose up -d      # start PostgreSQL/pgvector
+docker compose down       # stop services
+docker compose logs -f    # view logs
 ```
 
-### Application Containerization
-The project is ready for containerization with Spring Boot's built-in Docker support:
+To build a container image of the application:
 
 ```bash
 ./mvnw spring-boot:build-image
@@ -300,114 +246,21 @@ The project is ready for containerization with Spring Boot's built-in Docker sup
 
 ## 🔧 Development
 
-### Prerequisites
-- IDE with Java 25 support (IntelliJ IDEA, Eclipse, VS Code)
-- Maven integration
-- Docker for local database
-
-### Hot Reload
-The application includes Spring Boot DevTools for automatic restart during development.
-
-### API Testing
-Use the included `api.http` file with HTTP clients like:
-- IntelliJ IDEA HTTP Client
-- VS Code REST Client
-- Postman
-- curl
+- **Hot Reload**: Spring Boot DevTools restarts the app automatically on changes
+- **API Testing**: use the included `api.http` file
+- **Monitoring**: Spring Boot Actuator endpoints are enabled
 
 ## 📖 Dependencies
 
-### Core Dependencies
-- **Spring Boot 4.1.0**: Application framework
-- **Spring AI 2.0.0**: AI integration framework
-- **OpenAI Integration**: Chat completion APIs
-- **PostgreSQL**: Production database
-- **H2**: Test database
-
-### AI Features
-- **Chat Memory**: JDBC-based conversation storage
-- **Vector Store**: Semantic search capabilities
-- **PDF Reader**: Document processing
-- **Prompt Templates**: Structured AI interactions
-
-### Development Tools
-- **Spring Boot DevTools**: Hot reload
-- **Spring Boot Test**: Testing framework
-- **Mockito**: Mocking framework
-- **AssertJ**: Fluent assertions
-
-## 🚀 Deployment
-
-### Local Development
-```bash
-# With Maven
-./mvnw spring-boot:run
-
-# With Docker Compose
-docker compose up -d postgres
-./mvnw spring-boot:run
-```
-
-### Production Considerations
-1. **Environment Variables**: Secure API key management
-2. **Database**: PostgreSQL with pgvector extension
-3. **Monitoring**: Spring Boot Actuator endpoints
-4. **Logging**: Structured logging configuration
-5. **Security**: API authentication and authorization
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-### Development Guidelines
-- Follow Java coding standards
-- Write comprehensive tests
-- Update documentation
-- Use meaningful commit messages
+- **Spring Boot**: application framework (Web MVC, JDBC, Actuator, DevTools)
+- **Spring AI**: OpenAI chat and embedding models, JDBC chat memory,
+  pgvector vector store, PDF document reader, vector store advisor
+- **PostgreSQL + pgvector**: production database and vector store
+- **H2**: test database
 
 ## 📝 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 🆘 Troubleshooting
-
-### Common Issues
-
-#### Database Connection
-```bash
-# Ensure PostgreSQL is running
-docker compose ps
-
-# Check database logs
-docker compose logs postgres
-```
-
-#### OpenAI API Issues
-```bash
-# Verify API key is set
-echo $OPENAI_API_KEY
-
-# Check application logs for API errors
-./mvnw spring-boot:run
-```
-
-#### Test Failures
-```bash
-# Run tests with verbose output
-./mvnw test -X
-
-# Run specific test class
-./mvnw test -Dtest=ChatControllerTest
-```
-
-### Support
-- Create an issue for bugs or feature requests
-- Check existing issues for solutions
-- Review Spring AI documentation: https://docs.spring.io/spring-ai/reference/
+This project is licensed under the MIT License — see the [LICENSE](../LICENSE) file at the repository root.
 
 ## 🔗 Related Resources
 
@@ -419,4 +272,4 @@ echo $OPENAI_API_KEY
 
 ---
 
-**Built with ❤️ using Spring AI and Spring Boot**
+Built with ❤️ using Spring AI and Spring Boot
