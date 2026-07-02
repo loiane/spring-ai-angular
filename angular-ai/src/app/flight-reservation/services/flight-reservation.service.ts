@@ -1,9 +1,9 @@
 import { HttpClient, httpResource } from '@angular/common/http';
 import { effect, inject, Injectable, signal } from '@angular/core';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { LoggingService } from '../../shared/logging.service';
 import { ResourceErrorHandler, DEFAULT_RETRY_CONFIG } from '../../shared/resource-error-handler';
-import { FlightReservation, CancellationRequest, CancellationResponse } from '../models/flight-reservation';
+import { ApiFlightReservation, FlightReservation, CancellationRequest, CancellationResponse, ReservationStatus, toFlightReservation } from '../models/flight-reservation';
 import { ConciergeMessage, ConciergeResponse, MessageType } from '../models/concierge-message';
 
 @Injectable({
@@ -15,7 +15,7 @@ export class FlightReservationService {
    * API endpoints for flight reservation operations.
    * Public to allow test files to reference these constants with full type safety.
    */
-  public readonly RESERVATIONS_API = '/api/reservations';
+  public readonly RESERVATIONS_API = '/api/flight-reservations';
   public readonly CONCIERGE_API = '/api/concierge';
 
   private readonly http = inject(HttpClient);
@@ -36,9 +36,12 @@ export class FlightReservationService {
   selectedReservation = signal<FlightReservation | null>(null);
 
   /**
-   * Using httpResource for reactive data fetching of all reservations
+   * Using httpResource for reactive data fetching of all reservations.
+   * The backend returns ApiFlightReservation objects, mapped here to the UI model.
    */
-  reservationsResource = httpResource<FlightReservation[]>(() => this.RESERVATIONS_API);
+  reservationsResource = httpResource<FlightReservation[]>(() => this.RESERVATIONS_API, {
+    parse: raw => (raw as ApiFlightReservation[]).map(toFlightReservation)
+  });
 
   /**
    * Messages for concierge chat with initial greeting
@@ -119,7 +122,12 @@ export class FlightReservationService {
   }
 
   cancelReservation(request: CancellationRequest): Observable<CancellationResponse> {
-    return this.http.post<CancellationResponse>(`${this.RESERVATIONS_API}/cancel`, request);
+    return this.http
+      .put<ApiFlightReservation>(`${this.RESERVATIONS_API}/${request.reservationNumber}/cancel`, null)
+      .pipe(map(reservation => ({
+        success: reservation.status === ReservationStatus.CANCELLED,
+        message: `Reservation ${reservation.reservationId} has been cancelled.`
+      })));
   }
 
   refreshReservations(): void {

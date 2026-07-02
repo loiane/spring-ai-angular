@@ -1,7 +1,11 @@
 .flight-reservation-container {
-  height: 100vh;
+  height: calc(100vh - 64px);
   display: flex;
   flex-direction: column;
+
+  @media (max-width: 599px) {
+    height: calc(100vh - 56px);
+  }
 
   .main-toolbar {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);

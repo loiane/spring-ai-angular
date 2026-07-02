@@ -4,7 +4,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { FlightReservationService } from './flight-reservation.service';
-import { FlightReservation, CancellationRequest, CancellationResponse, ReservationStatus } from '../models/flight-reservation';
+import { ApiFlightReservation, FlightReservation, CancellationRequest, ReservationStatus } from '../models/flight-reservation';
 import { ConciergeResponse, MessageType } from '../models/concierge-message';
 
 describe('FlightReservationService', () => {
@@ -40,7 +40,7 @@ describe('FlightReservationService', () => {
   });
 
   it('should have correct API endpoints', () => {
-    expect(service.RESERVATIONS_API).toBe('/api/reservations');
+    expect(service.RESERVATIONS_API).toBe('/api/flight-reservations');
     expect(service.CONCIERGE_API).toBe('/api/concierge');
   });
 
@@ -155,21 +155,30 @@ describe('FlightReservationService', () => {
         lastName: 'Doe',
         reason: 'Change of plans'
       };
-      const mockResponse: CancellationResponse = {
-        success: true,
-        message: 'Reservation cancelled successfully',
-        cancellationFee: 50.00
+      const cancelledReservation: ApiFlightReservation = {
+        reservationId: 'SA101',
+        flightNumber: 'SF100',
+        passengerFirstName: 'John',
+        passengerLastName: 'Doe',
+        passengerEmail: 'john.doe@example.com',
+        departureAirport: 'JFK',
+        arrivalAirport: 'LHR',
+        seatNumber: '12A',
+        flightClass: 'ECONOMY',
+        status: ReservationStatus.CANCELLED,
+        createdAt: '2026-07-01T10:00:00',
+        updatedAt: '2026-07-01T11:00:00'
       };
 
       const responsePromise = firstValueFrom(service.cancelReservation(cancellationRequest));
 
-      const req = httpMock.expectOne(`${service.RESERVATIONS_API}/cancel`);
-      expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual(cancellationRequest);
-      req.flush(mockResponse);
+      const req = httpMock.expectOne(`${service.RESERVATIONS_API}/SA101/cancel`);
+      expect(req.request.method).toBe('PUT');
+      req.flush(cancelledReservation);
 
       const response = await responsePromise;
-      expect(response).toEqual(mockResponse);
+      expect(response.success).toBe(true);
+      expect(response.message).toContain('SA101');
     });
 
     it('should handle errors when cancelling reservation', async () => {
@@ -182,7 +191,7 @@ describe('FlightReservationService', () => {
 
       const responsePromise = firstValueFrom(service.cancelReservation(cancellationRequest));
 
-      const req = httpMock.expectOne(`${service.RESERVATIONS_API}/cancel`);
+      const req = httpMock.expectOne(`${service.RESERVATIONS_API}/SA999/cancel`);
       req.flush('Not found', { status: 404, statusText: 'Not Found' });
 
       await expect(responsePromise).rejects.toMatchObject({ status: 404 });
