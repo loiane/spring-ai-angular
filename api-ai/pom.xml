@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>4.0.6</version>
+		<version>4.1.0</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.loiane</groupId>
@@ -13,22 +13,10 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<name>api-ai</name>
 	<description>Sample Spring AI project</description>
-	<url/>
-	<licenses>
-		<license/>
-	</licenses>
-	<developers>
-		<developer/>
-	</developers>
-	<scm>
-		<connection/>
-		<developerConnection/>
-		<tag/>
-		<url/>
-	</scm>
+	
 	<properties>
 		<java.version>25</java.version>
-		<spring-ai.version>2.0.0-M8</spring-ai.version>
+		<spring-ai.version>2.0.0</spring-ai.version>
 	</properties>
 	<dependencies>
 
@@ -55,7 +43,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.ai</groupId>
-			<artifactId>spring-ai-advisors-vector-store</artifactId>
+			<artifactId>spring-ai-vector-store-advisor</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.ai</groupId>
@@ -116,14 +104,4 @@
 			</plugin>
 		</plugins>
 	</build>
-	<repositories>
-		<repository>
-			<id>spring-milestones</id>
-			<name>Spring Milestones</name>
-			<url>https://repo.spring.io/milestone</url>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</repository>
-	</repositories>
 </project>
