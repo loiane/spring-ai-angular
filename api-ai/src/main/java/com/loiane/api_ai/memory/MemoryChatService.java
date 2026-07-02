@@ -14,6 +14,8 @@ public class MemoryChatService {
 
     private final ChatClient chatClient;
 
+    private final ChatClient descriptionChatClient;
+
     private final ChatMemoryIDRepository chatMemoryRepository;
 
     private static final String DEFAULT_USER_ID = "Loiane";
@@ -23,6 +25,8 @@ public class MemoryChatService {
                              JdbcChatMemoryRepository jdbcChatMemoryRepository, ChatMemoryIDRepository chatMemoryRepository) {
 
         this.chatMemoryRepository = chatMemoryRepository;
+
+        this.descriptionChatClient = chatClientBuilder.clone().build();
 
         ChatMemory chatMemory = MessageWindowChatMemory.builder()
                 .chatMemoryRepository(jdbcChatMemoryRepository)
@@ -70,7 +74,7 @@ public class MemoryChatService {
     }
 
     private String generateDescription(String message) {
-        return this.chatClient.prompt()
+        return this.descriptionChatClient.prompt()
                 .user(DESCRIPTION_PROMPT + message)
                 .call()
                 .content();
