@@ -5,6 +5,17 @@ import { provideZonelessChangeDetection } from '@angular/core';
 import { ResourceErrorComponent } from './resource-error';
 import { ResourceError } from './resource-error-handler';
 
+function makeError(overrides: Partial<ResourceError> = {}): ResourceError {
+  return {
+    error: new HttpErrorResponse({ status: 0 }),
+    message: 'Network error',
+    retryCount: 0,
+    timestamp: new Date(),
+    isRetryable: true,
+    ...overrides
+  };
+}
+
 describe('ResourceErrorComponent', () => {
   let component: ResourceErrorComponent;
   let fixture: ComponentFixture<ResourceErrorComponent>;
@@ -23,6 +34,10 @@ describe('ResourceErrorComponent', () => {
     component = fixture.componentInstance;
   });
 
+  function getRetryButton(): HTMLButtonElement | null {
+    return fixture.nativeElement.querySelector('button[aria-label="Retry loading data"]');
+  }
+
   describe('component initialization', () => {
     it('should create', () => {
       expect(component).toBeTruthy();
@@ -35,93 +50,69 @@ describe('ResourceErrorComponent', () => {
       expect(component.showRetry()).toBe(true);
       expect(component.retrying()).toBe(false);
     });
+
+    it('should render nothing when there is no error', () => {
+      fixture.componentRef.setInput('error', null);
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('.error-container')).toBeNull();
+    });
   });
 
-  describe('canRetry getter', () => {
-    it('should return true when error is retryable and under max retries', () => {
-      const error: ResourceError = {
-        error: new HttpErrorResponse({ status: 0 }),
-        message: 'Network error',
-        retryCount: 0,
-        timestamp: new Date(),
-        isRetryable: true
-      };
-
-      fixture.componentRef.setInput('error', error);
+  describe('retry button availability', () => {
+    it('should show the retry button when error is retryable and under max retries', () => {
+      fixture.componentRef.setInput('error', makeError());
       fixture.componentRef.setInput('retryCount', 1);
       fixture.componentRef.setInput('maxRetries', 3);
       fixture.detectChanges();
 
-      expect(component.canRetry).toBe(true);
+      expect(getRetryButton()).toBeTruthy();
     });
 
-    it('should return false when error is null', () => {
-      fixture.componentRef.setInput('error', null);
-      fixture.detectChanges();
-
-      expect(component.canRetry).toBe(false);
-    });
-
-    it('should return false when error is not retryable', () => {
-      const error: ResourceError = {
+    it('should not show the retry button when error is not retryable', () => {
+      fixture.componentRef.setInput('error', makeError({
         error: new HttpErrorResponse({ status: 404 }),
         message: 'Not found',
-        retryCount: 0,
-        timestamp: new Date(),
         isRetryable: false
-      };
-
-      fixture.componentRef.setInput('error', error);
+      }));
       fixture.detectChanges();
 
-      expect(component.canRetry).toBe(false);
+      expect(getRetryButton()).toBeNull();
     });
 
-    it('should return false when max retries reached', () => {
-      const error: ResourceError = {
-        error: new HttpErrorResponse({ status: 0 }),
-        message: 'Network error',
-        retryCount: 3,
-        timestamp: new Date(),
-        isRetryable: true
-      };
-
-      fixture.componentRef.setInput('error', error);
+    it('should not show the retry button when max retries reached', () => {
+      fixture.componentRef.setInput('error', makeError({ retryCount: 3 }));
       fixture.componentRef.setInput('retryCount', 3);
       fixture.componentRef.setInput('maxRetries', 3);
       fixture.detectChanges();
 
-      expect(component.canRetry).toBe(false);
+      expect(getRetryButton()).toBeNull();
     });
 
-    it('should return false when retrying is in progress', () => {
-      const error: ResourceError = {
-        error: new HttpErrorResponse({ status: 0 }),
-        message: 'Network error',
-        retryCount: 0,
-        timestamp: new Date(),
-        isRetryable: true
-      };
-
-      fixture.componentRef.setInput('error', error);
+    it('should show a disabled retrying button while retry is in progress', () => {
+      fixture.componentRef.setInput('error', makeError());
       fixture.componentRef.setInput('retrying', true);
       fixture.detectChanges();
 
-      expect(component.canRetry).toBe(false);
+      expect(getRetryButton()).toBeNull();
+      const retryingButton: HTMLButtonElement =
+        fixture.nativeElement.querySelector('button[aria-label="Retrying..."]');
+      expect(retryingButton).toBeTruthy();
+      expect(retryingButton.disabled).toBe(true);
+    });
+
+    it('should not show the retry button when showRetry is false', () => {
+      fixture.componentRef.setInput('error', makeError());
+      fixture.componentRef.setInput('showRetry', false);
+      fixture.detectChanges();
+
+      expect(getRetryButton()).toBeNull();
     });
   });
 
-  describe('onRetry', () => {
-    it('should emit retry event when canRetry is true', () => {
-      const error: ResourceError = {
-        error: new HttpErrorResponse({ status: 0 }),
-        message: 'Network error',
-        retryCount: 0,
-        timestamp: new Date(),
-        isRetryable: true
-      };
-
-      fixture.componentRef.setInput('error', error);
+  describe('retry event', () => {
+    it('should emit retry when clicking the retry button', () => {
+      fixture.componentRef.setInput('error', makeError());
       fixture.detectChanges();
 
       let retryEmitted = false;
@@ -129,45 +120,18 @@ describe('ResourceErrorComponent', () => {
         retryEmitted = true;
       });
 
-      component.onRetry();
+      getRetryButton()!.click();
 
       expect(retryEmitted).toBe(true);
-    });
-
-    it('should not emit retry event when canRetry is false', () => {
-      const error: ResourceError = {
-        error: new HttpErrorResponse({ status: 404 }),
-        message: 'Not found',
-        retryCount: 0,
-        timestamp: new Date(),
-        isRetryable: false
-      };
-
-      fixture.componentRef.setInput('error', error);
-      fixture.detectChanges();
-
-      let retryEmitted = false;
-      component.retry.subscribe(() => {
-        retryEmitted = true;
-      });
-
-      component.onRetry();
-
-      expect(retryEmitted).toBe(false);
     });
   });
 
   describe('template rendering', () => {
     it('should display error message', () => {
-      const error: ResourceError = {
+      fixture.componentRef.setInput('error', makeError({
         error: new HttpErrorResponse({ status: 500 }),
-        message: 'Server error occurred',
-        retryCount: 0,
-        timestamp: new Date(),
-        isRetryable: true
-      };
-
-      fixture.componentRef.setInput('error', error);
+        message: 'Server error occurred'
+      }));
       fixture.detectChanges();
 
       const errorMessage = fixture.nativeElement.querySelector('.error-message');
@@ -175,15 +139,10 @@ describe('ResourceErrorComponent', () => {
     });
 
     it('should display custom title', () => {
-      const error: ResourceError = {
+      fixture.componentRef.setInput('error', makeError({
         error: new HttpErrorResponse({ status: 500 }),
-        message: 'Server error',
-        retryCount: 0,
-        timestamp: new Date(),
-        isRetryable: true
-      };
-
-      fixture.componentRef.setInput('error', error);
+        message: 'Server error'
+      }));
       fixture.componentRef.setInput('title', 'Custom Error Title');
       fixture.detectChanges();
 
@@ -192,15 +151,7 @@ describe('ResourceErrorComponent', () => {
     });
 
     it('should display retry count when retries have been attempted', () => {
-      const error: ResourceError = {
-        error: new HttpErrorResponse({ status: 0 }),
-        message: 'Network error',
-        retryCount: 2,
-        timestamp: new Date(),
-        isRetryable: true
-      };
-
-      fixture.componentRef.setInput('error', error);
+      fixture.componentRef.setInput('error', makeError({ retryCount: 2 }));
       fixture.componentRef.setInput('retryCount', 2);
       fixture.componentRef.setInput('maxRetries', 3);
       fixture.detectChanges();
@@ -210,15 +161,7 @@ describe('ResourceErrorComponent', () => {
     });
 
     it('should not display retry count when no retries attempted', () => {
-      const error: ResourceError = {
-        error: new HttpErrorResponse({ status: 0 }),
-        message: 'Network error',
-        retryCount: 0,
-        timestamp: new Date(),
-        isRetryable: true
-      };
-
-      fixture.componentRef.setInput('error', error);
+      fixture.componentRef.setInput('error', makeError());
       fixture.componentRef.setInput('retryCount', 0);
       fixture.detectChanges();
 
@@ -226,48 +169,8 @@ describe('ResourceErrorComponent', () => {
       expect(retryInfo).toBeNull();
     });
 
-    it('should show retry button when error is retryable', () => {
-      const error: ResourceError = {
-        error: new HttpErrorResponse({ status: 0 }),
-        message: 'Network error',
-        retryCount: 0,
-        timestamp: new Date(),
-        isRetryable: true
-      };
-
-      fixture.componentRef.setInput('error', error);
-      fixture.detectChanges();
-
-      const retryButton = fixture.nativeElement.querySelector('button[aria-label="Retry loading data"]');
-      expect(retryButton).toBeTruthy();
-    });
-
-    it('should not show retry button when error is non-retryable', () => {
-      const error: ResourceError = {
-        error: new HttpErrorResponse({ status: 404 }),
-        message: 'Not found',
-        retryCount: 0,
-        timestamp: new Date(),
-        isRetryable: false
-      };
-
-      fixture.componentRef.setInput('error', error);
-      fixture.detectChanges();
-
-      const retryButton = fixture.nativeElement.querySelector('button');
-      expect(retryButton).toBeNull();
-    });
-
     it('should show max retries message when limit reached', () => {
-      const error: ResourceError = {
-        error: new HttpErrorResponse({ status: 0 }),
-        message: 'Network error',
-        retryCount: 3,
-        timestamp: new Date(),
-        isRetryable: true
-      };
-
-      fixture.componentRef.setInput('error', error);
+      fixture.componentRef.setInput('error', makeError({ retryCount: 3 }));
       fixture.componentRef.setInput('retryCount', 3);
       fixture.componentRef.setInput('maxRetries', 3);
       fixture.detectChanges();
@@ -278,15 +181,11 @@ describe('ResourceErrorComponent', () => {
     });
 
     it('should show non-retryable info for non-retryable errors', () => {
-      const error: ResourceError = {
+      fixture.componentRef.setInput('error', makeError({
         error: new HttpErrorResponse({ status: 404 }),
         message: 'Not found',
-        retryCount: 0,
-        timestamp: new Date(),
         isRetryable: false
-      };
-
-      fixture.componentRef.setInput('error', error);
+      }));
       fixture.detectChanges();
 
       const nonRetryableInfo = fixture.nativeElement.querySelector('.non-retryable-info');

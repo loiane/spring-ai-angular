@@ -2,13 +2,6 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatListModule } from '@angular/material/list';
-import { MatSidenavModule } from '@angular/material/sidenav';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { By } from '@angular/platform-browser';
 import { of } from 'rxjs';
 
 import { ChatList } from './chat-list';
@@ -63,15 +56,7 @@ describe('ChatList', () => {
     mockMemoryChatService = new MockMemoryChatService();
 
     await TestBed.configureTestingModule({
-      imports: [
-        ChatList,
-        MatSidenavModule,
-        MatCardModule,
-        MatToolbarModule,
-        MatListModule,
-        MatIconModule,
-        MatButtonModule
-      ],
+      imports: [ChatList],
       providers: [
         provideZonelessChangeDetection(),
         provideHttpClient(),
@@ -86,56 +71,88 @@ describe('ChatList', () => {
     fixture.detectChanges();
   });
 
+  function getChatItems(): HTMLElement[] {
+    return Array.from(fixture.nativeElement.querySelectorAll('mat-nav-list mat-list-item'));
+  }
+
   it('should create', () => {
     expect(component).toBeTruthy();
-  });  it('should have chats resource initialized', () => {
-    expect(component.chats).toBeDefined();
-  });
-
-  it('should have memoryChatService injected', () => {
-    expect(component.memoryChatService).toBeDefined();
-  });
-
-  it('should select chat when selectChat is called', () => {
-    const chatId = 'test-chat-id';
-    component.selectChat(chatId);
-    expect(mockMemoryChatService.selectChat).toHaveBeenCalledWith(chatId);
-  });
-
-  it('should clear selection when createNewChat is called', () => {
-    component.createNewChat();
-    expect(mockMemoryChatService.clearSelection).toHaveBeenCalled();
-  });
-
-  it('should call deleteChat and stop propagation', () => {
-    const chatId = 'test-chat-id';
-    const mockEvent = {
-      stopPropagation: vi.fn()
-    } as any;
-
-    component.deleteChat(chatId, mockEvent);
-
-    expect(mockEvent.stopPropagation).toHaveBeenCalled();
   });
 
   it('should render toolbar with title', () => {
-    const toolbar = fixture.debugElement.query(By.css('mat-toolbar'));
+    const toolbar: HTMLElement = fixture.nativeElement.querySelector('mat-toolbar');
     expect(toolbar).toBeTruthy();
+    expect(toolbar.textContent).toContain('Chat with Memory');
   });
 
-  it('should render new chat button', () => {
-    const newChatButton = fixture.debugElement.query(By.css('button[aria-label="Create new chat"]'));
-    expect(newChatButton).toBeTruthy();
-    expect(newChatButton.nativeElement.textContent).toContain('New chat');
+  it('should render the list of chats', () => {
+    const items = getChatItems();
+    expect(items.length).toBe(2);
+    expect(items[0].textContent).toContain('First chat');
+    expect(items[1].textContent).toContain('Second chat');
   });
 
-  it('should handle loading state', () => {
+  it('should select a chat when clicking a chat item', () => {
+    getChatItems()[0].click();
+    expect(mockMemoryChatService.selectChat).toHaveBeenCalledWith('chat1');
+  });
+
+  it('should clear selection when clicking the new chat button', () => {
+    const newChatButton: HTMLButtonElement =
+      fixture.nativeElement.querySelector('button[aria-label="Create new chat"]');
+    expect(newChatButton.textContent).toContain('New chat');
+
+    newChatButton.click();
+
+    expect(mockMemoryChatService.clearSelection).toHaveBeenCalled();
+  });
+
+  it('should not select the chat when clicking its delete button', () => {
+    const deleteButton: HTMLButtonElement = getChatItems()[0].querySelector('button[matlistitemmeta]')!;
+    deleteButton.click();
+    expect(mockMemoryChatService.selectChat).not.toHaveBeenCalled();
+  });
+
+  it('should highlight the selected chat', () => {
+    mockMemoryChatService.selectedChatId.mockReturnValue('chat2');
+    fixture.detectChanges();
+
+    const items = getChatItems();
+    expect(items[0].classList.contains('selected')).toBe(false);
+    expect(items[1].classList.contains('selected')).toBe(true);
+  });
+
+  it('should show the loading state', () => {
     mockMemoryChatService.chatsResource.status.mockReturnValue('loading');
-    expect(component.chats.status()).toBe('loading');
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Loading chats...');
   });
 
-  it('should handle error state', () => {
+  it('should show the empty state when there are no chats', () => {
+    mockMemoryChatService.chatsResource.value.mockReturnValue([]);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('No chats available');
+  });
+
+  it('should show the error component and retry when loading chats fails', () => {
     mockMemoryChatService.chatsResource.status.mockReturnValue('error');
-    expect(component.chats.status()).toBe('error');
+    mockMemoryChatService.chatsErrorHandler.error.mockReturnValue({
+      error: new Error('load failed'),
+      message: 'Failed to load chats',
+      retryCount: 0,
+      timestamp: new Date(),
+      isRetryable: true
+    });
+    fixture.detectChanges();
+
+    const errorComponent = fixture.nativeElement.querySelector('app-resource-error');
+    expect(errorComponent).toBeTruthy();
+    expect(errorComponent.textContent).toContain('Error Loading Chats');
+
+    const retryButton: HTMLButtonElement = errorComponent.querySelector('button[aria-label="Retry loading data"]');
+    retryButton.click();
+    expect(mockMemoryChatService.retryLoadChats).toHaveBeenCalled();
   });
 });

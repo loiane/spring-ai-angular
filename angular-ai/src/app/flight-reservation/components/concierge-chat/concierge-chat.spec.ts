@@ -2,10 +2,12 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
+import { of, throwError } from 'rxjs';
+
 import { ConciergeChat } from './concierge-chat';
 import { FlightReservationService } from '../../services/flight-reservation.service';
 import { ConciergeResponse } from '../../models/concierge-message';
-import { of, throwError } from 'rxjs';
+import { ReservationStatus } from '../../models/flight-reservation';
 
 describe('ConciergeChat', () => {
   let component: ConciergeChat;
@@ -29,249 +31,170 @@ describe('ConciergeChat', () => {
     fixture.detectChanges();
   });
 
+  function getTextarea(): HTMLTextAreaElement {
+    return fixture.nativeElement.querySelector('textarea[matInput]');
+  }
+
+  function typeMessage(text: string): void {
+    const textarea = getTextarea();
+    textarea.value = text;
+    textarea.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+  }
+
+  function getSendButton(): HTMLButtonElement {
+    return fixture.nativeElement.querySelector('button[aria-label="Send message"]');
+  }
+
+  function getMessages(): string[] {
+    const messages = fixture.nativeElement.querySelectorAll('.message-content');
+    return Array.from(messages as NodeListOf<HTMLElement>).map(m => m.textContent?.trim() ?? '');
+  }
+
   it('should create', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should have access to messages from service', () => {
-    expect(component.messages).toBe(service.messages);
+  it('should render the initial concierge greeting', () => {
+    const messages = getMessages();
+    expect(messages.length).toBe(1);
+    expect(messages[0]).toContain("I'm your SpringFly Concierge");
   });
 
-  it('should have access to selected reservation from service', () => {
-    expect(component.selectedReservation).toBe(service.selectedReservation);
+  it('should start with an empty message input and disabled send button', () => {
+    expect(getTextarea().value).toBe('');
+    expect(getSendButton().disabled).toBe(true);
   });
 
-  it('should initialize currentMessage as empty', () => {
-    expect(component.currentMessage()).toBe('');
+  it('should enable the send button when the user types a message', () => {
+    typeMessage('I need help');
+    expect(getSendButton().disabled).toBe(false);
   });
 
-  describe('sendMessage', () => {
-    it('should send message when currentMessage is not empty', () => {
-      const testMessage = 'Hello, I need help';
+  it('should keep the send button disabled for whitespace-only input', () => {
+    typeMessage('   ');
+    expect(getSendButton().disabled).toBe(true);
+  });
+
+  it('should show the reservation number in the header when one is selected', () => {
+    service.selectedReservation.set({
+      number: 'SA101',
+      name: 'John Doe',
+      date: '2025-10-10',
+      status: ReservationStatus.CONFIRMED,
+      from: 'New York',
+      to: 'London',
+      seat: '12A',
+      class: 'Economy'
+    });
+    fixture.detectChanges();
+
+    const subtitle: HTMLElement = fixture.nativeElement.querySelector('mat-card-subtitle');
+    expect(subtitle.textContent).toContain('SA101');
+  });
+
+  describe('sending messages', () => {
+    it('should send the message and render the assistant response', () => {
       const mockResponse: ConciergeResponse = {
         content: 'How can I assist you?',
         requiresAction: false
       };
-
-      component.currentMessage.set(testMessage);
-
       vi.spyOn(service, 'sendConciergeMessage').mockReturnValue(of(mockResponse));
-      vi.spyOn(service, 'handleConciergeResponse');
 
-      component.sendMessage();
+      typeMessage('Hello, I need help');
+      getSendButton().click();
+      fixture.detectChanges();
 
-      expect(service.sendConciergeMessage).toHaveBeenCalledWith(testMessage);
-      expect(service.handleConciergeResponse).toHaveBeenCalledWith(mockResponse);
-      expect(component.currentMessage()).toBe('');
+      expect(service.sendConciergeMessage).toHaveBeenCalledWith('Hello, I need help');
+      expect(getMessages()).toContain('How can I assist you?');
+      // The input is cleared after sending, so the send button is disabled again
+      expect(getSendButton().disabled).toBe(true);
     });
 
-    it('should not send message when currentMessage is empty', () => {
-      component.currentMessage.set('');
+    it('should render an error message when sending fails', () => {
+      vi.spyOn(service, 'sendConciergeMessage').mockReturnValue(
+        throwError(() => new Error('Network error'))
+      );
 
-      vi.spyOn(service, 'sendConciergeMessage');
+      typeMessage('Test message');
+      getSendButton().click();
+      fixture.detectChanges();
 
-      component.sendMessage();
-
-      expect(service.sendConciergeMessage).not.toHaveBeenCalled();
+      const messages = getMessages();
+      expect(messages[messages.length - 1]).toContain('having trouble connecting');
     });
 
-    it('should not send message when currentMessage is only whitespace', () => {
-      component.currentMessage.set('   ');
-
-      vi.spyOn(service, 'sendConciergeMessage');
-
-      component.sendMessage();
-
-      expect(service.sendConciergeMessage).not.toHaveBeenCalled();
-    });
-
-    it('should handle errors when sending message', () => {
-      const testMessage = 'Test message';
-      const error = new Error('Network error');
-
-      component.currentMessage.set(testMessage);
-
-      vi.spyOn(service, 'sendConciergeMessage').mockReturnValue(throwError(() => error));
-      vi.spyOn(service, 'handleConciergeError');
-
-      component.sendMessage();
-
-      expect(service.sendConciergeMessage).toHaveBeenCalledWith(testMessage);
-      expect(service.handleConciergeError).toHaveBeenCalledWith(error);
-      expect(component.currentMessage()).toBe('');
-    });
-  });
-
-  describe('onKeyPress', () => {
-    it('should send message on Enter key without Shift', () => {
-      const event = new KeyboardEvent('keypress', { key: 'Enter', shiftKey: false });
-      vi.spyOn(event, 'preventDefault');
-      vi.spyOn(component, 'sendMessage');
-
-      component.onKeyPress(event);
-
-      expect(event.preventDefault).toHaveBeenCalled();
-      expect(component.sendMessage).toHaveBeenCalled();
-    });
-
-    it('should not send message on Enter key with Shift', () => {
-      const event = new KeyboardEvent('keypress', { key: 'Enter', shiftKey: true });
-      vi.spyOn(component, 'sendMessage');
-
-      component.onKeyPress(event);
-
-      expect(component.sendMessage).not.toHaveBeenCalled();
-    });
-
-    it('should not send message on other keys', () => {
-      const event = new KeyboardEvent('keypress', { key: 'a' });
-      vi.spyOn(component, 'sendMessage');
-
-      component.onKeyPress(event);
-
-      expect(component.sendMessage).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('formatTimestamp', () => {
-    it('should format timestamp correctly', () => {
-      const date = new Date('2025-10-05T14:30:00');
-      const formatted = component.formatTimestamp(date);
-
-      // Format may vary by locale, so just check it's a non-empty string
-      expect(formatted).toBeTruthy();
-      expect(typeof formatted).toBe('string');
-    });
-
-    it('should handle different times', () => {
-      const morning = new Date('2025-10-05T09:15:00');
-      const evening = new Date('2025-10-05T20:45:00');
-
-      const morningFormatted = component.formatTimestamp(morning);
-      const eveningFormatted = component.formatTimestamp(evening);
-
-      expect(morningFormatted).toBeTruthy();
-      expect(eveningFormatted).toBeTruthy();
-      expect(morningFormatted).not.toBe(eveningFormatted);
-    });
-  });
-
-  describe('Input Validation', () => {
-    it('should return null validation error for empty input', () => {
-      component.currentMessage.set('');
-      expect(component.validationError()).toBeNull();
-    });
-
-    it('should return null validation error for whitespace-only input', () => {
-      component.currentMessage.set('   ');
-      expect(component.validationError()).toBeNull();
-    });
-
-    it('should return null validation error for valid input', () => {
-      component.currentMessage.set('I need to book a flight');
-      expect(component.validationError()).toBeNull();
-    });
-
-    it('should return error for message exceeding max length', () => {
-      component.currentMessage.set('a'.repeat(2001));
-      const error = component.validationError();
-      expect(error).toBeTruthy();
-      expect(error).toContain('too long');
-      expect(error).toContain('2001/2000');
-    });
-
-    it('should return null validation error for message at max length', () => {
-      component.currentMessage.set('a'.repeat(2000));
-      expect(component.validationError()).toBeNull();
-    });
-  });
-
-  describe('canSend()', () => {
-    it('should return false for empty input', () => {
-      component.currentMessage.set('');
-      expect(component.canSend()).toBe(false);
-    });
-
-    it('should return false for whitespace-only input', () => {
-      component.currentMessage.set('   ');
-      expect(component.canSend()).toBe(false);
-    });
-
-    it('should return false for message exceeding max length', () => {
-      component.currentMessage.set('a'.repeat(2001));
-      expect(component.canSend()).toBe(false);
-    });
-
-    it('should return true for valid input', () => {
-      component.currentMessage.set('valid message');
-      expect(component.canSend()).toBe(true);
-    });
-  });
-
-  describe('sanitizeInput()', () => {
-    it('should remove script tags from input', () => {
-      const input = 'Hello <script>alert("xss")</script> world';
-      const result = (component as any).sanitizeInput(input);
-      expect(result).toBe('Hello  world');
-    });
-
-    it('should remove multiple script tags', () => {
-      const input = '<script>alert(1)</script>test<script>alert(2)</script>';
-      const result = (component as any).sanitizeInput(input);
-      expect(result).toBe('test');
-    });
-
-    it('should remove HTML tags', () => {
-      const input = 'Hello <b>world</b> <i>test</i>';
-      const result = (component as any).sanitizeInput(input);
-      expect(result).toBe('Hello world test');
-    });
-
-    it('should trim the result', () => {
-      const input = '  <b>test</b>  ';
-      const result = (component as any).sanitizeInput(input);
-      expect(result).toBe('test');
-    });
-
-    it('should handle clean input without modifications', () => {
-      const input = 'I need a flight to Paris';
-      const result = (component as any).sanitizeInput(input);
-      expect(result).toBe('I need a flight to Paris');
-    });
-  });
-
-  describe('sendMessage with validation', () => {
-    it('should not send message when canSend returns false', () => {
-      component.currentMessage.set('');
-      vi.spyOn(service, 'sendConciergeMessage');
-      component.sendMessage();
-      expect(service.sendConciergeMessage).not.toHaveBeenCalled();
-    });
-
-    it('should sanitize input before sending', () => {
-      const maliciousInput = 'Book flight <script>alert("xss")</script> to NYC';
-      component.currentMessage.set(maliciousInput);
-
+    it('should send the message when pressing Enter without Shift', () => {
       vi.spyOn(service, 'sendConciergeMessage').mockReturnValue(
         of({ content: 'OK', requiresAction: false })
       );
 
-      component.sendMessage();
+      typeMessage('enter message');
+      getTextarea().dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', shiftKey: false }));
+      fixture.detectChanges();
+
+      expect(service.sendConciergeMessage).toHaveBeenCalledWith('enter message');
+    });
+
+    it('should not send the message when pressing Enter with Shift', () => {
+      vi.spyOn(service, 'sendConciergeMessage');
+
+      typeMessage('multiline message');
+      getTextarea().dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', shiftKey: true }));
+      fixture.detectChanges();
+
+      expect(service.sendConciergeMessage).not.toHaveBeenCalled();
+    });
+
+    it('should not send when pressing other keys', () => {
+      vi.spyOn(service, 'sendConciergeMessage');
+
+      typeMessage('message');
+      getTextarea().dispatchEvent(new KeyboardEvent('keydown', { key: 'a' }));
+      fixture.detectChanges();
+
+      expect(service.sendConciergeMessage).not.toHaveBeenCalled();
+    });
+
+    it('should sanitize HTML and script tags before sending', () => {
+      vi.spyOn(service, 'sendConciergeMessage').mockReturnValue(
+        of({ content: 'OK', requiresAction: false })
+      );
+
+      typeMessage('Book flight <script>alert("xss")</script> to NYC');
+      getSendButton().click();
 
       expect(service.sendConciergeMessage).toHaveBeenCalledWith('Book flight  to NYC');
     });
 
-    it('should respect canSend when using Enter key', () => {
-      component.currentMessage.set('a'.repeat(2001)); // Too long
-      const event = new KeyboardEvent('keypress', { key: 'Enter', shiftKey: false });
+  });
 
-      vi.spyOn(event, 'preventDefault');
-      vi.spyOn(service, 'sendConciergeMessage');
-
-      component.onKeyPress(event);
-
-      expect(event.preventDefault).toHaveBeenCalled();
-      expect(service.sendConciergeMessage).not.toHaveBeenCalled();
+  describe('validation', () => {
+    it('should show the character counter hint', () => {
+      typeMessage('hello');
+      const hint: HTMLElement = fixture.nativeElement.querySelector('mat-hint');
+      expect(hint.textContent).toContain('5/2000');
     });
+
+    it('should disable send for messages over the max length', () => {
+      expect(getTextarea().getAttribute('maxlength')).toBe('2000');
+
+      typeMessage('a'.repeat(2001));
+
+      expect(getSendButton().disabled).toBe(true);
+    });
+
+    it('should not show a validation error at exactly max length', () => {
+      typeMessage('a'.repeat(2000));
+
+      expect(fixture.nativeElement.querySelector('mat-error')).toBeNull();
+      expect(getSendButton().disabled).toBe(false);
+    });
+  });
+
+  it('should render a timestamp for each message', () => {
+    const timestamp: HTMLElement = fixture.nativeElement.querySelector('.timestamp');
+    expect(timestamp).toBeTruthy();
+    expect(timestamp.textContent?.trim()).not.toBe('');
   });
 });

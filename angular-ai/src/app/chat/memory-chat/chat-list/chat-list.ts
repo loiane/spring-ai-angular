@@ -28,27 +28,27 @@ import { ChatPanel } from '../chat-panel/chat-panel';
 })
 export class ChatList {
 
-  readonly memoryChatService = inject(MemoryChatService);
+  protected readonly memoryChatService = inject(MemoryChatService);
   private readonly logger = inject(LoggingService);
 
-  chats = this.memoryChatService.chatsResource;
-  errorHandler = this.memoryChatService.chatsErrorHandler;
+  protected chats = this.memoryChatService.chatsResource;
+  protected errorHandler = this.memoryChatService.chatsErrorHandler;
 
-  selectChat(chatId: string): void {
+  protected selectChat(chatId: string): void {
     this.memoryChatService.selectChat(chatId);
   }
 
-  createNewChat(): void {
+  protected createNewChat(): void {
     this.memoryChatService.clearSelection();
   }
 
-  deleteChat(chatId: string, event: Event): void {
+  protected deleteChat(chatId: string, event: Event): void {
     event.stopPropagation(); // Prevent chat selection when clicking delete
     this.logger.debug('Delete chat requested', chatId);
     // Delete functionality to be implemented
   }
 
-  onRetry(): void {
+  protected onRetry(): void {
     this.memoryChatService.retryLoadChats();
   }
 }

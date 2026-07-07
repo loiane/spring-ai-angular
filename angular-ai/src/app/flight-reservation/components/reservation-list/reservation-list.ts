@@ -28,19 +28,17 @@ import { ResourceErrorComponent } from '../../../shared/resource-error';
 export class ReservationList {
   private readonly flightService = inject(FlightReservationService);
 
-  reservations = this.flightService.reservationsResource;
-  selectedReservation = this.flightService.selectedReservation;
-  errorHandler = this.flightService.reservationsErrorHandler;
+  protected reservations = this.flightService.reservationsResource;
+  protected selectedReservation = this.flightService.selectedReservation;
+  protected errorHandler = this.flightService.reservationsErrorHandler;
 
-  displayedColumns: string[] = ['number', 'name', 'date', 'status', 'from', 'to', 'seat', 'class', 'actions'];
+  protected displayedColumns: string[] = ['number', 'name', 'date', 'status', 'from', 'to', 'seat', 'class', 'actions'];
 
-  ReservationStatus = ReservationStatus;
-
-  onSelectReservation(reservation: FlightReservation): void {
+  protected onSelectReservation(reservation: FlightReservation): void {
     this.flightService.selectReservation(reservation);
   }
 
-  getStatusChipClass(status: ReservationStatus): string {
+  protected getStatusChipClass(status: ReservationStatus): string {
     switch (status) {
       case ReservationStatus.CONFIRMED:
         return 'status-confirmed';
@@ -53,11 +51,11 @@ export class ReservationList {
     }
   }
 
-  onRefresh(): void {
+  protected onRefresh(): void {
     this.flightService.refreshReservations();
   }
 
-  onRetry(): void {
+  protected onRetry(): void {
     this.flightService.retryLoadReservations();
   }
 }

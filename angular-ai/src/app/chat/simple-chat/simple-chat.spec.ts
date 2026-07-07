@@ -1,12 +1,13 @@
 import { provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { of, throwError } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 
 import { ChatService } from '../chat-service';
+import { ChatResponse } from '../chat-response';
 import { SimpleChat } from './simple-chat';
 
 class MockChatService {
-  sendChatMessage(message: string) {
+  sendChatMessage() {
     return of({ message: 'Mocked response', isBot: true });
   }
 }
@@ -32,334 +33,162 @@ describe('SimpleChat', () => {
     fixture.detectChanges();
   });
 
+  function getInput(): HTMLInputElement {
+    return fixture.nativeElement.querySelector('input[matInput]');
+  }
+
+  function typeMessage(text: string): void {
+    const input = getInput();
+    input.value = text;
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+  }
+
+  function clickSend(): void {
+    const button: HTMLButtonElement = fixture.nativeElement.querySelector('button[aria-label="Send"]');
+    button.click();
+    fixture.detectChanges();
+  }
+
+  function getMessageBubbles(): string[] {
+    const bubbles = fixture.nativeElement.querySelectorAll('.message-bubble');
+    return Array.from(bubbles as NodeListOf<HTMLElement>).map(b => b.textContent?.trim() ?? '');
+  }
+
   it('should create', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should add user message to messages and call sendChatMessage', () => {
-    vi.spyOn(component as any, 'updateMessages');
-    vi.spyOn(component as any, 'sendChatMessage');
-    component.userInput.set('test');
-    component.sendMessage();
-    expect((component as any).updateMessages).toHaveBeenCalledWith('test');
-    expect((component as any).sendChatMessage).toHaveBeenCalled();
+  it('should display the initial welcome message', () => {
+    const bubbles = getMessageBubbles();
+    expect(bubbles.length).toBe(1);
+    expect(bubbles[0]).toBe('Hello, how can I help you today?');
   });
 
-  it('should not send empty message', () => {
-    component.userInput.set('   ');
-    vi.spyOn(component as any, 'updateMessages');
-    component.sendMessage();
-    expect((component as any).updateMessages).not.toHaveBeenCalled();
+  it('should not render the send button when input is empty', () => {
+    const button = fixture.nativeElement.querySelector('button[aria-label="Send"]');
+    expect(button).toBeNull();
   });
 
-  it('should initialize with default message', () => {
-    expect(component.messages().length).toBe(1);
-    expect(component.messages()[0].message).toBe('Hello, how can I help you today?');
-    expect(component.messages()[0].isBot).toBe(true);
+  it('should render the send button once the user types', () => {
+    typeMessage('hello');
+    const button = fixture.nativeElement.querySelector('button[aria-label="Send"]');
+    expect(button).toBeTruthy();
+    expect(button.disabled).toBe(false);
   });
 
-  it('should initialize with correct default values', () => {
-    expect(component.userInput()).toBe('');
-    expect(component.isLoading).toBe(false);
-  });
-
-  it('should not send message when loading', () => {
-    component.userInput.set('test message');
-    component.isLoading = true;
-    vi.spyOn(component as any, 'updateMessages');
-    vi.spyOn(component as any, 'sendChatMessage');
-
-    component.sendMessage();
-
-    expect((component as any).updateMessages).not.toHaveBeenCalled();
-    expect((component as any).sendChatMessage).not.toHaveBeenCalled();
-  });
-
-  it('should update messages correctly', () => {
-    const initialMessageCount = component.messages().length;
-
-    (component as any).updateMessages('Test message', false);
-
-    expect(component.messages().length).toBe(initialMessageCount + 1);
-    expect(component.messages()[component.messages().length - 1].message).toBe('Test message');
-    expect(component.messages()[component.messages().length - 1].isBot).toBe(false);
-  });
-
-  it('should update messages with bot flag true by default for second parameter', () => {
-    const initialMessageCount = component.messages().length;
-
-    (component as any).updateMessages('Bot message', true);
-
-    expect(component.messages().length).toBe(initialMessageCount + 1);
-    expect(component.messages()[component.messages().length - 1].message).toBe('Bot message');
-    expect(component.messages()[component.messages().length - 1].isBot).toBe(true);
-  });
-
-  it('should handle scrollToBottom without errors when chatHistory is available', () => {
-    // Test scrollToBottom functionality
-    expect(() => (component as any).scrollToBottom()).not.toThrow();
-  });
-
-  it('should handle scrollToBottom gracefully when chatHistory throws error', () => {
-    // Test scrollToBottom error handling
-    expect(() => (component as any).scrollToBottom()).not.toThrow();
-  });
-
-  it('should call sendChatMessage and handle successful response', () => {
+  it('should send the message and render the response when clicking send', async () => {
     vi.spyOn(chatService, 'sendChatMessage').mockReturnValue(
       of({ message: 'Test response', isBot: true })
     );
-    vi.spyOn(component as any, 'updateMessages');
 
-    component.userInput.set('test message');
-    (component as any).sendChatMessage('test message');
+    typeMessage('test message');
+    clickSend();
 
     expect(chatService.sendChatMessage).toHaveBeenCalledWith('test message');
-    expect((component as any).updateMessages).toHaveBeenCalledWith('Test response', true);
-    expect(component.userInput()).toBe('');
-    expect(component.isLoading).toBe(false);
+    const bubbles = getMessageBubbles();
+    expect(bubbles).toContain('test message');
+    expect(bubbles[bubbles.length - 1]).toBe('Test response');
+    await fixture.whenStable();
+    expect(getInput().value).toBe('');
   });
 
-  it('should handle chat service error', () => {
+  it('should send the message when pressing enter', () => {
+    vi.spyOn(chatService, 'sendChatMessage').mockReturnValue(
+      of({ message: 'Enter response', isBot: true })
+    );
+
+    typeMessage('enter message');
+    getInput().dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter' }));
+    fixture.detectChanges();
+
+    expect(chatService.sendChatMessage).toHaveBeenCalledWith('enter message');
+    expect(getMessageBubbles()).toContain('Enter response');
+  });
+
+  it('should not send a whitespace-only message', () => {
+    vi.spyOn(chatService, 'sendChatMessage');
+
+    typeMessage('   ');
+    getInput().dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter' }));
+    fixture.detectChanges();
+
+    expect(chatService.sendChatMessage).not.toHaveBeenCalled();
+    expect(getMessageBubbles().length).toBe(1);
+  });
+
+  it('should show the typing indicator while waiting for the response', () => {
+    const response$ = new Subject<ChatResponse>();
+    vi.spyOn(chatService, 'sendChatMessage').mockReturnValue(response$);
+
+    typeMessage('slow message');
+    clickSend();
+
+    expect(fixture.nativeElement.querySelector('.typing')).toBeTruthy();
+
+    response$.next({ message: 'Done', isBot: true });
+    response$.complete();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.typing')).toBeNull();
+    expect(getMessageBubbles()).toContain('Done');
+  });
+
+  it('should disable the send button while loading', () => {
+    const response$ = new Subject<ChatResponse>();
+    vi.spyOn(chatService, 'sendChatMessage').mockReturnValue(response$);
+
+    typeMessage('slow message');
+    clickSend();
+
+    const button = fixture.nativeElement.querySelector('button[aria-label="Send"]');
+    expect(button.disabled).toBe(true);
+  });
+
+  it('should render an error message when the service fails', () => {
     vi.spyOn(chatService, 'sendChatMessage').mockReturnValue(
       throwError(() => new Error('Service error'))
     );
-    vi.spyOn(component as any, 'updateMessages');
 
-    component.userInput.set('test message');
-    component.isLoading = true;
-    (component as any).sendChatMessage('test message');
+    typeMessage('failing message');
+    clickSend();
 
-    expect(chatService.sendChatMessage).toHaveBeenCalledWith('test message');
-    expect((component as any).updateMessages).toHaveBeenCalledWith(
-      'Sorry, I am unable to process your request at the moment.',
-      true
-    );
-    expect(component.isLoading).toBe(false);
+    const bubbles = getMessageBubbles();
+    expect(bubbles[bubbles.length - 1]).toBe('Sorry, I am unable to process your request at the moment.');
+    expect(fixture.nativeElement.querySelector('.typing')).toBeNull();
   });
 
-  it('should handle null/undefined response from chat service', () => {
-    vi.spyOn(chatService, 'sendChatMessage').mockReturnValue(of(null as any));
-    vi.spyOn(component as any, 'updateMessages');
-
-    component.userInput.set('test message');
-    (component as any).sendChatMessage('test message');
-
-    expect(chatService.sendChatMessage).toHaveBeenCalledWith('test message');
-    expect((component as any).updateMessages).not.toHaveBeenCalledWith(expect.any(String), true);
-    expect(component.userInput()).toBe('');
-    expect(component.isLoading).toBe(false);
-  });
-
-  it('should handle local simulation mode', () => {
-    vi.spyOn(component as any, 'simulateResponse');
-    // Set local to true by accessing private property
-    (component as any).local = true;
-
-    component.userInput.set('test message');
-    component.sendMessage();
-
-    expect((component as any).simulateResponse).toHaveBeenCalled();
-  });
-
-  it('should simulate response in local mode', () => {
-    vi.spyOn(component as any, 'getResponse');
-
-    (component as any).simulateResponse();
-
-    expect((component as any).getResponse).toHaveBeenCalled();
-    expect(component.userInput()).toBe('');
-  });
-
-  it('should simulate response with timeout in getResponse', () => {
-    vi.spyOn(component as any, 'updateMessages');
-    vi.useFakeTimers();
-
-    (component as any).getResponse();
-
-    vi.advanceTimersByTime(2100);
-
-    expect((component as any).updateMessages).toHaveBeenCalledWith(
-      'This is a simulated response from the AI model.',
-      true
-    );
-    expect(component.isLoading).toBe(false);
-    vi.useRealTimers();
-  });
-
-  it('should set loading state when sending message', () => {
-    component.userInput.set('test message');
-    component.isLoading = false;
-    vi.spyOn(component as any, 'sendChatMessage').mockImplementation(() => undefined);
-
-    component.sendMessage();
-
-    expect(component.isLoading).toBe(true);
-  });
-
-  it('should not process empty string after trimming', () => {
-    component.userInput.set('   ');
-    vi.spyOn(component as any, 'sendChatMessage');
-
-    component.sendMessage();
-
-    expect((component as any).sendChatMessage).not.toHaveBeenCalled();
-    expect(component.isLoading).toBe(false);
-  });
-
-  it('should clear user input after successful chat service call', () => {
+  it('should sanitize HTML and script tags before sending', () => {
     vi.spyOn(chatService, 'sendChatMessage').mockReturnValue(
       of({ message: 'Response', isBot: true })
     );
 
-    component.userInput.set('test message');
-    (component as any).sendChatMessage('test message');
+    typeMessage('Hello <script>alert("xss")</script> <b>world</b>');
+    clickSend();
 
-    expect(component.userInput()).toBe('');
+    expect(chatService.sendChatMessage).toHaveBeenCalledWith('Hello  world');
   });
 
-  describe('Input Validation', () => {
-    it('should return null validation error for empty input', () => {
-      component.userInput.set('');
-      fixture.detectChanges();
-      expect(component.validationError()).toBeNull();
-    });
-
-    it('should return null validation error for whitespace-only input', () => {
-      component.userInput.set('   ');
-      fixture.detectChanges();
-      expect(component.validationError()).toBeNull();
-    });
-
-    it('should return null validation error for valid input', () => {
-      component.userInput.set('Hello, this is a valid message');
-      fixture.detectChanges();
-      expect(component.validationError()).toBeNull();
-    });
-
-    it('should return error for message exceeding max length', () => {
-      component.userInput.set('a'.repeat(2001));
-      fixture.detectChanges();
-      const error = component.validationError();
-      expect(error).toBeTruthy();
-      expect(error).toContain('too long');
-      expect(error).toContain('2001/2000');
-    });
-
-    it('should return null validation error for message at max length', () => {
-      component.userInput.set('a'.repeat(2000));
-      fixture.detectChanges();
-      expect(component.validationError()).toBeNull();
-    });
+  it('should show the character counter hint', () => {
+    typeMessage('hello');
+    const hint: HTMLElement = fixture.nativeElement.querySelector('mat-hint');
+    expect(hint.textContent).toContain('5/2000');
   });
 
-  describe('canSend()', () => {
-    it('should return false for empty input', () => {
-      component.userInput.set('');
-      component.isLoading = false;
-      expect(component.canSend()).toBe(false);
-    });
+  it('should disable send for messages over the max length', () => {
+    expect(getInput().getAttribute('maxlength')).toBe('2000');
 
-    it('should return false for whitespace-only input', () => {
-      component.userInput.set('   ');
-      component.isLoading = false;
-      expect(component.canSend()).toBe(false);
-    });
+    typeMessage('a'.repeat(2001));
 
-    it('should return false when loading', () => {
-      component.userInput.set('valid message');
-      component.isLoading = true;
-      expect(component.canSend()).toBe(false);
-    });
-
-    it('should return false for message exceeding max length', () => {
-      component.userInput.set('a'.repeat(2001));
-      component.isLoading = false;
-      expect(component.canSend()).toBe(false);
-    });
-
-    it('should return true for valid input when not loading', () => {
-      component.userInput.set('valid message');
-      component.isLoading = false;
-      expect(component.canSend()).toBe(true);
-    });
+    const button = fixture.nativeElement.querySelector('button[aria-label="Send"]');
+    expect(button.disabled).toBe(true);
   });
 
-  describe('sanitizeInput()', () => {
-    it('should remove script tags from input', () => {
-      const input = 'Hello <script>alert("xss")</script> world';
-      const result = (component as any).sanitizeInput(input);
-      expect(result).toBe('Hello  world');
-    });
+  it('should not show a validation error at exactly max length', () => {
+    typeMessage('a'.repeat(2000));
 
-    it('should remove multiple script tags', () => {
-      const input = '<script>alert(1)</script>test<script>alert(2)</script>';
-      const result = (component as any).sanitizeInput(input);
-      expect(result).toBe('test');
-    });
-
-    it('should remove HTML tags', () => {
-      const input = 'Hello <b>world</b> <i>test</i>';
-      const result = (component as any).sanitizeInput(input);
-      expect(result).toBe('Hello world test');
-    });
-
-    it('should remove nested tags', () => {
-      const input = '<div><span>test</span></div>';
-      const result = (component as any).sanitizeInput(input);
-      expect(result).toBe('test');
-    });
-
-    it('should trim the result', () => {
-      const input = '  <b>test</b>  ';
-      const result = (component as any).sanitizeInput(input);
-      expect(result).toBe('test');
-    });
-
-    it('should handle clean input without modifications', () => {
-      const input = 'This is clean text';
-      const result = (component as any).sanitizeInput(input);
-      expect(result).toBe('This is clean text');
-    });
-
-    it('should handle empty input', () => {
-      const input = '';
-      const result = (component as any).sanitizeInput(input);
-      expect(result).toBe('');
-    });
+    expect(fixture.nativeElement.querySelector('mat-error')).toBeNull();
+    const button = fixture.nativeElement.querySelector('button[aria-label="Send"]');
+    expect(button.disabled).toBe(false);
   });
-
-  describe('sendMessage with validation', () => {
-    it('should not send message when canSend returns false', () => {
-      component.userInput.set('');
-      vi.spyOn(component as any, 'sendChatMessage');
-      component.sendMessage();
-      expect((component as any).sendChatMessage).not.toHaveBeenCalled();
-    });
-
-    it('should sanitize input before sending', () => {
-      component.userInput.set('Hello <script>alert("xss")</script> world');
-      vi.spyOn(component as any, 'sendChatMessage');
-      vi.spyOn(component as any, 'updateMessages');
-
-      component.sendMessage();
-
-      expect((component as any).updateMessages).toHaveBeenCalledWith('Hello  world');
-      expect((component as any).sendChatMessage).toHaveBeenCalledWith('Hello  world');
-    });
-
-    it('should send sanitized message to chat service', () => {
-      const maliciousInput = 'Test <b>bold</b> <script>hack()</script>';
-      component.userInput.set(maliciousInput);
-
-      vi.spyOn(chatService, 'sendChatMessage').mockReturnValue(
-        of({ message: 'Response', isBot: true })
-      );
-
-      component.sendMessage();
-
-      expect(chatService.sendChatMessage).toHaveBeenCalledWith('Test bold');
-    });
-  });
-
 });

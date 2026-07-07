@@ -12,5 +12,5 @@ import { RouterLink, RouterOutlet } from '@angular/router';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class App {
-  readonly title = 'AI-Spring-Angular';
+  protected readonly title = 'AI-Spring-Angular';
 }

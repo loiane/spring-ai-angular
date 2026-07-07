@@ -22,7 +22,7 @@
     </div>
 
     <div class="error-actions">
-      @if (showRetry() && canRetry) {
+      @if (showRetry() && (canRetry || retrying())) {
         @if (retrying()) {
           <button
             mat-raised-button

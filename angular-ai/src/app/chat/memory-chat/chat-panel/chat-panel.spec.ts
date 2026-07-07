@@ -2,16 +2,11 @@ import { provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { FormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { of, throwError } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 
 import { ChatPanel } from './chat-panel';
 import { MemoryChatService } from '../memory-chat.service';
-import { ChatType } from '../../chat-message';
+import { ChatMessage, ChatType } from '../../chat-message';
 import { ChatStartResponse } from '../../chat';
 
 class MockMemoryChatService {
@@ -56,14 +51,7 @@ describe('ChatPanel', () => {
     mockMemoryChatService = new MockMemoryChatService();
 
     await TestBed.configureTestingModule({
-      imports: [
-        ChatPanel,
-        FormsModule,
-        MatCardModule,
-        MatInputModule,
-        MatButtonModule,
-        MatIconModule
-      ],
+      imports: [ChatPanel],
       providers: [
         provideZonelessChangeDetection(),
         provideHttpClient(),
@@ -78,325 +66,205 @@ describe('ChatPanel', () => {
     fixture.detectChanges();
   });
 
+  function getInput(): HTMLInputElement {
+    return fixture.nativeElement.querySelector('input[matInput]');
+  }
+
+  function typeMessage(text: string): void {
+    const input = getInput();
+    input.value = text;
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+  }
+
+  function clickSend(): void {
+    const button: HTMLButtonElement = fixture.nativeElement.querySelector('button[aria-label="Send"]');
+    button.click();
+    fixture.detectChanges();
+  }
+
+  function getMessageBubbles(): string[] {
+    const bubbles = fixture.nativeElement.querySelectorAll('.message-bubble');
+    return Array.from(bubbles as NodeListOf<HTMLElement>).map(b => b.textContent?.trim() ?? '');
+  }
+
   it('should create', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should initialize with default values', () => {
-    expect(component.userInput()).toBe('');
-    expect(component.isLoading).toBe(false);
-    expect(component.messages()).toEqual([]);
+  it('should start with an empty chat and empty input', () => {
+    expect(getMessageBubbles()).toEqual([]);
+    expect(getInput().value).toBe('');
   });
 
-  it('should not send empty message', () => {
-    component.userInput.set('   ');
-    vi.spyOn(component as any, 'sendChatMessage');
-
-    component.sendMessage();
-
-    expect((component as any).sendChatMessage).not.toHaveBeenCalled();
-    expect(component.isLoading).toBe(false);
+  it('should not render the send button when input is empty', () => {
+    expect(fixture.nativeElement.querySelector('button[aria-label="Send"]')).toBeNull();
   });
 
-  it('should not send message when loading', () => {
-    component.userInput.set('test message');
-    component.isLoading = true;
-    vi.spyOn(component as any, 'sendChatMessage');
+  it('should not send a whitespace-only message', () => {
+    typeMessage('   ');
+    getInput().dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter' }));
+    fixture.detectChanges();
 
-    component.sendMessage();
-
-    expect((component as any).sendChatMessage).not.toHaveBeenCalled();
+    expect(mockMemoryChatService.startNewChat).not.toHaveBeenCalled();
+    expect(mockMemoryChatService.continueChat).not.toHaveBeenCalled();
   });
 
-  it('should send message when valid input and not loading', () => {
-    component.userInput.set('test message');
-    component.isLoading = false;
-    vi.spyOn(component as any, 'sendChatMessage').mockImplementation(() => undefined);
-    vi.spyOn(component as any, 'updateMessages');
-
-    component.sendMessage();
-
-    expect((component as any).updateMessages).toHaveBeenCalledWith('test message');
-    expect(component.isLoading).toBe(true);
-    expect((component as any).sendChatMessage).toHaveBeenCalled();
-  });
-
-  it('should update messages with user type by default', () => {
-    const initialCount = component.messages().length;
-
-    (component as any).updateMessages('test message');
-
-    expect(component.messages().length).toBe(initialCount + 1);
-    expect(component.messages()[0].content).toBe('test message');
-    expect(component.messages()[0].type).toBe(ChatType.USER);
-  });
-
-  it('should update messages with specified type', () => {
-    const initialCount = component.messages().length;
-
-    (component as any).updateMessages('assistant message', ChatType.ASSISTANT);
-
-    expect(component.messages().length).toBe(initialCount + 1);
-    expect(component.messages()[0].content).toBe('assistant message');
-    expect(component.messages()[0].type).toBe(ChatType.ASSISTANT);
-  });
-
-  it('should handle scrollToBottom without errors', () => {
-    expect(() => (component as any).scrollToBottom()).not.toThrow();
-  });
-
-  it('should start new chat when no chat selected', () => {
+  it('should start a new chat when no chat is selected', async () => {
     mockMemoryChatService.selectedChatId.mockReturnValue(undefined);
-    component.userInput.set('new chat message');
 
-    (component as any).sendChatMessage('new chat message');
+    typeMessage('new chat message');
+    clickSend();
 
     expect(mockMemoryChatService.startNewChat).toHaveBeenCalledWith('new chat message');
+    expect(mockMemoryChatService.selectChat).toHaveBeenCalledWith('new-chat-123');
+    expect(mockMemoryChatService.chatsResource.reload).toHaveBeenCalled();
+    await fixture.whenStable();
+    expect(getInput().value).toBe('');
   });
 
-  it('should continue existing chat when chat selected', () => {
+  it('should continue the existing chat when a chat is selected', () => {
     mockMemoryChatService.selectedChatId.mockReturnValue('existing-chat-123');
-    component.userInput.set('continue message');
 
-    (component as any).sendChatMessage('continue message');
+    typeMessage('continue message');
+    clickSend();
 
     expect(mockMemoryChatService.continueChat).toHaveBeenCalledWith('existing-chat-123', 'continue message');
+    const bubbles = getMessageBubbles();
+    expect(bubbles).toContain('continue message');
+    expect(bubbles[bubbles.length - 1]).toBe('Response from AI');
   });
 
-  it('should handle continue chat success', () => {
+  it('should show the typing indicator while waiting for the response', () => {
     mockMemoryChatService.selectedChatId.mockReturnValue('chat-123');
-    mockMemoryChatService.continueChat.mockReturnValue(of({
-      content: 'AI response',
-      type: ChatType.ASSISTANT
-    }));
-    vi.spyOn(component as any, 'updateMessages');
-    component.userInput.set('test message');
+    const response$ = new Subject<ChatMessage>();
+    mockMemoryChatService.continueChat.mockReturnValue(response$);
 
-    (component as any).sendChatMessage('test message');
+    typeMessage('slow message');
+    clickSend();
 
-    expect((component as any).updateMessages).toHaveBeenCalledWith('AI response', ChatType.ASSISTANT);
-    expect(component.userInput()).toBe('');
-    expect(component.isLoading).toBe(false);
+    expect(fixture.nativeElement.querySelector('.typing')).toBeTruthy();
+
+    response$.next({ content: 'Done', type: ChatType.ASSISTANT });
+    response$.complete();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.typing')).toBeNull();
+    expect(getMessageBubbles()).toContain('Done');
   });
 
-  it('should handle continue chat error', () => {
+  it('should render an error message when continuing a chat fails', () => {
     mockMemoryChatService.selectedChatId.mockReturnValue('chat-123');
     mockMemoryChatService.continueChat.mockReturnValue(throwError(() => new Error('API Error')));
-    vi.spyOn(component as any, 'updateMessages');
-    component.userInput.set('test message');
 
-    (component as any).sendChatMessage('test message');
+    typeMessage('failing message');
+    clickSend();
 
-    expect((component as any).updateMessages).toHaveBeenCalledWith(
-      'Sorry, I am unable to process your request at the moment.',
-      ChatType.ASSISTANT
-    );
-    expect(component.isLoading).toBe(false);
+    const bubbles = getMessageBubbles();
+    expect(bubbles[bubbles.length - 1]).toBe('Sorry, I am unable to process your request at the moment.');
   });
 
-  it('should handle start new chat success', () => {
-    mockMemoryChatService.selectedChatId.mockReturnValue(undefined);
-    const mockResponse: ChatStartResponse = {
-      chatId: 'new-chat-456',
-      message: 'Welcome!',
-      description: 'New chat'
-    };
-    mockMemoryChatService.startNewChat.mockReturnValue(of(mockResponse));
-    component.userInput.set('start new chat');
-
-    (component as any).sendChatMessage('start new chat');
-
-    expect(mockMemoryChatService.selectChat).toHaveBeenCalledWith('new-chat-456');
-    expect(mockMemoryChatService.chatsResource.reload).toHaveBeenCalled();
-    expect(component.userInput()).toBe('');
-    expect(component.isLoading).toBe(false);
-  });
-
-  it('should handle start new chat error', () => {
+  it('should render an error message when starting a new chat fails', () => {
     mockMemoryChatService.selectedChatId.mockReturnValue(undefined);
     mockMemoryChatService.startNewChat.mockReturnValue(throwError(() => new Error('API Error')));
-    vi.spyOn(component as any, 'updateMessages');
-    component.userInput.set('test message');
 
-    (component as any).sendChatMessage('test message');
+    typeMessage('failing message');
+    clickSend();
 
-    expect((component as any).updateMessages).toHaveBeenCalledWith(
-      'Sorry, I am unable to process your request at the moment.',
-      ChatType.ASSISTANT
-    );
-    expect(component.isLoading).toBe(false);
+    const bubbles = getMessageBubbles();
+    expect(bubbles[bubbles.length - 1]).toBe('Sorry, I am unable to process your request at the moment.');
   });
 
-  it('should reload chat list when continuing chat with few messages', () => {
+  it('should reload the chat list when continuing a chat with few messages', () => {
     mockMemoryChatService.selectedChatId.mockReturnValue('chat-123');
     mockMemoryChatService.chatMessagesResource.value.mockReturnValue([
       { content: 'First message', type: ChatType.USER }
     ]);
-    mockMemoryChatService.continueChat.mockReturnValue(of({
-      content: 'AI response',
-      type: ChatType.ASSISTANT
-    }));
-    component.userInput.set('test message');
 
-    (component as any).sendChatMessage('test message');
+    typeMessage('test message');
+    clickSend();
 
     expect(mockMemoryChatService.chatsResource.reload).toHaveBeenCalled();
   });
 
-  it('should not reload chat list when continuing chat with many messages', () => {
+  it('should not reload the chat list when continuing a chat with many messages', () => {
     mockMemoryChatService.selectedChatId.mockReturnValue('chat-123');
     mockMemoryChatService.chatMessagesResource.value.mockReturnValue([
       { content: 'First message', type: ChatType.USER },
       { content: 'Second message', type: ChatType.ASSISTANT },
       { content: 'Third message', type: ChatType.USER }
     ]);
-    mockMemoryChatService.continueChat.mockReturnValue(of({
-      content: 'AI response',
-      type: ChatType.ASSISTANT
-    }));
-    component.userInput.set('test message');
 
-    (component as any).sendChatMessage('test message');
+    typeMessage('test message');
+    clickSend();
 
     expect(mockMemoryChatService.chatsResource.reload).not.toHaveBeenCalled();
   });
 
-  describe('Input Validation', () => {
-    it('should return null validation error for empty input', () => {
-      component.userInput.set('');
-      fixture.detectChanges();
-      expect(component.validationError()).toBeNull();
-    });
+  it('should sanitize HTML and script tags before sending to startNewChat', () => {
+    mockMemoryChatService.selectedChatId.mockReturnValue(undefined);
+    const mockResponse: ChatStartResponse = {
+      chatId: 'new-chat-789',
+      message: 'Response',
+      description: 'New chat'
+    };
+    mockMemoryChatService.startNewChat.mockReturnValue(of(mockResponse));
 
-    it('should return null validation error for whitespace-only input', () => {
-      component.userInput.set('   ');
-      fixture.detectChanges();
-      expect(component.validationError()).toBeNull();
-    });
+    typeMessage('Test <script>alert("xss")</script> message');
+    clickSend();
 
-    it('should return null validation error for valid input', () => {
-      component.userInput.set('Tell me about your memory');
-      fixture.detectChanges();
-      expect(component.validationError()).toBeNull();
-    });
-
-    it('should return error for message exceeding max length', () => {
-      component.userInput.set('a'.repeat(2001));
-      fixture.detectChanges();
-      const error = component.validationError();
-      expect(error).toBeTruthy();
-      expect(error).toContain('too long');
-      expect(error).toContain('2001/2000');
-    });
-
-    it('should return null validation error for message at max length', () => {
-      component.userInput.set('a'.repeat(2000));
-      fixture.detectChanges();
-      expect(component.validationError()).toBeNull();
-    });
+    expect(mockMemoryChatService.startNewChat).toHaveBeenCalledWith('Test  message');
   });
 
-  describe('canSend()', () => {
-    it('should return false for empty input', () => {
-      component.userInput.set('');
-      component.isLoading = false;
-      expect(component.canSend()).toBe(false);
-    });
+  it('should sanitize HTML and script tags before sending to continueChat', () => {
+    mockMemoryChatService.selectedChatId.mockReturnValue('chat-123');
 
-    it('should return false for whitespace-only input', () => {
-      component.userInput.set('   ');
-      component.isLoading = false;
-      expect(component.canSend()).toBe(false);
-    });
+    typeMessage('Continue <b>bold</b> <script>hack()</script>');
+    clickSend();
 
-    it('should return false when loading', () => {
-      component.userInput.set('valid message');
-      component.isLoading = true;
-      expect(component.canSend()).toBe(false);
-    });
-
-    it('should return false for message exceeding max length', () => {
-      component.userInput.set('a'.repeat(2001));
-      component.isLoading = false;
-      expect(component.canSend()).toBe(false);
-    });
-
-    it('should return true for valid input when not loading', () => {
-      component.userInput.set('valid message');
-      component.isLoading = false;
-      expect(component.canSend()).toBe(true);
-    });
+    expect(mockMemoryChatService.continueChat).toHaveBeenCalledWith('chat-123', 'Continue bold');
   });
 
-  describe('sanitizeInput()', () => {
-    it('should remove script tags from input', () => {
-      const input = 'Hello <script>alert("xss")</script> world';
-      const result = (component as any).sanitizeInput(input);
-      expect(result).toBe('Hello  world');
-    });
-
-    it('should remove multiple script tags', () => {
-      const input = '<script>alert(1)</script>test<script>alert(2)</script>';
-      const result = (component as any).sanitizeInput(input);
-      expect(result).toBe('test');
-    });
-
-    it('should remove HTML tags', () => {
-      const input = 'Hello <b>world</b> <i>test</i>';
-      const result = (component as any).sanitizeInput(input);
-      expect(result).toBe('Hello world test');
-    });
-
-    it('should trim the result', () => {
-      const input = '  <b>test</b>  ';
-      const result = (component as any).sanitizeInput(input);
-      expect(result).toBe('test');
-    });
-
-    it('should handle clean input without modifications', () => {
-      const input = 'What do you remember about our conversation?';
-      const result = (component as any).sanitizeInput(input);
-      expect(result).toBe('What do you remember about our conversation?');
-    });
+  it('should show the character counter hint', () => {
+    typeMessage('hello');
+    const hint: HTMLElement = fixture.nativeElement.querySelector('mat-hint');
+    expect(hint.textContent).toContain('5/2000');
   });
 
-  describe('sendMessage with validation', () => {
-    it('should not send message when canSend returns false', () => {
-      component.userInput.set('');
-      vi.spyOn(component as any, 'sendChatMessage');
-      component.sendMessage();
-      expect((component as any).sendChatMessage).not.toHaveBeenCalled();
+  it('should disable send for messages over the max length', () => {
+    expect(getInput().getAttribute('maxlength')).toBe('2000');
+
+    typeMessage('a'.repeat(2001));
+
+    const button = fixture.nativeElement.querySelector('button[aria-label="Send"]');
+    expect(button.disabled).toBe(true);
+  });
+
+  it('should not show a validation error at exactly max length', () => {
+    typeMessage('a'.repeat(2000));
+
+    expect(fixture.nativeElement.querySelector('mat-error')).toBeNull();
+    const button = fixture.nativeElement.querySelector('button[aria-label="Send"]');
+    expect(button.disabled).toBe(false);
+  });
+
+  it('should show the messages error component when loading messages fails', () => {
+    mockMemoryChatService.chatMessagesResource.status.mockReturnValue('error');
+    mockMemoryChatService.messagesErrorHandler.error.mockReturnValue({
+      error: new Error('load failed'),
+      message: 'Failed to load messages',
+      retryCount: 0,
+      timestamp: new Date(),
+      isRetryable: true
     });
+    fixture.detectChanges();
 
-    it('should sanitize input before sending to startNewChat', () => {
-      mockMemoryChatService.selectedChatId.mockReturnValue(undefined);
-      const maliciousInput = 'Test <script>alert("xss")</script> message';
-      component.userInput.set(maliciousInput);
+    const errorComponent = fixture.nativeElement.querySelector('app-resource-error');
+    expect(errorComponent).toBeTruthy();
+    expect(errorComponent.textContent).toContain('Error Loading Messages');
 
-      const mockResponse: ChatStartResponse = {
-        chatId: 'new-chat-789',
-        message: 'Response',
-        description: 'New chat'
-      };
-      mockMemoryChatService.startNewChat.mockReturnValue(of(mockResponse));
-
-      component.sendMessage();
-
-      expect(mockMemoryChatService.startNewChat).toHaveBeenCalledWith('Test  message');
-    });
-
-    it('should sanitize input before sending to continueChat', () => {
-      mockMemoryChatService.selectedChatId.mockReturnValue('chat-123');
-      const maliciousInput = 'Continue <b>bold</b> <script>hack()</script>';
-      component.userInput.set(maliciousInput);
-
-      mockMemoryChatService.continueChat.mockReturnValue(
-        of({ content: 'Response', type: ChatType.ASSISTANT })
-      );
-
-      component.sendMessage();
-
-      expect(mockMemoryChatService.continueChat).toHaveBeenCalledWith('chat-123', 'Continue bold');
-    });
+    const retryButton: HTMLButtonElement = errorComponent.querySelector('button[aria-label="Retry loading data"]');
+    retryButton.click();
+    expect(mockMemoryChatService.retryLoadMessages).toHaveBeenCalled();
   });
 });

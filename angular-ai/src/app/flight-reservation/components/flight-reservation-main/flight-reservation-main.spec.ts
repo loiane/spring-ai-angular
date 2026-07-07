@@ -23,38 +23,52 @@ describe('FlightReservationMain', () => {
     fixture.detectChanges();
   });
 
+  function getToggleButton(): HTMLButtonElement {
+    return fixture.nativeElement.querySelector('button[aria-label="Toggle concierge chat"]');
+  }
+
+  function getToggleIcon(): string {
+    return getToggleButton().querySelector('mat-icon')?.textContent?.trim() ?? '';
+  }
+
+  function getSidenav(): HTMLElement {
+    return fixture.nativeElement.querySelector('mat-sidenav');
+  }
+
   it('should create', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should initialize with sidenav opened', () => {
-    expect(component.sidenavOpened).toBe(true);
+  it('should render the toolbar title', () => {
+    const toolbar: HTMLElement = fixture.nativeElement.querySelector('mat-toolbar');
+    expect(toolbar.textContent).toContain('SpringFly Reservations');
   });
 
-  describe('toggleSidenav', () => {
-    it('should toggle sidenav from true to false', () => {
-      component.sidenavOpened = true;
-      component.toggleSidenav();
-      expect(component.sidenavOpened).toBe(false);
-    });
+  it('should render the reservation list and concierge chat', () => {
+    expect(fixture.nativeElement.querySelector('app-reservation-list')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('app-concierge-chat')).toBeTruthy();
+  });
 
-    it('should toggle sidenav from false to true', () => {
-      component.sidenavOpened = false;
-      component.toggleSidenav();
-      expect(component.sidenavOpened).toBe(true);
-    });
+  it('should start with the sidenav opened', () => {
+    expect(getToggleIcon()).toBe('chevron_right');
+    expect(getSidenav().classList.contains('mat-drawer-opened')).toBe(true);
+  });
 
-    it('should toggle multiple times correctly', () => {
-      component.sidenavOpened = true;
+  it('should close the sidenav when clicking the toggle button', () => {
+    getToggleButton().click();
+    fixture.detectChanges();
 
-      component.toggleSidenav();
-      expect(component.sidenavOpened).toBe(false);
+    expect(getToggleIcon()).toBe('chat');
+    expect(getSidenav().classList.contains('mat-drawer-opened')).toBe(false);
+  });
 
-      component.toggleSidenav();
-      expect(component.sidenavOpened).toBe(true);
+  it('should reopen the sidenav when toggling twice', () => {
+    getToggleButton().click();
+    fixture.detectChanges();
+    getToggleButton().click();
+    fixture.detectChanges();
 
-      component.toggleSidenav();
-      expect(component.sidenavOpened).toBe(false);
-    });
+    expect(getToggleIcon()).toBe('chevron_right');
+    expect(getSidenav().classList.contains('mat-drawer-opened')).toBe(true);
   });
 });

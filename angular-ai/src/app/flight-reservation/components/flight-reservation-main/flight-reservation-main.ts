@@ -22,9 +22,9 @@ import { ConciergeChat } from '../concierge-chat/concierge-chat';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class FlightReservationMain {
-  sidenavOpened = true;
+  protected sidenavOpened = true;
 
-  toggleSidenav(): void {
+  protected toggleSidenav(): void {
     this.sidenavOpened = !this.sidenavOpened;
   }
 }

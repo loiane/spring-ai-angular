@@ -28,17 +28,17 @@ export class SimpleChat {
 
   private readonly local = false;
 
-  readonly MAX_LENGTH = MAX_MESSAGE_LENGTH;
+  protected readonly MAX_LENGTH = MAX_MESSAGE_LENGTH;
 
-  userInput = signal('');
-  isLoading = false;
+  protected userInput = signal('');
+  protected isLoading = signal(false);
 
-  messages = signal<ChatResponse[]>([
+  protected messages = signal<ChatResponse[]>([
     { message: 'Hello, how can I help you today?', isBot: true },
   ]);
 
   // Computed validation state
-  readonly validationError = computed(() => {
+  protected readonly validationError = computed(() => {
     const input = this.userInput().trim();
     if (input.length === 0) {
       return null; // No error for empty input
@@ -49,11 +49,11 @@ export class SimpleChat {
     return null;
   });
 
-  readonly canSend = computed(() => {
+  protected readonly canSend = computed(() => {
     const input = this.userInput().trim();
-    return input.length > 0 && 
-           input.length <= MAX_MESSAGE_LENGTH && 
-           !this.isLoading;
+    return input.length > 0 &&
+           input.length <= MAX_MESSAGE_LENGTH &&
+           !this.isLoading();
   });
 
   // Effect to auto-scroll when messages change
@@ -62,7 +62,7 @@ export class SimpleChat {
     setTimeout(() => this.scrollToBottom(), 0); // Use setTimeout to ensure DOM is updated
   });
 
-  sendMessage(): void {
+  protected sendMessage(): void {
     if (!this.canSend()) {
       return;
     }
@@ -70,7 +70,7 @@ export class SimpleChat {
     const sanitizedInput = this.sanitizeInput(this.userInput().trim());
     
     this.updateMessages(sanitizedInput);
-    this.isLoading = true;
+    this.isLoading.set(true);
 
     if (this.local) {
       this.simulateResponse();
@@ -93,7 +93,7 @@ export class SimpleChat {
     setTimeout(() => {
       const response = 'This is a simulated response from the AI model.';
       this.updateMessages(response, true);
-      this.isLoading = false;
+      this.isLoading.set(false);
     }, 2000);
   }
 
@@ -118,7 +118,7 @@ export class SimpleChat {
     .pipe(
       catchError(() => {
         this.updateMessages('Sorry, I am unable to process your request at the moment.', true);
-        this.isLoading = false;
+        this.isLoading.set(false);
         return of();
       })
     )
@@ -127,7 +127,7 @@ export class SimpleChat {
         this.updateMessages(response.message, true);
       }
       this.userInput.set('');
-      this.isLoading = false;
+      this.isLoading.set(false);
     });
   }
 }

@@ -38,17 +38,17 @@ export class ChatPanel {
 
   // Export ChatType for template usage
   protected readonly ChatType = ChatType;
-  readonly MAX_LENGTH = MAX_MESSAGE_LENGTH;
+  protected readonly MAX_LENGTH = MAX_MESSAGE_LENGTH;
 
-  userInput = signal('');
-  isLoading = false;
+  protected userInput = signal('');
+  protected isLoading = signal(false);
 
-  messages = signal<ChatMessage[]>([]);
-  messagesResource = this.memoryChatService.chatMessagesResource;
-  messagesErrorHandler = this.memoryChatService.messagesErrorHandler;
+  protected messages = signal<ChatMessage[]>([]);
+  protected messagesResource = this.memoryChatService.chatMessagesResource;
+  protected messagesErrorHandler = this.memoryChatService.messagesErrorHandler;
 
   // Computed validation state
-  readonly validationError = computed(() => {
+  protected readonly validationError = computed(() => {
     const input = this.userInput().trim();
     if (input.length === 0) {
       return null; // No error for empty input
@@ -59,11 +59,11 @@ export class ChatPanel {
     return null;
   });
 
-  readonly canSend = computed(() => {
+  protected readonly canSend = computed(() => {
     const input = this.userInput().trim();
-    return input.length > 0 && 
-           input.length <= MAX_MESSAGE_LENGTH && 
-           !this.isLoading;
+    return input.length > 0 &&
+           input.length <= MAX_MESSAGE_LENGTH &&
+           !this.isLoading();
   });
 
   /**
@@ -105,14 +105,14 @@ export class ChatPanel {
     this.messages.set([]);
   });
 
-  sendMessage(): void {
+  protected sendMessage(): void {
     if (!this.canSend()) {
       return;
     }
 
     const sanitizedInput = this.sanitizeInput(this.userInput().trim());
     this.updateMessages(sanitizedInput);
-    this.isLoading = true;
+    this.isLoading.set(true);
     this.sendChatMessage(sanitizedInput);
   }
 
@@ -148,7 +148,7 @@ export class ChatPanel {
         .pipe(
           catchError(() => {
             this.updateMessages('Sorry, I am unable to process your request at the moment.', ChatType.ASSISTANT);
-            this.isLoading = false;
+            this.isLoading.set(false);
             return of();
           })
         )
@@ -157,7 +157,7 @@ export class ChatPanel {
             this.updateMessages(response.content, ChatType.ASSISTANT);
           }
           this.userInput.set('');
-          this.isLoading = false;
+          this.isLoading.set(false);
 
           // Reload chat list if this was one of the first messages
           const currentMessages = this.memoryChatService.chatMessagesResource.value();
@@ -171,7 +171,7 @@ export class ChatPanel {
         .pipe(
           catchError(() => {
             this.updateMessages('Sorry, I am unable to process your request at the moment.', ChatType.ASSISTANT);
-            this.isLoading = false;
+            this.isLoading.set(false);
             return of();
           })
         )
@@ -182,12 +182,12 @@ export class ChatPanel {
             this.memoryChatService.chatsResource.reload();
           }
           this.userInput.set('');
-          this.isLoading = false;
+          this.isLoading.set(false);
         });
     }
   }
 
-  onRetryLoadMessages(): void {
+  protected onRetryLoadMessages(): void {
     this.memoryChatService.retryLoadMessages();
   }
 

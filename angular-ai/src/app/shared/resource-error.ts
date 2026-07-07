@@ -51,7 +51,7 @@ export class ResourceErrorComponent {
   /**
    * Check if retry is available
    */
-  get canRetry(): boolean {
+  protected get canRetry(): boolean {
     const err = this.error();
     return err !== null &&
            err.isRetryable &&
@@ -62,7 +62,7 @@ export class ResourceErrorComponent {
   /**
    * Handle retry button click
    */
-  onRetry(): void {
+  protected onRetry(): void {
     if (this.canRetry) {
       this.retry.emit();
     }

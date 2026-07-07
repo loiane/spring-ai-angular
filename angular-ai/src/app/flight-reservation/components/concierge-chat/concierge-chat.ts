@@ -32,15 +32,15 @@ const MAX_MESSAGE_LENGTH = 2000;
 export class ConciergeChat {
   private readonly flightService = inject(FlightReservationService);
 
-  messages = this.flightService.messages;
-  selectedReservation = this.flightService.selectedReservation;
-  currentMessage = signal('');
+  protected messages = this.flightService.messages;
+  protected selectedReservation = this.flightService.selectedReservation;
+  protected currentMessage = signal('');
 
-  readonly MAX_LENGTH = MAX_MESSAGE_LENGTH;
-  MessageType = MessageType;
+  protected readonly MAX_LENGTH = MAX_MESSAGE_LENGTH;
+  protected MessageType = MessageType;
 
   // Computed validation state
-  readonly validationError = computed(() => {
+  protected readonly validationError = computed(() => {
     const input = this.currentMessage().trim();
     if (input.length === 0) {
       return null; // No error for empty input
@@ -51,12 +51,12 @@ export class ConciergeChat {
     return null;
   });
 
-  readonly canSend = computed(() => {
+  protected readonly canSend = computed(() => {
     const input = this.currentMessage().trim();
     return input.length > 0 && input.length <= MAX_MESSAGE_LENGTH;
   });
 
-  sendMessage(): void {
+  protected sendMessage(): void {
     if (!this.canSend()) {
       return;
     }
@@ -77,14 +77,14 @@ export class ConciergeChat {
       .trim();
   }
 
-  onKeyPress(event: KeyboardEvent): void {
+  protected onKeyPress(event: KeyboardEvent): void {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
       this.sendMessage();
     }
   }
 
-  formatTimestamp(timestamp: Date): string {
+  protected formatTimestamp(timestamp: Date): string {
     return new Intl.DateTimeFormat('en-US', {
       hour: '2-digit',
       minute: '2-digit',
