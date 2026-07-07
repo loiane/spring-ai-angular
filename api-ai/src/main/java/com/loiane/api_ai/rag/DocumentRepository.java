@@ -54,7 +54,7 @@ public class DocumentRepository {
         
         String sql = """
             INSERT INTO documents (id, filename, content_type, file_size, upload_date, status, error_message)
-            VALUES (?, ?, ?, ?, ?, ?::VARCHAR, ?)
+            VALUES (?::uuid, ?, ?, ?, ?, ?::VARCHAR, ?)
             ON CONFLICT (id) DO UPDATE SET
                 filename = EXCLUDED.filename,
                 content_type = EXCLUDED.content_type,
@@ -94,7 +94,7 @@ public class DocumentRepository {
      * @return Optional containing the document if found, empty otherwise
      */
     public Optional<DocumentMetadata> findById(String id) {
-        String sql = "SELECT * FROM documents WHERE id = ?";
+        String sql = "SELECT * FROM documents WHERE id = ?::uuid";
         
         try {
             DocumentMetadata document = jdbcTemplate.queryForObject(sql, documentRowMapper, id);
@@ -124,7 +124,7 @@ public class DocumentRepository {
      * @param id The document ID to delete
      */
     public void deleteById(String id) {
-        String sql = "DELETE FROM documents WHERE id = ?";
+        String sql = "DELETE FROM documents WHERE id = ?::uuid";
         int rowsAffected = jdbcTemplate.update(sql, id);
         
         if (rowsAffected > 0) {
@@ -141,7 +141,7 @@ public class DocumentRepository {
      * @param status The new status
      */
     public void updateStatus(String id, DocumentStatus status) {
-        String sql = "UPDATE documents SET status = ?::VARCHAR, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+        String sql = "UPDATE documents SET status = ?::VARCHAR, updated_at = CURRENT_TIMESTAMP WHERE id = ?::uuid";
         int rowsAffected = jdbcTemplate.update(sql, status.name(), id);
         
         if (rowsAffected > 0) {
@@ -159,7 +159,7 @@ public class DocumentRepository {
      * @param errorMessage The error message (can be null)
      */
     public void updateStatusWithError(String id, DocumentStatus status, String errorMessage) {
-        String sql = "UPDATE documents SET status = ?::VARCHAR, error_message = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+        String sql = "UPDATE documents SET status = ?::VARCHAR, error_message = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?::uuid";
         int rowsAffected = jdbcTemplate.update(sql, status.name(), errorMessage, id);
         
         if (rowsAffected > 0) {

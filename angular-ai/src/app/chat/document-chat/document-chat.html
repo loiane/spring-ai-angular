@@ -1,0 +1,89 @@
+<mat-card class="chat-container">
+  <div class="chat-header">
+    <mat-toolbar>
+      <span>Chat with your Document</span>
+      <span class="spacer"></span>
+      @if (document(); as doc) {
+        <mat-chip-set>
+          <mat-chip [class.ready]="doc.status === 'READY'" [class.error]="doc.status === 'ERROR'">
+            <mat-icon matChipAvatar>description</mat-icon>
+            {{ doc.filename }} — {{ doc.status }}
+          </mat-chip>
+        </mat-chip-set>
+      }
+      <button mat-stroked-button
+              aria-label="Upload PDF"
+              (click)="fileInput.click()"
+              [disabled]="isProcessing()">
+        @if (isProcessing()) {
+          <mat-spinner diameter="18"></mat-spinner>
+        } @else {
+          <mat-icon>upload_file</mat-icon>
+        }
+        Upload PDF
+      </button>
+      <input #fileInput type="file" accept="application/pdf" hidden (change)="onFileSelected($event)">
+    </mat-toolbar>
+  </div>
+  <div class="chat-history" #chatHistory>
+    <div class="messages">
+    @for (message of messages(); track $index) {
+      <div class="message">
+        <div class="message-bubble" [class.user]="!message.isBot">
+          @if (message.isBot) {
+            <span [innerHTML]="message.message | markdownToHtml"></span>
+          } @else {
+            {{ message.message }}
+          }
+          @if (message.sources?.length) {
+            <div class="sources">
+              <div class="sources-title">
+                <mat-icon inline>menu_book</mat-icon> Sources
+              </div>
+              @for (source of message.sources; track $index) {
+                <div class="source">
+                  <span class="source-filename">{{ source.filename }}</span>
+                  <span class="source-snippet">{{ source.content }}</span>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    }
+    @if (isLoading()) {
+      <div class="message">
+        <div class="message-bubble">
+          <span class="typing">...</span>
+        </div>
+      </div>
+    }
+  </div>
+  </div>
+
+  <div class="chat-input">
+    <mat-form-field class="full-width">
+      <mat-label>{{ isReady() ? 'Ask about your document' : 'Upload a PDF to start chatting' }}</mat-label>
+      <input matInput
+             [ngModel]="userInput()"
+             (ngModelChange)="userInput.set($event)"
+             (keyup.enter)="sendMessage()"
+             [maxlength]="MAX_LENGTH"
+             [disabled]="!isReady()"
+             placeholder="Type your question...">
+      <mat-hint align="end">{{userInput().length}}/{{MAX_LENGTH}}</mat-hint>
+      @if (validationError()) {
+        <mat-error>{{validationError()}}</mat-error>
+      }
+      @if (userInput()) {
+        <button matSuffix
+                mat-icon-button
+                aria-label="Send"
+                (click)="sendMessage()"
+                [disabled]="!canSend()">
+          <mat-icon>send</mat-icon>
+        </button>
+     }
+    </mat-form-field>
+  </div>
+</mat-card>

@@ -8,6 +8,9 @@ export const routes: Routes = [
   { path: 'memory-chat',
     loadComponent: () => import('./chat/memory-chat/chat-list/chat-list').then(c => c.ChatList)
   },
+  { path: 'chat-with-document',
+    loadComponent: () => import('./chat/document-chat/document-chat').then(c => c.DocumentChat)
+  },
   { path: 'flight-reservations',
     loadComponent: () => import('./flight-reservation/components/flight-reservation-main/flight-reservation-main').then(c => c.FlightReservationMain)
   },

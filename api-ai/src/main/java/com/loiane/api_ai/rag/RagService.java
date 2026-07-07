@@ -9,10 +9,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
+import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.document.Document;
+import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.ai.vectorstore.filter.Filter;
+import org.springframework.ai.vectorstore.filter.FilterExpressionBuilder;
 import org.springframework.stereotype.Service;
 
+import com.loiane.api_ai.rag.config.DocumentProperties;
 import com.loiane.api_ai.rag.model.RagResponse;
 import com.loiane.api_ai.rag.model.Source;
 
@@ -34,16 +39,42 @@ public class RagService {
 
     private static final Logger log = LoggerFactory.getLogger(RagService.class);
 
+    static final String REFUSAL_MESSAGE =
+            "I'm sorry, I can only answer questions about the uploaded document, and I couldn't find that information in it.";
+
+    private static final PromptTemplate QA_PROMPT = new PromptTemplate("""
+            {query}
+
+            You are a document Q&A assistant. Answer the question above using ONLY the context below.
+            If the context does not contain the information needed to answer, or the question is not
+            about the document, reply exactly with:
+            "%s"
+            Do not use outside knowledge.
+
+            Context:
+            ---------------------
+            {question_answer_context}
+            ---------------------
+            """.formatted(REFUSAL_MESSAGE));
+
     private final ChatClient chatClient;
     private final VectorStore vectorStore;
+    private final DocumentProperties documentProperties;
 
-    public RagService(ChatClient.Builder chatClientBuilder, VectorStore vectorStore) {
+    public RagService(ChatClient.Builder chatClientBuilder, VectorStore vectorStore,
+                      DocumentProperties documentProperties) {
         this.vectorStore = vectorStore;
-        
-        // Configure ChatClient with QuestionAnswerAdvisor as a default advisor
+        this.documentProperties = documentProperties;
+
+        // Configure ChatClient with QuestionAnswerAdvisor as a default advisor,
+        // using a grounded prompt that restricts answers to the retrieved context
         this.chatClient = chatClientBuilder
                 .defaultAdvisors(
                         QuestionAnswerAdvisor.builder(vectorStore)
+                                .promptTemplate(QA_PROMPT)
+                                .searchRequest(SearchRequest.builder()
+                                        .topK(documentProperties.getTopK())
+                                        .build())
                                 .build()
                 )
                 .build();
@@ -60,21 +91,37 @@ public class RagService {
      * </ol>
      * 
      * @param question The question to ask
+     * @param documentId Optional document id to scope retrieval to a single document
      * @return A RagResponse with the answer and source citations
      */
-    public RagResponse askQuestion(String question) {
-        log.info("Processing RAG question: {}", question);
+    public RagResponse askQuestion(String question, String documentId) {
+        log.info("Processing RAG question: {} (documentId: {})", question, documentId);
 
         try {
+            Filter.Expression filter = buildDocumentFilter(documentId);
+
             // QuestionAnswerAdvisor automatically retrieves relevant documents
             // and injects them as context for the LLM
-            String answer = chatClient.prompt()
-                    .user(question)
-                    .call()
-                    .content();
+            var promptSpec = chatClient.prompt().user(question);
+            if (filter != null) {
+                // The advisor param expects a filter expression string, not a Filter.Expression
+                promptSpec = promptSpec.advisors(a ->
+                        a.param(QuestionAnswerAdvisor.FILTER_EXPRESSION,
+                                "document_id == '" + documentId + "'"));
+            }
+            String answer = promptSpec.call().content();
+
+            if (answer != null && answer.contains(REFUSAL_MESSAGE)) {
+                return new RagResponse(REFUSAL_MESSAGE, List.of());
+            }
 
             // Retrieve documents separately for source attribution
-            List<Document> relevantDocs = vectorStore.similaritySearch(question);
+            SearchRequest searchRequest = SearchRequest.builder()
+                    .query(question)
+                    .topK(documentProperties.getTopK())
+                    .filterExpression(filter)
+                    .build();
+            List<Document> relevantDocs = vectorStore.similaritySearch(searchRequest);
 
             // Extract unique sources from document metadata
             List<Source> sources = extractSources(relevantDocs);
@@ -89,6 +136,13 @@ public class RagService {
                     List.of()
             );
         }
+    }
+
+    private Filter.Expression buildDocumentFilter(String documentId) {
+        if (documentId == null || documentId.isBlank()) {
+            return null;
+        }
+        return new FilterExpressionBuilder().eq("document_id", documentId).build();
     }
 
     /**

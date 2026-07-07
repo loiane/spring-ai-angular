@@ -12,6 +12,7 @@ import java.util.List;
 
 import com.loiane.api_ai.rag.exception.DocumentNotFoundException;
 import com.loiane.api_ai.rag.model.DocumentMetadata;
+import com.loiane.api_ai.rag.model.RagRequest;
 import com.loiane.api_ai.rag.model.RagResponse;
 
 @RestController
@@ -62,8 +63,8 @@ public class RagController {
     }
 
     @PostMapping("/ask")
-    public ResponseEntity<RagResponse> ask(@RequestBody String question) {
-        RagResponse response = ragService.askQuestion(question);
+    public ResponseEntity<RagResponse> ask(@RequestBody RagRequest request) {
+        RagResponse response = ragService.askQuestion(request.question(), request.documentId());
         return ResponseEntity.ok(response);
     }
 }
