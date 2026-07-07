@@ -33,7 +33,7 @@ public class RagReader {
             return vectorStore;
         }
         List<Document> documents = getDocsFromPdf();
-        TextSplitter textSplitter = new TokenTextSplitter();
+        TextSplitter textSplitter = TokenTextSplitter.builder().build();
         List<Document> splitDocuments = textSplitter.apply(documents);
         vectorStore.add(splitDocuments);
         return vectorStore;

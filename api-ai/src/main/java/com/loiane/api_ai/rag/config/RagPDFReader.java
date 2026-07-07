@@ -41,7 +41,7 @@ public class RagPDFReader {
         } else {
             log.info("Vector store file not found, creating a new one.");
             List<Document> documents = getDocsFromPdf();
-            TextSplitter textSplitter = new TokenTextSplitter();
+            TextSplitter textSplitter = TokenTextSplitter.builder().build();
             List<Document> splitDocuments = textSplitter.apply(documents);
             simpleVectorStore.add(splitDocuments);
             simpleVectorStore.save(vectorStoreFile);

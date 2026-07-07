@@ -207,14 +207,13 @@ public class DocumentService {
         log.debug("Splitting text into chunks: chunkSize={}, overlap={}", 
                 documentProperties.getChunkSize(), documentProperties.getChunkOverlap());
         
-        TokenTextSplitter textSplitter = new TokenTextSplitter(
-                documentProperties.getChunkSize(),
-                documentProperties.getChunkOverlap(),
-                documentProperties.getMinChunkSize(),
-                10000, // maxChunkSize
-                true, // keepSeparator
-                null // default separator characters
-        );
+        TokenTextSplitter textSplitter = TokenTextSplitter.builder()
+                .withChunkSize(documentProperties.getChunkSize())
+                .withMinChunkSizeChars(documentProperties.getChunkOverlap())
+                .withMinChunkLengthToEmbed(documentProperties.getMinChunkSize())
+                .withMaxNumChunks(10000)
+                .withKeepSeparator(true)
+                .build();
         
         List<Document> chunks = textSplitter.apply(documents);
         log.info("Split into {} chunks", chunks.size());
