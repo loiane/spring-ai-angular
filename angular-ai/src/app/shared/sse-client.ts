@@ -1,5 +1,5 @@
 import { HttpClient, HttpDownloadProgressEvent, HttpEventType } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
+import { inject, Service } from '@angular/core';
 import { Observable } from 'rxjs';
 
 /**
@@ -32,9 +32,7 @@ const DEFAULT_EVENT_NAME = 'message';
  * completes when the stream ends, and cancels the underlying request if the
  * subscription is unsubscribed early.
  */
-@Injectable({
-  providedIn: 'root'
-})
+@Service()
 export class SseClient {
 
   private readonly http = inject(HttpClient);
