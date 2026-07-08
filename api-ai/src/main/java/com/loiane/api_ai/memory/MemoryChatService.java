@@ -7,6 +7,8 @@ import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.memory.repository.jdbc.JdbcChatMemoryRepository;
 import org.springframework.stereotype.Service;
 
+import reactor.core.publisher.Flux;
+
 import java.util.List;
 
 @Service
@@ -70,6 +72,18 @@ public class MemoryChatService {
                 .user(message)
                 .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, chatId))
                 .call()
+                .content();
+    }
+
+    public Flux<String> chatStream(String chatId, String message) {
+        if (!this.chatMemoryRepository.chatIdExists(chatId)) {
+            throw new IllegalArgumentException("Chat ID does not exist: " + chatId);
+        }
+
+        return this.chatClient.prompt()
+                .user(message)
+                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, chatId))
+                .stream()
                 .content();
     }
 

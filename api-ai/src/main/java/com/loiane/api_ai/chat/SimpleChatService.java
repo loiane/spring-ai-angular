@@ -3,6 +3,8 @@ package com.loiane.api_ai.chat;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 
+import reactor.core.publisher.Flux;
+
 @Service
 public class SimpleChatService {
 
@@ -16,6 +18,13 @@ public class SimpleChatService {
         return this.chatClient.prompt()
                 .user(message)
                 .call()
+                .content();
+    }
+
+    public Flux<String> chatStream(String message) {
+        return this.chatClient.prompt()
+                .user(message)
+                .stream()
                 .content();
     }
 }

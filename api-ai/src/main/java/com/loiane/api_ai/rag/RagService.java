@@ -19,7 +19,12 @@ import org.springframework.stereotype.Service;
 
 import com.loiane.api_ai.rag.config.DocumentProperties;
 import com.loiane.api_ai.rag.model.RagResponse;
+import com.loiane.api_ai.rag.model.RagStreamEvent;
 import com.loiane.api_ai.rag.model.Source;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * RAG (Retrieval-Augmented Generation) service for answering questions using uploaded documents.
@@ -136,6 +141,63 @@ public class RagService {
                     List.of()
             );
         }
+    }
+
+    /**
+     * Ask a question using the RAG pipeline, streaming the answer as it is generated.
+     *
+     * <p>Emits a sequence of "answer" events with incremental content chunks,
+     * followed by a single terminal "sources" event once the answer is complete.
+     *
+     * @param question   The question to ask
+     * @param documentId Optional document id to scope retrieval to a single document
+     * @return A Flux of RagStreamEvent, ending with a "sources" event
+     */
+    public Flux<RagStreamEvent> askQuestionStream(String question, String documentId) {
+        log.info("Processing streaming RAG question: {} (documentId: {})", question, documentId);
+
+        Filter.Expression filter = buildDocumentFilter(documentId);
+
+        var promptSpec = chatClient.prompt().user(question);
+        if (filter != null) {
+            promptSpec = promptSpec.advisors(a ->
+                    a.param(QuestionAnswerAdvisor.FILTER_EXPRESSION,
+                            "document_id == '" + documentId + "'"));
+        }
+
+        StringBuilder answerBuilder = new StringBuilder();
+
+        Flux<RagStreamEvent> answerFlux = promptSpec.stream().content()
+                .doOnNext(answerBuilder::append)
+                .map(RagStreamEvent::answer);
+
+        Mono<RagStreamEvent> sourcesMono = Mono.fromCallable(() -> resolveSources(question, filter, answerBuilder.toString()))
+                .subscribeOn(Schedulers.boundedElastic());
+
+        return Flux.concat(answerFlux, sourcesMono)
+                .onErrorResume(e -> {
+                    log.error("Error processing streaming RAG question: {}", question, e);
+                    return Flux.just(RagStreamEvent.answer(
+                            "Sorry, I encountered an error while processing your question. Please try again."),
+                            RagStreamEvent.sources(List.of()));
+                });
+    }
+
+    private RagStreamEvent resolveSources(String question, Filter.Expression filter, String answer) {
+        if (answer != null && answer.contains(REFUSAL_MESSAGE)) {
+            return RagStreamEvent.sources(List.of());
+        }
+
+        SearchRequest searchRequest = SearchRequest.builder()
+                .query(question)
+                .topK(documentProperties.getTopK())
+                .filterExpression(filter)
+                .build();
+        List<Document> relevantDocs = vectorStore.similaritySearch(searchRequest);
+        List<Source> sources = extractSources(relevantDocs);
+
+        log.info("Streamed answer with {} sources", sources.size());
+        return RagStreamEvent.sources(sources);
     }
 
     private Filter.Expression buildDocumentFilter(String documentId) {

@@ -2,6 +2,7 @@ package com.loiane.api_ai.memory;
 
 import java.util.List;
 
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -10,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.loiane.api_ai.chat.ChatRequest;
+
+import reactor.core.publisher.Flux;
 
 @RestController
 @RequestMapping("/api/chat-memory")
@@ -39,5 +42,11 @@ public class MemoryChatController {
     @PostMapping("/{chatId}")
     public ChatMessage chatMemory(@PathVariable String chatId, @RequestBody ChatRequest request) {
         return new ChatMessage(this.memoryChatService.chat(chatId, request.message()), "ASSISTANT");
+    }
+
+    @PostMapping(value = "/{chatId}/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<ChatMessage> chatMemoryStream(@PathVariable String chatId, @RequestBody ChatRequest request) {
+        return this.memoryChatService.chatStream(chatId, request.message())
+                .map(content -> new ChatMessage(content, "ASSISTANT"));
     }
 }

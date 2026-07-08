@@ -3,7 +3,9 @@ package com.loiane.api_ai.rag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -14,6 +16,8 @@ import com.loiane.api_ai.rag.exception.DocumentNotFoundException;
 import com.loiane.api_ai.rag.model.DocumentMetadata;
 import com.loiane.api_ai.rag.model.RagRequest;
 import com.loiane.api_ai.rag.model.RagResponse;
+
+import reactor.core.publisher.Flux;
 
 @RestController
 @RequestMapping("/api/rag")
@@ -66,5 +70,14 @@ public class RagController {
     public ResponseEntity<RagResponse> ask(@RequestBody RagRequest request) {
         RagResponse response = ragService.askQuestion(request.question(), request.documentId());
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping(value = "/ask/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<ServerSentEvent<Object>> askStream(@RequestBody RagRequest request) {
+        return ragService.askQuestionStream(request.question(), request.documentId())
+                .map(event -> ServerSentEvent.builder()
+                        .event(event.type())
+                        .data(event.type().equals("sources") ? event.sources() : event.content())
+                        .build());
     }
 }

@@ -6,6 +6,8 @@ import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.stereotype.Service;
 
+import reactor.core.publisher.Flux;
+
 /**
  * AI concierge service for the SpringFly reservations page.
  * Uses tool calling to look up and manage reservations on behalf of the passenger.
@@ -54,6 +56,14 @@ public class ConciergeService {
                 .user(message)
                 .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, CONVERSATION_ID))
                 .call()
+                .content();
+    }
+
+    public Flux<String> chatStream(String message) {
+        return this.chatClient.prompt()
+                .user(message)
+                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, CONVERSATION_ID))
+                .stream()
                 .content();
     }
 }
