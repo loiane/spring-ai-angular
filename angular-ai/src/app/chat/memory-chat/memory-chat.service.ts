@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
 import { LoggingService } from '../../shared/logging.service';
 import { ResourceErrorHandler, DEFAULT_RETRY_CONFIG } from '../../shared/resource-error-handler';
-import { postSse } from '../../shared/sse-client';
+import { SseClient } from '../../shared/sse-client';
 import { Chat, ChatStartResponse } from '../chat';
 import { ChatMessage } from '../chat-message';
 
@@ -20,6 +20,7 @@ export class MemoryChatService {
   public readonly API_MEMORY = '/api/chat-memory';
 
   private readonly http = inject(HttpClient);
+  private readonly sseClient = inject(SseClient);
   private readonly logger = inject(LoggingService);
 
   /**
@@ -111,7 +112,7 @@ export class MemoryChatService {
    * chunks as they arrive.
    */
   continueChatStream(chatId: string, message: string): Observable<string> {
-    return postSse<ChatMessage>(`${this.API_MEMORY}/${chatId}/stream`, { message })
+    return this.sseClient.post<ChatMessage>(`${this.API_MEMORY}/${chatId}/stream`, { message })
       .pipe(
         filter(event => event.event === 'message'),
         map(event => event.data.content)

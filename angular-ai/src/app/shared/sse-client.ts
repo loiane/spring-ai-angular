@@ -1,3 +1,5 @@
+import { HttpClient, HttpDownloadProgressEvent, HttpEventType } from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
 /**
@@ -17,70 +19,71 @@ export interface SseEvent<T = unknown> {
 const DEFAULT_EVENT_NAME = 'message';
 
 /**
- * Sends a POST request and streams back the response body as Server-Sent Events.
+ * Streams Server-Sent Events over POST requests.
  *
- * Native `EventSource` only supports `GET` requests, so this uses `fetch` with a
- * `ReadableStream` reader to manually parse the `text/event-stream` wire format
- * (`event:` / `data:` lines separated by blank lines).
+ * Native `EventSource` only supports `GET` requests, so this parses the
+ * `text/event-stream` wire format (`event:` / `data:` lines separated by blank
+ * lines) from the response body as it arrives. It is built on Angular's
+ * `HttpClient` (download-progress events expose the partial response text), so
+ * HTTP interceptors — auth headers, logging, etc. — apply to streaming requests
+ * the same way they do to regular ones.
  *
  * The returned Observable emits one {@link SseEvent} per server-sent message,
- * completes when the stream ends, and aborts the underlying request if the
+ * completes when the stream ends, and cancels the underlying request if the
  * subscription is unsubscribed early.
- *
- * @param url  The endpoint to POST to.
- * @param body The request body, serialized as JSON.
  */
-export function postSse<T = unknown>(url: string, body: unknown): Observable<SseEvent<T>> {
-  return new Observable<SseEvent<T>>(subscriber => {
-    const controller = new AbortController();
+@Injectable({
+  providedIn: 'root'
+})
+export class SseClient {
 
-    fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'text/event-stream'
-      },
-      body: JSON.stringify(body),
-      signal: controller.signal
-    })
-      .then(async response => {
-        if (!response.ok || !response.body) {
-          throw new Error(`SSE request to ${url} failed with status ${response.status}`);
-        }
+  private readonly http = inject(HttpClient);
 
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = '';
+  /**
+   * Sends a POST request and streams back the response body as Server-Sent Events.
+   *
+   * @param url  The endpoint to POST to.
+   * @param body The request body, serialized as JSON.
+   */
+  post<T = unknown>(url: string, body: unknown): Observable<SseEvent<T>> {
+    return new Observable<SseEvent<T>>(subscriber => {
+      // Index into the (cumulative) response text up to which complete
+      // frames have already been emitted.
+      let processed = 0;
 
-        for (;;) {
-          const { done, value } = await reader.read();
-          if (done) {
-            break;
-          }
+      const emitFrames = (text: string, streamEnded: boolean): void => {
+        const frames = text.slice(processed).split('\n\n');
+        const remainder = streamEnded ? '' : frames.pop() ?? '';
+        processed = text.length - remainder.length;
 
-          buffer += decoder.decode(value, { stream: true });
-          const rawEvents = buffer.split('\n\n');
-          buffer = rawEvents.pop() ?? '';
-
-          for (const rawEvent of rawEvents) {
-            const parsed = parseSseEvent<T>(rawEvent);
-            if (parsed) {
-              subscriber.next(parsed);
-            }
+        for (const frame of frames) {
+          const parsed = parseSseEvent<T>(frame);
+          if (parsed) {
+            subscriber.next(parsed);
           }
         }
+      };
 
-        subscriber.complete();
-      })
-      .catch((err: unknown) => {
-        if (err instanceof DOMException && err.name === 'AbortError') {
-          return;
-        }
-        subscriber.error(err);
+      const subscription = this.http.post(url, body, {
+        headers: { Accept: 'text/event-stream' },
+        observe: 'events',
+        responseType: 'text',
+        reportProgress: true
+      }).subscribe({
+        next: event => {
+          if (event.type === HttpEventType.DownloadProgress) {
+            emitFrames((event as HttpDownloadProgressEvent).partialText ?? '', false);
+          } else if (event.type === HttpEventType.Response) {
+            emitFrames(event.body ?? '', true);
+          }
+        },
+        error: err => subscriber.error(err),
+        complete: () => subscriber.complete()
       });
 
-    return () => controller.abort();
-  });
+      return () => subscription.unsubscribe();
+    });
+  }
 }
 
 function parseSseEvent<T>(rawEvent: string): SseEvent<T> | null {
@@ -91,7 +94,11 @@ function parseSseEvent<T>(rawEvent: string): SseEvent<T> | null {
     if (line.startsWith('event:')) {
       eventName = line.slice('event:'.length).trim();
     } else if (line.startsWith('data:')) {
-      dataLines.push(line.slice('data:'.length).trim());
+      // Do NOT trim the payload: raw-string SSE data (e.g. streamed answer
+      // deltas) may legitimately start or end with whitespace, and Spring
+      // writes "data:" with no padding space. Trimming here would silently
+      // glue streamed words together.
+      dataLines.push(line.slice('data:'.length));
     }
   }
 

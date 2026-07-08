@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { of, throwError } from 'rxjs';
 
@@ -159,27 +159,16 @@ describe('ConciergeChat', () => {
       expect(service.sendConciergeMessageStream).toHaveBeenCalledWith('Book flight  to NYC');
     });
 
-    it('should keep the user message and the streamed assistant reply as separate messages, in order', async () => {
+    it('should keep the user message and the streamed assistant reply as separate messages, in order', () => {
       // Exercise the real (unmocked) service so the eager user-message push and
       // the assistant placeholder can't get reordered relative to each other.
-      const encoder = new TextEncoder();
-      const body = 'data: {"content":"How"}\n\ndata: {"content":" can I help?"}\n\n';
-      const stream = new ReadableStream<Uint8Array>({
-        start(controller) {
-          controller.enqueue(encoder.encode(body));
-          controller.close();
-        }
-      });
-      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-        new Response(stream, { status: 200, headers: { 'Content-Type': 'text/event-stream' } })
-      );
+      const httpMock = TestBed.inject(HttpTestingController);
 
       typeMessage('I want to book a flight');
       getSendButton().click();
 
-      // Wait for the fetch-based SSE stream to complete.
-      await new Promise(resolve => setTimeout(resolve, 0));
-      await new Promise(resolve => setTimeout(resolve, 0));
+      const req = httpMock.expectOne(`${service.CONCIERGE_API}/stream`);
+      req.flush('data: {"content":"How"}\n\ndata: {"content":" can I help?"}\n\n');
       fixture.detectChanges();
 
       const messages = getMessages();
@@ -188,8 +177,6 @@ describe('ConciergeChat', () => {
 
       expect(userIndex).toBeGreaterThanOrEqual(0);
       expect(assistantIndex).toBeGreaterThan(userIndex);
-
-      fetchSpy.mockRestore();
     });
 
   });

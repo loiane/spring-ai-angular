@@ -7,17 +7,6 @@ import { FlightReservationService } from './flight-reservation.service';
 import { ApiFlightReservation, FlightReservation, CancellationRequest, ReservationStatus } from '../models/flight-reservation';
 import { ConciergeResponse, MessageType } from '../models/concierge-message';
 
-function sseResponse(body: string, status = 200): Response {
-  const encoder = new TextEncoder();
-  const stream = new ReadableStream<Uint8Array>({
-    start(controller) {
-      controller.enqueue(encoder.encode(body));
-      controller.close();
-    }
-  });
-  return new Response(stream, { status, headers: { 'Content-Type': 'text/event-stream' } });
-}
-
 describe('FlightReservationService', () => {
   let service: FlightReservationService;
   let httpMock: HttpTestingController;
@@ -159,33 +148,24 @@ describe('FlightReservationService', () => {
   });
 
   describe('sendConciergeMessageStream', () => {
-    let fetchSpy: ReturnType<typeof vi.spyOn>;
-
-    afterEach(() => {
-      fetchSpy?.mockRestore();
-    });
-
-    it('should add the user message and emit assistant text deltas', async () => {
-      const body = 'data: {"content":"Hel","requiresAction":false}\n\n'
-        + 'data: {"content":"lo","requiresAction":false}\n\n';
-      fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(sseResponse(body));
-
+    it('should add the user message and emit assistant text deltas', () => {
       const initialMessageCount = service.messages().length;
 
       const deltas: string[] = [];
-      await new Promise<void>((resolve, reject) => {
-        service.sendConciergeMessageStream('I need help with my booking').subscribe({
-          next: delta => deltas.push(delta),
-          error: reject,
-          complete: resolve
-        });
+      let completed = false;
+      service.sendConciergeMessageStream('I need help with my booking').subscribe({
+        next: delta => deltas.push(delta),
+        complete: () => completed = true
       });
 
+      const req = httpMock.expectOne(`${service.CONCIERGE_API}/stream`);
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toEqual({ message: 'I need help with my booking' });
+      req.flush('data: {"content":"Hel","requiresAction":false}\n\n'
+        + 'data: {"content":"lo","requiresAction":false}\n\n');
+
       expect(deltas).toEqual(['Hel', 'lo']);
-      expect(fetchSpy).toHaveBeenCalledWith(`${service.CONCIERGE_API}/stream`, expect.objectContaining({
-        method: 'POST',
-        body: JSON.stringify({ message: 'I need help with my booking' })
-      }));
+      expect(completed).toBe(true);
 
       const messages = service.messages();
       expect(messages.length).toBe(initialMessageCount + 1);

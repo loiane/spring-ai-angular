@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { postSse } from '../../shared/sse-client';
+import { SseClient } from '../../shared/sse-client';
 import { DocumentMetadata, RagResponse, RagStreamEvent, Source } from './rag.model';
 
 /**
@@ -32,6 +32,7 @@ export class RagService {
   public readonly API = '/api/rag';
 
   private readonly http = inject(HttpClient);
+  private readonly sseClient = inject(SseClient);
 
   /**
    * Upload a PDF document for processing.
@@ -68,7 +69,7 @@ export class RagService {
    * event once the answer is complete.
    */
   askQuestionStream(question: string, documentId: string): Observable<RagStreamEvent> {
-    return postSse<string | Source[]>(`${this.API}/ask/stream`, { question, documentId })
+    return this.sseClient.post<string | Source[]>(`${this.API}/ask/stream`, { question, documentId })
       .pipe(
         map((event): RagStreamEvent =>
           event.event === 'sources'

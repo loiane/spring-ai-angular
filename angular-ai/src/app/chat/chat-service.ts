@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
-import { postSse } from '../shared/sse-client';
+import { SseClient } from '../shared/sse-client';
 import { ChatResponse } from './chat-response';
 
 /**
@@ -42,6 +42,7 @@ export class ChatService {
   public readonly API = '/api/chat';
 
   private readonly http = inject(HttpClient);
+  private readonly sseClient = inject(SseClient);
 
   /**
    * Send a simple chat message without conversation context.
@@ -81,7 +82,7 @@ export class ChatService {
    * ```
    */
   sendChatMessageStream(message: string): Observable<string> {
-    return postSse<ChatResponse>(`${this.API}/stream`, { message })
+    return this.sseClient.post<ChatResponse>(`${this.API}/stream`, { message })
       .pipe(
         filter(event => event.event === 'message'),
         map(event => event.data.message)

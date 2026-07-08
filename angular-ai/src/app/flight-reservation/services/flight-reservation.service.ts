@@ -4,7 +4,7 @@ import { map, Observable } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { LoggingService } from '../../shared/logging.service';
 import { ResourceErrorHandler, DEFAULT_RETRY_CONFIG } from '../../shared/resource-error-handler';
-import { postSse } from '../../shared/sse-client';
+import { SseClient } from '../../shared/sse-client';
 import { ApiFlightReservation, FlightReservation, CancellationRequest, CancellationResponse, ReservationStatus, toFlightReservation } from '../models/flight-reservation';
 import { ConciergeMessage, ConciergeResponse, MessageType } from '../models/concierge-message';
 
@@ -21,6 +21,7 @@ export class FlightReservationService {
   public readonly CONCIERGE_API = '/api/concierge';
 
   private readonly http = inject(HttpClient);
+  private readonly sseClient = inject(SseClient);
   private readonly logger = inject(LoggingService);
 
   /**
@@ -115,7 +116,7 @@ export class FlightReservationService {
 
     this.messages.update(messages => [...messages, userMessage]);
 
-    return postSse<ConciergeResponse>(`${this.CONCIERGE_API}/stream`, { message })
+    return this.sseClient.post<ConciergeResponse>(`${this.CONCIERGE_API}/stream`, { message })
       .pipe(
         filter(event => event.event === 'message'),
         map(event => event.data.content)

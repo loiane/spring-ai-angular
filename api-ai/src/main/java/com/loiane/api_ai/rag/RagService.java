@@ -107,14 +107,7 @@ public class RagService {
 
             // QuestionAnswerAdvisor automatically retrieves relevant documents
             // and injects them as context for the LLM
-            var promptSpec = chatClient.prompt().user(question);
-            if (filter != null) {
-                // The advisor param expects a filter expression string, not a Filter.Expression
-                promptSpec = promptSpec.advisors(a ->
-                        a.param(QuestionAnswerAdvisor.FILTER_EXPRESSION,
-                                "document_id == '" + documentId + "'"));
-            }
-            String answer = promptSpec.call().content();
+            String answer = buildPrompt(question, documentId).call().content();
 
             if (answer != null && answer.contains(REFUSAL_MESSAGE)) {
                 return new RagResponse(REFUSAL_MESSAGE, List.of());
@@ -158,16 +151,9 @@ public class RagService {
 
         Filter.Expression filter = buildDocumentFilter(documentId);
 
-        var promptSpec = chatClient.prompt().user(question);
-        if (filter != null) {
-            promptSpec = promptSpec.advisors(a ->
-                    a.param(QuestionAnswerAdvisor.FILTER_EXPRESSION,
-                            "document_id == '" + documentId + "'"));
-        }
-
         StringBuilder answerBuilder = new StringBuilder();
 
-        Flux<RagStreamEvent> answerFlux = promptSpec.stream().content()
+        Flux<RagStreamEvent> answerFlux = buildPrompt(question, documentId).stream().content()
                 .doOnNext(answerBuilder::append)
                 .map(RagStreamEvent::answer);
 
@@ -198,6 +184,21 @@ public class RagService {
 
         log.info("Streamed answer with {} sources", sources.size());
         return RagStreamEvent.sources(sources);
+    }
+
+    /**
+     * Builds the prompt spec for a question, scoping the QuestionAnswerAdvisor
+     * retrieval to a single document when a documentId is provided.
+     */
+    private ChatClient.ChatClientRequestSpec buildPrompt(String question, String documentId) {
+        var promptSpec = chatClient.prompt().user(question);
+        if (documentId != null && !documentId.isBlank()) {
+            // The advisor param expects a filter expression string, not a Filter.Expression
+            promptSpec = promptSpec.advisors(a ->
+                    a.param(QuestionAnswerAdvisor.FILTER_EXPRESSION,
+                            "document_id == '" + documentId + "'"));
+        }
+        return promptSpec;
     }
 
     private Filter.Expression buildDocumentFilter(String documentId) {
