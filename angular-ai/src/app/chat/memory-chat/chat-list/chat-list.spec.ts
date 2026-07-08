@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideZonelessChangeDetection } from '@angular/core';
+import { provideZonelessChangeDetection, signal } from '@angular/core';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { of } from 'rxjs';
@@ -8,34 +8,37 @@ import { ChatList } from './chat-list';
 import { MemoryChatService } from '../memory-chat.service';
 
 class MockMemoryChatService {
-  selectedChatId = vi.fn().mockReturnValue(undefined);
+  selectedChatId = signal<string | undefined>(undefined);
+  chatsStatus = signal('resolved');
+  chatsValue = signal<{ id: string; description: string }[]>([
+    { id: 'chat1', description: 'First chat' },
+    { id: 'chat2', description: 'Second chat' }
+  ]);
   chatsResource = {
-    value: vi.fn().mockReturnValue([
-      { id: 'chat1', description: 'First chat' },
-      { id: 'chat2', description: 'Second chat' }
-    ]),
-    status: vi.fn().mockReturnValue('resolved'),
-    error: vi.fn().mockReturnValue(null),
-    isLoading: vi.fn().mockReturnValue(false),
+    value: this.chatsValue,
+    status: this.chatsStatus,
+    error: signal(null),
+    isLoading: signal(false),
     reload: vi.fn()
   };
 
   chatMessagesResource = {
-    value: vi.fn().mockReturnValue([]),
-    status: vi.fn().mockReturnValue('idle'),
-    error: vi.fn().mockReturnValue(null),
+    value: signal([]),
+    status: signal('idle'),
+    error: signal(null),
     reload: vi.fn()
   };
 
+  chatsError = signal<unknown>(null);
   chatsErrorHandler = {
-    error: vi.fn().mockReturnValue(null),
-    retryCount: vi.fn().mockReturnValue(0),
+    error: this.chatsError,
+    retryCount: signal(0),
     reset: vi.fn()
   };
 
   messagesErrorHandler = {
-    error: vi.fn().mockReturnValue(null),
-    retryCount: vi.fn().mockReturnValue(0),
+    error: signal(null),
+    retryCount: signal(0),
     reset: vi.fn()
   };
 
@@ -114,7 +117,7 @@ describe('ChatList', () => {
   });
 
   it('should highlight the selected chat', () => {
-    mockMemoryChatService.selectedChatId.mockReturnValue('chat2');
+    mockMemoryChatService.selectedChatId.set('chat2');
     fixture.detectChanges();
 
     const items = getChatItems();
@@ -123,22 +126,22 @@ describe('ChatList', () => {
   });
 
   it('should show the loading state', () => {
-    mockMemoryChatService.chatsResource.status.mockReturnValue('loading');
+    mockMemoryChatService.chatsStatus.set('loading');
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent).toContain('Loading chats...');
   });
 
   it('should show the empty state when there are no chats', () => {
-    mockMemoryChatService.chatsResource.value.mockReturnValue([]);
+    mockMemoryChatService.chatsValue.set([]);
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent).toContain('No chats available');
   });
 
   it('should show the error component and retry when loading chats fails', () => {
-    mockMemoryChatService.chatsResource.status.mockReturnValue('error');
-    mockMemoryChatService.chatsErrorHandler.error.mockReturnValue({
+    mockMemoryChatService.chatsStatus.set('error');
+    mockMemoryChatService.chatsError.set({
       error: new Error('load failed'),
       message: 'Failed to load chats',
       retryCount: 0,

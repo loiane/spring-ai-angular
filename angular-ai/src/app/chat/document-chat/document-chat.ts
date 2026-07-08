@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, signal, viewChild } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { disabled, form, FormField, maxLength } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
@@ -18,7 +18,7 @@ const POLL_INTERVAL_MS = 2000;
 
 @Component({
   selector: 'app-document-chat',
-  imports: [MatCardModule, MatInputModule, MatButtonModule, FormsModule, MatToolbar,
+  imports: [MatCardModule, MatInputModule, MatButtonModule, FormField, MatToolbar,
     MatIconModule, MatChipsModule, MatProgressSpinnerModule, MarkdownToHtmlPipe],
   templateUrl: './document-chat.html',
   styleUrl: './document-chat.scss',
@@ -34,6 +34,10 @@ export class DocumentChat {
   protected readonly MAX_LENGTH = MAX_MESSAGE_LENGTH;
 
   protected userInput = signal('');
+  protected readonly chatForm = form(this.userInput, p => {
+    maxLength(p, MAX_MESSAGE_LENGTH);
+    disabled(p, () => !this.isReady());
+  });
   protected isLoading = signal(false);
   private isUploading = signal(false);
 
@@ -47,12 +51,8 @@ export class DocumentChat {
   protected readonly isProcessing = computed(() => this.isUploading() || this.document()?.status === 'PROCESSING');
 
   protected readonly validationError = computed(() => {
-    const input = this.userInput().trim();
-    if (input.length === 0) {
-      return null;
-    }
-    if (input.length > MAX_MESSAGE_LENGTH) {
-      return `Message is too long (${input.length}/${MAX_MESSAGE_LENGTH} characters)`;
+    if (this.chatForm().errors().some(error => error.kind === 'maxLength')) {
+      return `Message is too long (${this.userInput().length}/${MAX_MESSAGE_LENGTH} characters)`;
     }
     return null;
   });
@@ -60,7 +60,7 @@ export class DocumentChat {
   protected readonly canSend = computed(() => {
     const input = this.userInput().trim();
     return input.length > 0 &&
-           input.length <= MAX_MESSAGE_LENGTH &&
+           this.chatForm().valid() &&
            !this.isLoading() &&
            this.isReady();
   });

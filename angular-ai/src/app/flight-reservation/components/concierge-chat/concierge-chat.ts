@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 
-import { FormsModule } from '@angular/forms';
+import { form, FormField, maxLength } from '@angular/forms/signals';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
@@ -16,7 +16,7 @@ const MAX_MESSAGE_LENGTH = 2000;
 @Component({
   selector: 'app-concierge-chat',
   imports: [
-    FormsModule,
+    FormField,
     MatCardModule,
     MatButtonModule,
     MatInputModule,
@@ -35,25 +35,22 @@ export class ConciergeChat {
   protected messages = this.flightService.messages;
   protected selectedReservation = this.flightService.selectedReservation;
   protected currentMessage = signal('');
+  protected readonly messageForm = form(this.currentMessage, p => maxLength(p, MAX_MESSAGE_LENGTH));
 
   protected readonly MAX_LENGTH = MAX_MESSAGE_LENGTH;
   protected MessageType = MessageType;
 
-  // Computed validation state
+  // Validation state derived from the signal form
   protected readonly validationError = computed(() => {
-    const input = this.currentMessage().trim();
-    if (input.length === 0) {
-      return null; // No error for empty input
-    }
-    if (input.length > MAX_MESSAGE_LENGTH) {
-      return `Message is too long (${input.length}/${MAX_MESSAGE_LENGTH} characters)`;
+    if (this.messageForm().errors().some(error => error.kind === 'maxLength')) {
+      return `Message is too long (${this.currentMessage().length}/${MAX_MESSAGE_LENGTH} characters)`;
     }
     return null;
   });
 
   protected readonly canSend = computed(() => {
     const input = this.currentMessage().trim();
-    return input.length > 0 && input.length <= MAX_MESSAGE_LENGTH;
+    return input.length > 0 && this.messageForm().valid();
   });
 
   protected sendMessage(): void {

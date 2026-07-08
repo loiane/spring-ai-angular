@@ -26,11 +26,9 @@
   <div class="chat-input">
     <mat-form-field class="full-width">
       <mat-label>Ask anything</mat-label>
-      <input matInput 
-             [ngModel]="userInput()" 
-             (ngModelChange)="userInput.set($event)"
+      <input matInput
+             [formField]="chatForm"
              (keyup.enter)="sendMessage()"
-             [maxlength]="MAX_LENGTH"
              placeholder="Type your message...">
       <mat-hint align="end">{{userInput().length}}/{{MAX_LENGTH}}</mat-hint>
       @if (validationError()) {

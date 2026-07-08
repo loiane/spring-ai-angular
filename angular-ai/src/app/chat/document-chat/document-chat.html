@@ -65,11 +65,8 @@
     <mat-form-field class="full-width">
       <mat-label>{{ isReady() ? 'Ask about your document' : 'Upload a PDF to start chatting' }}</mat-label>
       <input matInput
-             [ngModel]="userInput()"
-             (ngModelChange)="userInput.set($event)"
+             [formField]="chatForm"
              (keyup.enter)="sendMessage()"
-             [maxlength]="MAX_LENGTH"
-             [disabled]="!isReady()"
              placeholder="Type your question...">
       <mat-hint align="end">{{userInput().length}}/{{MAX_LENGTH}}</mat-hint>
       @if (validationError()) {

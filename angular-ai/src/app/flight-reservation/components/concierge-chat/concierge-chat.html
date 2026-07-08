@@ -37,9 +37,8 @@
         <mat-label>Type your message...</mat-label>
         <textarea
           matInput
-          [(ngModel)]="currentMessage"
+          [formField]="messageForm"
           (keydown)="onKeyPress($event)"
-          [maxlength]="MAX_LENGTH"
           placeholder="Ask about your booking, cancellations, or any travel assistance..."
           rows="3">
         </textarea>

@@ -1,4 +1,4 @@
-import { provideZonelessChangeDetection } from '@angular/core';
+import { provideZonelessChangeDetection, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
@@ -10,20 +10,23 @@ import { ChatMessage, ChatType } from '../../chat-message';
 import { ChatStartResponse } from '../../chat';
 
 class MockMemoryChatService {
-  selectedChatId = vi.fn().mockReturnValue(undefined);
+  selectedChatId = signal<string | undefined>(undefined);
+  messagesStatus = signal('idle');
+  messagesValue = signal<ChatMessage[]>([]);
   chatMessagesResource = {
-    value: vi.fn().mockReturnValue([]),
-    status: vi.fn().mockReturnValue('idle'),
-    error: vi.fn().mockReturnValue(null),
+    value: this.messagesValue,
+    status: this.messagesStatus,
+    error: signal(null),
     reload: vi.fn()
   };
   chatsResource = {
     reload: vi.fn()
   };
 
+  messagesError = signal<unknown>(null);
   messagesErrorHandler = {
-    error: vi.fn().mockReturnValue(null),
-    retryCount: vi.fn().mockReturnValue(0),
+    error: this.messagesError,
+    retryCount: signal(0),
     reset: vi.fn()
   };
 
@@ -111,7 +114,7 @@ describe('ChatPanel', () => {
   });
 
   it('should start a new chat when no chat is selected', async () => {
-    mockMemoryChatService.selectedChatId.mockReturnValue(undefined);
+    mockMemoryChatService.selectedChatId.set(undefined);
 
     typeMessage('new chat message');
     clickSend();
@@ -124,7 +127,7 @@ describe('ChatPanel', () => {
   });
 
   it('should continue the existing chat when a chat is selected', () => {
-    mockMemoryChatService.selectedChatId.mockReturnValue('existing-chat-123');
+    mockMemoryChatService.selectedChatId.set('existing-chat-123');
 
     typeMessage('continue message');
     clickSend();
@@ -136,7 +139,7 @@ describe('ChatPanel', () => {
   });
 
   it('should show the typing indicator while waiting for the response', () => {
-    mockMemoryChatService.selectedChatId.mockReturnValue('chat-123');
+    mockMemoryChatService.selectedChatId.set('chat-123');
     const response$ = new Subject<ChatMessage>();
     mockMemoryChatService.continueChat.mockReturnValue(response$);
 
@@ -154,7 +157,7 @@ describe('ChatPanel', () => {
   });
 
   it('should render an error message when continuing a chat fails', () => {
-    mockMemoryChatService.selectedChatId.mockReturnValue('chat-123');
+    mockMemoryChatService.selectedChatId.set('chat-123');
     mockMemoryChatService.continueChat.mockReturnValue(throwError(() => new Error('API Error')));
 
     typeMessage('failing message');
@@ -165,7 +168,7 @@ describe('ChatPanel', () => {
   });
 
   it('should render an error message when starting a new chat fails', () => {
-    mockMemoryChatService.selectedChatId.mockReturnValue(undefined);
+    mockMemoryChatService.selectedChatId.set(undefined);
     mockMemoryChatService.startNewChat.mockReturnValue(throwError(() => new Error('API Error')));
 
     typeMessage('failing message');
@@ -176,8 +179,8 @@ describe('ChatPanel', () => {
   });
 
   it('should reload the chat list when continuing a chat with few messages', () => {
-    mockMemoryChatService.selectedChatId.mockReturnValue('chat-123');
-    mockMemoryChatService.chatMessagesResource.value.mockReturnValue([
+    mockMemoryChatService.selectedChatId.set('chat-123');
+    mockMemoryChatService.messagesValue.set([
       { content: 'First message', type: ChatType.USER }
     ]);
 
@@ -188,8 +191,8 @@ describe('ChatPanel', () => {
   });
 
   it('should not reload the chat list when continuing a chat with many messages', () => {
-    mockMemoryChatService.selectedChatId.mockReturnValue('chat-123');
-    mockMemoryChatService.chatMessagesResource.value.mockReturnValue([
+    mockMemoryChatService.selectedChatId.set('chat-123');
+    mockMemoryChatService.messagesValue.set([
       { content: 'First message', type: ChatType.USER },
       { content: 'Second message', type: ChatType.ASSISTANT },
       { content: 'Third message', type: ChatType.USER }
@@ -202,7 +205,7 @@ describe('ChatPanel', () => {
   });
 
   it('should sanitize HTML and script tags before sending to startNewChat', () => {
-    mockMemoryChatService.selectedChatId.mockReturnValue(undefined);
+    mockMemoryChatService.selectedChatId.set(undefined);
     const mockResponse: ChatStartResponse = {
       chatId: 'new-chat-789',
       message: 'Response',
@@ -217,7 +220,7 @@ describe('ChatPanel', () => {
   });
 
   it('should sanitize HTML and script tags before sending to continueChat', () => {
-    mockMemoryChatService.selectedChatId.mockReturnValue('chat-123');
+    mockMemoryChatService.selectedChatId.set('chat-123');
 
     typeMessage('Continue <b>bold</b> <script>hack()</script>');
     clickSend();
@@ -249,8 +252,8 @@ describe('ChatPanel', () => {
   });
 
   it('should show the messages error component when loading messages fails', () => {
-    mockMemoryChatService.chatMessagesResource.status.mockReturnValue('error');
-    mockMemoryChatService.messagesErrorHandler.error.mockReturnValue({
+    mockMemoryChatService.messagesStatus.set('error');
+    mockMemoryChatService.messagesError.set({
       error: new Error('load failed'),
       message: 'Failed to load messages',
       retryCount: 0,
