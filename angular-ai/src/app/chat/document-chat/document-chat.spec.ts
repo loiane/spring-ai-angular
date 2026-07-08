@@ -4,7 +4,7 @@ import { of, Subject, throwError } from 'rxjs';
 
 import { DocumentChat } from './document-chat';
 import { RagService } from './rag.service';
-import { DocumentMetadata, RagResponse } from './rag.model';
+import { DocumentMetadata, RagStreamEvent } from './rag.model';
 
 const readyDocument: DocumentMetadata = {
   id: 'doc-1',
@@ -22,8 +22,8 @@ class MockRagService {
   getDocument() {
     return of(readyDocument);
   }
-  askQuestion() {
-    return of({ answer: 'Mocked answer', sources: [] });
+  askQuestionStream() {
+    return of({ type: 'answer', content: 'Mocked answer' }, { type: 'sources', sources: [] });
   }
 }
 
@@ -182,17 +182,18 @@ describe('DocumentChat', () => {
   });
 
   it('should send a question and render the answer with sources', () => {
-    const response: RagResponse = {
-      answer: 'The answer',
-      sources: [{ content: 'snippet from doc', filename: 'test.pdf', metadata: {} }]
-    };
-    vi.spyOn(ragService, 'askQuestion').mockReturnValue(of(response));
+    const events: RagStreamEvent[] = [
+      { type: 'answer', content: 'The ' },
+      { type: 'answer', content: 'answer' },
+      { type: 'sources', sources: [{ content: 'snippet from doc', filename: 'test.pdf', metadata: {} }] }
+    ];
+    vi.spyOn(ragService, 'askQuestionStream').mockReturnValue(of(...events));
 
     selectFile('test.pdf', 'application/pdf');
     typeQuestion('What is this about?');
     clickSend();
 
-    expect(ragService.askQuestion).toHaveBeenCalledWith('What is this about?', 'doc-1');
+    expect(ragService.askQuestionStream).toHaveBeenCalledWith('What is this about?', 'doc-1');
     const bubbles = getMessageBubbles();
     expect(bubbles).toContain('What is this about?');
     expect(bubbles[bubbles.length - 1]).toContain('The answer');
@@ -204,9 +205,11 @@ describe('DocumentChat', () => {
   });
 
   it('should not render a sources section when the answer has no sources', () => {
-    vi.spyOn(ragService, 'askQuestion').mockReturnValue(
-      of({ answer: 'No sources answer', sources: [] })
-    );
+    const events: RagStreamEvent[] = [
+      { type: 'answer', content: 'No sources answer' },
+      { type: 'sources', sources: [] }
+    ];
+    vi.spyOn(ragService, 'askQuestionStream').mockReturnValue(of(...events));
 
     selectFile('test.pdf', 'application/pdf');
     typeQuestion('off-topic question');
@@ -217,8 +220,8 @@ describe('DocumentChat', () => {
   });
 
   it('should show the typing indicator while waiting for the answer', () => {
-    const response$ = new Subject<RagResponse>();
-    vi.spyOn(ragService, 'askQuestion').mockReturnValue(response$);
+    const response$ = new Subject<RagStreamEvent>();
+    vi.spyOn(ragService, 'askQuestionStream').mockReturnValue(response$);
 
     selectFile('test.pdf', 'application/pdf');
     typeQuestion('slow question');
@@ -226,7 +229,8 @@ describe('DocumentChat', () => {
 
     expect(fixture.nativeElement.querySelector('.typing')).toBeTruthy();
 
-    response$.next({ answer: 'Done', sources: [] });
+    response$.next({ type: 'answer', content: 'Done' });
+    response$.next({ type: 'sources', sources: [] });
     response$.complete();
     fixture.detectChanges();
 
@@ -234,7 +238,7 @@ describe('DocumentChat', () => {
   });
 
   it('should render an error message when asking fails', () => {
-    vi.spyOn(ragService, 'askQuestion').mockReturnValue(
+    vi.spyOn(ragService, 'askQuestionStream').mockReturnValue(
       throwError(() => new Error('Service error'))
     );
 
@@ -247,26 +251,28 @@ describe('DocumentChat', () => {
   });
 
   it('should sanitize HTML and script tags before sending', () => {
-    vi.spyOn(ragService, 'askQuestion').mockReturnValue(
-      of({ answer: 'Answer', sources: [] })
-    );
+    const events: RagStreamEvent[] = [
+      { type: 'answer', content: 'Answer' },
+      { type: 'sources', sources: [] }
+    ];
+    vi.spyOn(ragService, 'askQuestionStream').mockReturnValue(of(...events));
 
     selectFile('test.pdf', 'application/pdf');
     typeQuestion('Hello <script>alert("xss")</script> world');
     clickSend();
 
-    expect(ragService.askQuestion).toHaveBeenCalledWith('Hello  world', 'doc-1');
+    expect(ragService.askQuestionStream).toHaveBeenCalledWith('Hello  world', 'doc-1');
   });
 
   it('should not send a whitespace-only question', () => {
-    vi.spyOn(ragService, 'askQuestion');
+    vi.spyOn(ragService, 'askQuestionStream');
 
     selectFile('test.pdf', 'application/pdf');
     typeQuestion('   ');
     getQuestionInput().dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter' }));
     fixture.detectChanges();
 
-    expect(ragService.askQuestion).not.toHaveBeenCalled();
+    expect(ragService.askQuestionStream).not.toHaveBeenCalled();
   });
 
   it('should disable send for questions over the max length', () => {

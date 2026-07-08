@@ -1,8 +1,10 @@
 import { HttpClient, httpResource } from '@angular/common/http';
 import { effect, inject, Injectable, signal } from '@angular/core';
 import { Observable } from 'rxjs';
+import { filter, map } from 'rxjs/operators';
 import { LoggingService } from '../../shared/logging.service';
 import { ResourceErrorHandler, DEFAULT_RETRY_CONFIG } from '../../shared/resource-error-handler';
+import { postSse } from '../../shared/sse-client';
 import { Chat, ChatStartResponse } from '../chat';
 import { ChatMessage } from '../chat-message';
 
@@ -99,6 +101,21 @@ export class MemoryChatService {
    */
   continueChat(chatId: string, message: string): Observable<ChatMessage> {
     return this.http.post<ChatMessage>(`${this.API_MEMORY}/${chatId}`, { message });
+  }
+
+  /**
+   * Continue chat and stream the AI's response as it is generated.
+   *
+   * Each emission is an incremental text chunk (delta) of the assistant's reply,
+   * not the full accumulated answer. Callers are responsible for concatenating
+   * chunks as they arrive.
+   */
+  continueChatStream(chatId: string, message: string): Observable<string> {
+    return postSse<ChatMessage>(`${this.API_MEMORY}/${chatId}/stream`, { message })
+      .pipe(
+        filter(event => event.event === 'message'),
+        map(event => event.data.content)
+      );
   }
 
   /**

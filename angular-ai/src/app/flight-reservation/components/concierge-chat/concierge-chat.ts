@@ -7,6 +7,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatListModule } from '@angular/material/list';
+import { catchError, of } from 'rxjs';
 import { FlightReservationService } from '../../services/flight-reservation.service';
 import { MessageType } from '../../models/concierge-message';
 import { MarkdownToHtmlPipe } from '../../../shared/markdown-to-html.pipe';
@@ -59,11 +60,25 @@ export class ConciergeChat {
     }
 
     const sanitizedMessage = this.sanitizeInput(this.currentMessage().trim());
-    this.flightService.sendConciergeMessage(sanitizedMessage).subscribe({
-      next: (response) => this.flightService.handleConciergeResponse(response),
-      error: (error) => this.flightService.handleConciergeError(error)
-    });
     this.currentMessage.set('');
+
+    // sendConciergeMessageStream synchronously appends the user message, so it
+    // must be called before startAssistantMessage() appends the placeholder —
+    // otherwise the placeholder ends up before the user message in the list.
+    const stream$ = this.flightService.sendConciergeMessageStream(sanitizedMessage);
+    this.flightService.startAssistantMessage();
+
+    stream$
+      .pipe(
+        catchError(error => {
+          this.flightService.handleConciergeStreamError(error);
+          return of();
+        })
+      )
+      .subscribe({
+        next: (delta: string) => this.flightService.appendToLastAssistantMessage(delta),
+        complete: () => this.flightService.completeAssistantMessage()
+      });
   }
 
   private sanitizeInput(input: string): string {

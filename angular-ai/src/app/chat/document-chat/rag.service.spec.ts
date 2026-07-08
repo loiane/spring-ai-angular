@@ -6,6 +6,17 @@ import { provideHttpClientTesting, HttpTestingController } from '@angular/common
 import { RagService } from './rag.service';
 import { DocumentMetadata, RagResponse } from './rag.model';
 
+function sseResponse(body: string, status = 200): Response {
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream<Uint8Array>({
+    start(controller) {
+      controller.enqueue(encoder.encode(body));
+      controller.close();
+    }
+  });
+  return new Response(stream, { status, headers: { 'Content-Type': 'text/event-stream' } });
+}
+
 describe('RagService', () => {
   let service: RagService;
   let httpMock: HttpTestingController;
@@ -109,6 +120,40 @@ describe('RagService', () => {
 
       const req = httpMock.expectOne(`${service.API}/ask`);
       req.flush('Something went wrong', { status: 500, statusText: 'Server Error' });
+    });
+  });
+
+  describe('askQuestionStream', () => {
+    let fetchSpy: ReturnType<typeof vi.spyOn>;
+
+    afterEach(() => {
+      fetchSpy?.mockRestore();
+    });
+
+    it('should POST to the stream endpoint and emit answer deltas followed by sources', async () => {
+      const body = 'event: answer\ndata: "The "\n\n'
+        + 'event: answer\ndata: "answer"\n\n'
+        + 'event: sources\ndata: [{"content":"snippet","filename":"test.pdf","metadata":{}}]\n\n';
+      fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(sseResponse(body));
+
+      const events: unknown[] = [];
+      await new Promise<void>((resolve, reject) => {
+        service.askQuestionStream('What is this about?', 'doc-1').subscribe({
+          next: event => events.push(event),
+          error: reject,
+          complete: resolve
+        });
+      });
+
+      expect(events).toEqual([
+        { type: 'answer', content: 'The ' },
+        { type: 'answer', content: 'answer' },
+        { type: 'sources', sources: [{ content: 'snippet', filename: 'test.pdf', metadata: {} }] }
+      ]);
+      expect(fetchSpy).toHaveBeenCalledWith(`${service.API}/ask/stream`, expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ question: 'What is this about?', documentId: 'doc-1' })
+      }));
     });
   });
 });

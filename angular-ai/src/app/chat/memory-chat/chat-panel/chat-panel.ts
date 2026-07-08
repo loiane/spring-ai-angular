@@ -121,8 +121,8 @@ export class ChatPanel {
       .trim();
   }
 
-  private updateMessages(content: string, type: ChatType = ChatType.USER): void {
-    this.messages.update((messages: ChatMessage[]) => [...messages, { content, type }]);
+  private updateMessages(content: string, type: ChatType = ChatType.USER, streaming = false): void {
+    this.messages.update((messages: ChatMessage[]) => [...messages, { content, type, streaming }]);
   }
 
   private scrollToBottom(): void {
@@ -140,26 +140,30 @@ export class ChatPanel {
     const currentChatId = this.memoryChatService.selectedChatId();
 
     if (currentChatId) {
-      // Continue existing chat
-      this.memoryChatService.continueChat(currentChatId, message)
+      // Continue existing chat, streaming the assistant's reply
+      this.updateMessages('', ChatType.ASSISTANT, true);
+
+      this.memoryChatService.continueChatStream(currentChatId, message)
         .pipe(
           catchError(() => {
-            this.updateMessages('Sorry, I am unable to process your request at the moment.', ChatType.ASSISTANT);
+            this.appendToLastMessage('Sorry, I am unable to process your request at the moment.', true);
+            this.setLastMessageStreaming(false);
             this.isLoading.set(false);
             return of();
           })
         )
-        .subscribe((response: ChatMessage) => {
-          if (response) {
-            this.updateMessages(response.content, ChatType.ASSISTANT);
-          }
-          this.userInput.set('');
-          this.isLoading.set(false);
+        .subscribe({
+          next: (delta: string) => this.appendToLastMessage(delta),
+          complete: () => {
+            this.setLastMessageStreaming(false);
+            this.userInput.set('');
+            this.isLoading.set(false);
 
-          // Reload chat list if this was one of the first messages
-          const currentMessages = this.memoryChatService.chatMessagesResource.value();
-          if (currentMessages && currentMessages.length <= 2) {
-            this.memoryChatService.chatsResource.reload();
+            // Reload chat list if this was one of the first messages
+            const currentMessages = this.memoryChatService.chatMessagesResource.value();
+            if (currentMessages && currentMessages.length <= 2) {
+              this.memoryChatService.chatsResource.reload();
+            }
           }
         });
     } else {
@@ -182,6 +186,24 @@ export class ChatPanel {
           this.isLoading.set(false);
         });
     }
+  }
+
+  private appendToLastMessage(delta: string, replace = false): void {
+    this.messages.update((messages: ChatMessage[]) => {
+      const lastIndex = messages.length - 1;
+      const last = messages[lastIndex];
+      const updated = { ...last, content: replace ? delta : last.content + delta };
+      return [...messages.slice(0, lastIndex), updated];
+    });
+  }
+
+  private setLastMessageStreaming(streaming: boolean): void {
+    this.messages.update((messages: ChatMessage[]) => {
+      const lastIndex = messages.length - 1;
+      const last = messages[lastIndex];
+      const updated = { ...last, streaming };
+      return [...messages.slice(0, lastIndex), updated];
+    });
   }
 
   protected onRetryLoadMessages(): void {

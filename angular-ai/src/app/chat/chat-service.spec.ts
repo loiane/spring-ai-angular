@@ -6,6 +6,17 @@ import { provideHttpClientTesting, HttpTestingController } from '@angular/common
 import { ChatService } from './chat-service';
 import { ChatResponse } from './chat-response';
 
+function sseResponse(body: string, status = 200): Response {
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream<Uint8Array>({
+    start(controller) {
+      controller.enqueue(encoder.encode(body));
+      controller.close();
+    }
+  });
+  return new Response(stream, { status, headers: { 'Content-Type': 'text/event-stream' } });
+}
+
 describe('ChatService', () => {
   let service: ChatService;
   let httpMock: HttpTestingController;
@@ -72,6 +83,34 @@ describe('ChatService', () => {
       const req = httpMock.expectOne(service.API);
       expect(req.request.url).toBe('/api/chat');
       req.flush(mockResponse);
+    });
+  });
+
+  describe('sendChatMessageStream', () => {
+    let fetchSpy: ReturnType<typeof vi.spyOn>;
+
+    afterEach(() => {
+      fetchSpy?.mockRestore();
+    });
+
+    it('should POST to the stream endpoint and emit text deltas', async () => {
+      const body = 'data: {"message":"Hel"}\n\ndata: {"message":"lo"}\n\n';
+      fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(sseResponse(body));
+
+      const deltas: string[] = [];
+      await new Promise<void>((resolve, reject) => {
+        service.sendChatMessageStream('hi').subscribe({
+          next: delta => deltas.push(delta),
+          error: reject,
+          complete: resolve
+        });
+      });
+
+      expect(deltas).toEqual(['Hel', 'lo']);
+      expect(fetchSpy).toHaveBeenCalledWith(`${service.API}/stream`, expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ message: 'hi' })
+      }));
     });
   });
 });

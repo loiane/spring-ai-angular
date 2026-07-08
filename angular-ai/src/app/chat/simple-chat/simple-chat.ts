@@ -7,6 +7,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatToolbar } from '@angular/material/toolbar';
 import { catchError, of } from 'rxjs';
 import { LoggingService } from '../../shared/logging.service';
+import { MarkdownToHtmlPipe } from '../../shared/markdown-to-html.pipe';
 import { ChatResponse } from '../chat-response';
 import { ChatService } from '../chat-service';
 
@@ -14,7 +15,7 @@ const MAX_MESSAGE_LENGTH = 2000;
 
 @Component({
   selector: 'app-simple-chat',
-  imports: [MatCardModule, MatInputModule, MatButtonModule, FormField, MatToolbar, MatIconModule],
+  imports: [MatCardModule, MatInputModule, MatButtonModule, FormField, MatToolbar, MatIconModule, MarkdownToHtmlPipe],
   templateUrl: './simple-chat.html',
   styleUrl: './simple-chat.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -65,7 +66,7 @@ export class SimpleChat {
     }
 
     const sanitizedInput = this.sanitizeInput(this.userInput().trim());
-    
+
     this.updateMessages(sanitizedInput);
     this.isLoading.set(true);
 
@@ -82,8 +83,8 @@ export class SimpleChat {
       .trim();
   }
 
-  private updateMessages(message: string, isBot = false): void {
-    this.messages.update(messages => [...messages, { message, isBot }]);
+  private updateMessages(message: string, isBot = false, streaming = false): void {
+    this.messages.update(messages => [...messages, { message, isBot, streaming }]);
   }
 
   private getResponse(): void {
@@ -111,20 +112,42 @@ export class SimpleChat {
   }
 
   private sendChatMessage(message: string): void {
-    this.chatService.sendChatMessage(message)
-    .pipe(
-      catchError(() => {
-        this.updateMessages('Sorry, I am unable to process your request at the moment.', true);
-        this.isLoading.set(false);
-        return of();
-      })
-    )
-    .subscribe((response: ChatResponse) => {
-      if (response) {
-        this.updateMessages(response.message, true);
-      }
-      this.userInput.set('');
-      this.isLoading.set(false);
+    this.updateMessages('', true, true);
+
+    this.chatService.sendChatMessageStream(message)
+      .pipe(
+        catchError(() => {
+          this.appendToLastMessage('Sorry, I am unable to process your request at the moment.', true);
+          this.setLastMessageStreaming(false);
+          this.isLoading.set(false);
+          return of();
+        })
+      )
+      .subscribe({
+        next: (delta: string) => this.appendToLastMessage(delta),
+        complete: () => {
+          this.setLastMessageStreaming(false);
+          this.userInput.set('');
+          this.isLoading.set(false);
+        }
+      });
+  }
+
+  private appendToLastMessage(delta: string, replace = false): void {
+    this.messages.update(messages => {
+      const lastIndex = messages.length - 1;
+      const last = messages[lastIndex];
+      const updated = { ...last, message: replace ? delta : last.message + delta };
+      return [...messages.slice(0, lastIndex), updated];
+    });
+  }
+
+  private setLastMessageStreaming(streaming: boolean): void {
+    this.messages.update(messages => {
+      const lastIndex = messages.length - 1;
+      const last = messages[lastIndex];
+      const updated = { ...last, streaming };
+      return [...messages.slice(0, lastIndex), updated];
     });
   }
 }

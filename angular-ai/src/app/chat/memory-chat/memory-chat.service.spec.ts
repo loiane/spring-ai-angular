@@ -6,6 +6,17 @@ import { MemoryChatService } from './memory-chat.service';
 import { ChatStartResponse } from '../chat';
 import { ChatMessage, ChatType } from '../chat-message';
 
+function sseResponse(body: string, status = 200): Response {
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream<Uint8Array>({
+    start(controller) {
+      controller.enqueue(encoder.encode(body));
+      controller.close();
+    }
+  });
+  return new Response(stream, { status, headers: { 'Content-Type': 'text/event-stream' } });
+}
+
 describe('MemoryChatService', () => {
   let service: MemoryChatService;
   let httpMock: HttpTestingController;
@@ -102,6 +113,35 @@ describe('MemoryChatService', () => {
       expect(req.request.method).toBe('POST');
       expect(req.request.body).toEqual({ message });
       req.flush(mockResponse);
+    });
+  });
+
+  describe('continueChatStream', () => {
+    let fetchSpy: ReturnType<typeof vi.spyOn>;
+
+    afterEach(() => {
+      fetchSpy?.mockRestore();
+    });
+
+    it('should POST to the stream endpoint and emit text deltas', async () => {
+      const chatId = '123';
+      const body = 'data: {"content":"Hel","type":"ASSISTANT"}\n\ndata: {"content":"lo","type":"ASSISTANT"}\n\n';
+      fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(sseResponse(body));
+
+      const deltas: string[] = [];
+      await new Promise<void>((resolve, reject) => {
+        service.continueChatStream(chatId, 'Follow-up message').subscribe({
+          next: delta => deltas.push(delta),
+          error: reject,
+          complete: resolve
+        });
+      });
+
+      expect(deltas).toEqual(['Hel', 'lo']);
+      expect(fetchSpy).toHaveBeenCalledWith(`${service.API_MEMORY}/${chatId}/stream`, expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ message: 'Follow-up message' })
+      }));
     });
   });
 

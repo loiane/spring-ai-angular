@@ -27,7 +27,13 @@
             }
             <span class="timestamp">{{ formatTimestamp(message.timestamp) }}</span>
           </div>
-          <div class="message-content" [innerHTML]="message.content | markdownToHtml"></div>
+          <div class="message-content">
+            @if (message.streaming) {
+              <span style="white-space: pre-wrap;">{{ message.content }}</span>
+            } @else {
+              <span [innerHTML]="message.content | markdownToHtml"></span>
+            }
+          </div>
         </div>
       }
     </div>

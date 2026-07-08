@@ -31,7 +31,11 @@
       <div class="message">
         <div class="message-bubble" [class.user]="!message.isBot">
           @if (message.isBot) {
-            <span [innerHTML]="message.message | markdownToHtml"></span>
+            @if (message.streaming) {
+              <span style="white-space: pre-wrap;">{{ message.message }}</span>
+            } @else {
+              <span [innerHTML]="message.message | markdownToHtml"></span>
+            }
           } @else {
             {{ message.message }}
           }

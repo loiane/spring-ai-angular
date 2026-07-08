@@ -10,7 +10,7 @@ import { MatToolbar } from '@angular/material/toolbar';
 import { catchError, interval, of, switchMap, takeWhile } from 'rxjs';
 import { LoggingService } from '../../shared/logging.service';
 import { MarkdownToHtmlPipe } from '../../shared/markdown-to-html.pipe';
-import { DocumentMetadata, RagChatMessage, RagResponse } from './rag.model';
+import { DocumentMetadata, RagChatMessage, RagStreamEvent, Source } from './rag.model';
 import { RagService } from './rag.service';
 
 const MAX_MESSAGE_LENGTH = 2000;
@@ -150,22 +150,59 @@ export class DocumentChat {
     if (!documentId) {
       return;
     }
-    this.ragService.askQuestion(question, documentId)
+
+    this.messages.update(messages => [...messages, { message: '', isBot: true, streaming: true }]);
+
+    this.ragService.askQuestionStream(question, documentId)
       .pipe(
         catchError(() => {
-          this.updateMessages('Sorry, I am unable to process your request at the moment.', true);
+          this.appendToLastMessage('Sorry, I am unable to process your request at the moment.', true);
+          this.setLastMessageStreaming(false);
           this.isLoading.set(false);
           return of();
         })
       )
-      .subscribe((response: RagResponse) => {
-        if (response) {
-          this.messages.update(messages =>
-            [...messages, { message: response.answer, isBot: true, sources: response.sources }]);
+      .subscribe({
+        next: (event: RagStreamEvent) => {
+          if (event.type === 'answer') {
+            this.appendToLastMessage(event.content);
+          } else {
+            this.setLastMessageSources(event.sources);
+          }
+        },
+        complete: () => {
+          this.setLastMessageStreaming(false);
+          this.userInput.set('');
+          this.isLoading.set(false);
         }
-        this.userInput.set('');
-        this.isLoading.set(false);
       });
+  }
+
+  private appendToLastMessage(delta: string, replace = false): void {
+    this.messages.update(messages => {
+      const lastIndex = messages.length - 1;
+      const last = messages[lastIndex];
+      const updated = { ...last, message: replace ? delta : last.message + delta };
+      return [...messages.slice(0, lastIndex), updated];
+    });
+  }
+
+  private setLastMessageSources(sources: Source[]): void {
+    this.messages.update(messages => {
+      const lastIndex = messages.length - 1;
+      const last = messages[lastIndex];
+      const updated = { ...last, sources };
+      return [...messages.slice(0, lastIndex), updated];
+    });
+  }
+
+  private setLastMessageStreaming(streaming: boolean): void {
+    this.messages.update(messages => {
+      const lastIndex = messages.length - 1;
+      const last = messages[lastIndex];
+      const updated = { ...last, streaming };
+      return [...messages.slice(0, lastIndex), updated];
+    });
   }
 
   private sanitizeInput(input: string): string {

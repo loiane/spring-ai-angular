@@ -30,10 +30,7 @@ class MockMemoryChatService {
     reset: vi.fn()
   };
 
-  continueChat = vi.fn().mockReturnValue(of({
-    content: 'Response from AI',
-    type: ChatType.ASSISTANT
-  }));
+  continueChatStream = vi.fn().mockReturnValue(of('Response from AI'));
 
   startNewChat = vi.fn().mockReturnValue(of({
     chatId: 'new-chat-123',
@@ -110,7 +107,7 @@ describe('ChatPanel', () => {
     fixture.detectChanges();
 
     expect(mockMemoryChatService.startNewChat).not.toHaveBeenCalled();
-    expect(mockMemoryChatService.continueChat).not.toHaveBeenCalled();
+    expect(mockMemoryChatService.continueChatStream).not.toHaveBeenCalled();
   });
 
   it('should start a new chat when no chat is selected', () => {
@@ -131,7 +128,7 @@ describe('ChatPanel', () => {
     typeMessage('continue message');
     clickSend();
 
-    expect(mockMemoryChatService.continueChat).toHaveBeenCalledWith('existing-chat-123', 'continue message');
+    expect(mockMemoryChatService.continueChatStream).toHaveBeenCalledWith('existing-chat-123', 'continue message');
     const bubbles = getMessageBubbles();
     expect(bubbles).toContain('continue message');
     expect(bubbles[bubbles.length - 1]).toBe('Response from AI');
@@ -139,15 +136,15 @@ describe('ChatPanel', () => {
 
   it('should show the typing indicator while waiting for the response', () => {
     mockMemoryChatService.selectedChatId.set('chat-123');
-    const response$ = new Subject<ChatMessage>();
-    mockMemoryChatService.continueChat.mockReturnValue(response$);
+    const response$ = new Subject<string>();
+    mockMemoryChatService.continueChatStream.mockReturnValue(response$);
 
     typeMessage('slow message');
     clickSend();
 
     expect(fixture.nativeElement.querySelector('.typing')).toBeTruthy();
 
-    response$.next({ content: 'Done', type: ChatType.ASSISTANT });
+    response$.next('Done');
     response$.complete();
     fixture.detectChanges();
 
@@ -157,7 +154,7 @@ describe('ChatPanel', () => {
 
   it('should render an error message when continuing a chat fails', () => {
     mockMemoryChatService.selectedChatId.set('chat-123');
-    mockMemoryChatService.continueChat.mockReturnValue(throwError(() => new Error('API Error')));
+    mockMemoryChatService.continueChatStream.mockReturnValue(throwError(() => new Error('API Error')));
 
     typeMessage('failing message');
     clickSend();
@@ -224,7 +221,7 @@ describe('ChatPanel', () => {
     typeMessage('Continue <b>bold</b> <script>hack()</script>');
     clickSend();
 
-    expect(mockMemoryChatService.continueChat).toHaveBeenCalledWith('chat-123', 'Continue bold');
+    expect(mockMemoryChatService.continueChatStream).toHaveBeenCalledWith('chat-123', 'Continue bold');
   });
 
   it('should show the character counter hint', () => {

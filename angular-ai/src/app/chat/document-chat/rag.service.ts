@@ -1,7 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { DocumentMetadata, RagResponse } from './rag.model';
+import { map } from 'rxjs/operators';
+import { postSse } from '../../shared/sse-client';
+import { DocumentMetadata, RagResponse, RagStreamEvent, Source } from './rag.model';
 
 /**
  * RAG (Retrieval-Augmented Generation) Service
@@ -55,5 +57,24 @@ export class RagService {
    */
   askQuestion(question: string, documentId: string): Observable<RagResponse> {
     return this.http.post<RagResponse>(`${this.API}/ask`, { question, documentId });
+  }
+
+  /**
+   * Ask a question scoped to a single uploaded document, streaming the answer
+   * as it is generated.
+   *
+   * Emits a sequence of `{ type: 'answer', content }` events with incremental
+   * text chunks, followed by a single terminal `{ type: 'sources', sources }`
+   * event once the answer is complete.
+   */
+  askQuestionStream(question: string, documentId: string): Observable<RagStreamEvent> {
+    return postSse<string | Source[]>(`${this.API}/ask/stream`, { question, documentId })
+      .pipe(
+        map((event): RagStreamEvent =>
+          event.event === 'sources'
+            ? { type: 'sources', sources: event.data as Source[] }
+            : { type: 'answer', content: event.data as string }
+        )
+      );
   }
 }

@@ -95,24 +95,20 @@ describe('ConciergeChat', () => {
 
   describe('sending messages', () => {
     it('should send the message and render the assistant response', () => {
-      const mockResponse: ConciergeResponse = {
-        content: 'How can I assist you?',
-        requiresAction: false
-      };
-      vi.spyOn(service, 'sendConciergeMessage').mockReturnValue(of(mockResponse));
+      vi.spyOn(service, 'sendConciergeMessageStream').mockReturnValue(of('How can I assist you?'));
 
       typeMessage('Hello, I need help');
       getSendButton().click();
       fixture.detectChanges();
 
-      expect(service.sendConciergeMessage).toHaveBeenCalledWith('Hello, I need help');
+      expect(service.sendConciergeMessageStream).toHaveBeenCalledWith('Hello, I need help');
       expect(getMessages()).toContain('How can I assist you?');
       // The input is cleared after sending, so the send button is disabled again
       expect(getSendButton().disabled).toBe(true);
     });
 
     it('should render an error message when sending fails', () => {
-      vi.spyOn(service, 'sendConciergeMessage').mockReturnValue(
+      vi.spyOn(service, 'sendConciergeMessageStream').mockReturnValue(
         throwError(() => new Error('Network error'))
       );
 
@@ -125,46 +121,75 @@ describe('ConciergeChat', () => {
     });
 
     it('should send the message when pressing Enter without Shift', () => {
-      vi.spyOn(service, 'sendConciergeMessage').mockReturnValue(
-        of({ content: 'OK', requiresAction: false })
-      );
+      vi.spyOn(service, 'sendConciergeMessageStream').mockReturnValue(of('OK'));
 
       typeMessage('enter message');
       getTextarea().dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', shiftKey: false }));
       fixture.detectChanges();
 
-      expect(service.sendConciergeMessage).toHaveBeenCalledWith('enter message');
+      expect(service.sendConciergeMessageStream).toHaveBeenCalledWith('enter message');
     });
 
     it('should not send the message when pressing Enter with Shift', () => {
-      vi.spyOn(service, 'sendConciergeMessage');
+      vi.spyOn(service, 'sendConciergeMessageStream');
 
       typeMessage('multiline message');
       getTextarea().dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', shiftKey: true }));
       fixture.detectChanges();
 
-      expect(service.sendConciergeMessage).not.toHaveBeenCalled();
+      expect(service.sendConciergeMessageStream).not.toHaveBeenCalled();
     });
 
     it('should not send when pressing other keys', () => {
-      vi.spyOn(service, 'sendConciergeMessage');
+      vi.spyOn(service, 'sendConciergeMessageStream');
 
       typeMessage('message');
       getTextarea().dispatchEvent(new KeyboardEvent('keydown', { key: 'a' }));
       fixture.detectChanges();
 
-      expect(service.sendConciergeMessage).not.toHaveBeenCalled();
+      expect(service.sendConciergeMessageStream).not.toHaveBeenCalled();
     });
 
     it('should sanitize HTML and script tags before sending', () => {
-      vi.spyOn(service, 'sendConciergeMessage').mockReturnValue(
-        of({ content: 'OK', requiresAction: false })
-      );
+      vi.spyOn(service, 'sendConciergeMessageStream').mockReturnValue(of('OK'));
 
       typeMessage('Book flight <script>alert("xss")</script> to NYC');
       getSendButton().click();
 
-      expect(service.sendConciergeMessage).toHaveBeenCalledWith('Book flight  to NYC');
+      expect(service.sendConciergeMessageStream).toHaveBeenCalledWith('Book flight  to NYC');
+    });
+
+    it('should keep the user message and the streamed assistant reply as separate messages, in order', async () => {
+      // Exercise the real (unmocked) service so the eager user-message push and
+      // the assistant placeholder can't get reordered relative to each other.
+      const encoder = new TextEncoder();
+      const body = 'data: {"content":"How"}\n\ndata: {"content":" can I help?"}\n\n';
+      const stream = new ReadableStream<Uint8Array>({
+        start(controller) {
+          controller.enqueue(encoder.encode(body));
+          controller.close();
+        }
+      });
+      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+        new Response(stream, { status: 200, headers: { 'Content-Type': 'text/event-stream' } })
+      );
+
+      typeMessage('I want to book a flight');
+      getSendButton().click();
+
+      // Wait for the fetch-based SSE stream to complete.
+      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise(resolve => setTimeout(resolve, 0));
+      fixture.detectChanges();
+
+      const messages = getMessages();
+      const userIndex = messages.indexOf('I want to book a flight');
+      const assistantIndex = messages.indexOf('How can I help?');
+
+      expect(userIndex).toBeGreaterThanOrEqual(0);
+      expect(assistantIndex).toBeGreaterThan(userIndex);
+
+      fetchSpy.mockRestore();
     });
 
   });

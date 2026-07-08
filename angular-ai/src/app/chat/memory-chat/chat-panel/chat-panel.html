@@ -13,8 +13,12 @@
     <div class="messages">
     @for (message of messages(); track $index) {
       <div class="message">
-        <div class="message-bubble" [class.user]="message.type === ChatType.USER" style="white-space: pre-wrap;"
-        [innerHTML]="message.content | markdownToHtml">
+        <div class="message-bubble" [class.user]="message.type === ChatType.USER" style="white-space: pre-wrap;">
+          @if (message.streaming) {
+            {{ message.content }}
+          } @else {
+            <span [innerHTML]="message.content | markdownToHtml"></span>
+          }
         </div>
       </div>
     }
@@ -40,10 +44,10 @@
         <mat-error>{{validationError()}}</mat-error>
       }
       @if (userInput()) {
-        <button matSuffix 
-                mat-icon-button 
-                aria-label="Send" 
-                (click)="sendMessage()" 
+        <button matSuffix
+                mat-icon-button
+                aria-label="Send"
+                (click)="sendMessage()"
                 [disabled]="!canSend()">
           <mat-icon>send</mat-icon>
         </button>

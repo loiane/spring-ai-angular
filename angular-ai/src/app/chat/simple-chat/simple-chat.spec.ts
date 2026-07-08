@@ -3,12 +3,11 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, Subject, throwError } from 'rxjs';
 
 import { ChatService } from '../chat-service';
-import { ChatResponse } from '../chat-response';
 import { SimpleChat } from './simple-chat';
 
 class MockChatService {
-  sendChatMessage() {
-    return of({ message: 'Mocked response', isBot: true });
+  sendChatMessageStream() {
+    return of('Mocked response');
   }
 }
 
@@ -77,15 +76,15 @@ describe('SimpleChat', () => {
     expect(button.disabled).toBe(false);
   });
 
-  it('should send the message and render the response when clicking send', () => {
-    vi.spyOn(chatService, 'sendChatMessage').mockReturnValue(
-      of({ message: 'Test response', isBot: true })
+  it('should send the message and render the streamed response when clicking send', () => {
+    vi.spyOn(chatService, 'sendChatMessageStream').mockReturnValue(
+      of('Test ', 'response')
     );
 
     typeMessage('test message');
     clickSend();
 
-    expect(chatService.sendChatMessage).toHaveBeenCalledWith('test message');
+    expect(chatService.sendChatMessageStream).toHaveBeenCalledWith('test message');
     const bubbles = getMessageBubbles();
     expect(bubbles).toContain('test message');
     expect(bubbles[bubbles.length - 1]).toBe('Test response');
@@ -93,39 +92,39 @@ describe('SimpleChat', () => {
   });
 
   it('should send the message when pressing enter', () => {
-    vi.spyOn(chatService, 'sendChatMessage').mockReturnValue(
-      of({ message: 'Enter response', isBot: true })
+    vi.spyOn(chatService, 'sendChatMessageStream').mockReturnValue(
+      of('Enter response')
     );
 
     typeMessage('enter message');
     getInput().dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter' }));
     fixture.detectChanges();
 
-    expect(chatService.sendChatMessage).toHaveBeenCalledWith('enter message');
+    expect(chatService.sendChatMessageStream).toHaveBeenCalledWith('enter message');
     expect(getMessageBubbles()).toContain('Enter response');
   });
 
   it('should not send a whitespace-only message', () => {
-    vi.spyOn(chatService, 'sendChatMessage');
+    vi.spyOn(chatService, 'sendChatMessageStream');
 
     typeMessage('   ');
     getInput().dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter' }));
     fixture.detectChanges();
 
-    expect(chatService.sendChatMessage).not.toHaveBeenCalled();
+    expect(chatService.sendChatMessageStream).not.toHaveBeenCalled();
     expect(getMessageBubbles().length).toBe(1);
   });
 
   it('should show the typing indicator while waiting for the response', () => {
-    const response$ = new Subject<ChatResponse>();
-    vi.spyOn(chatService, 'sendChatMessage').mockReturnValue(response$);
+    const response$ = new Subject<string>();
+    vi.spyOn(chatService, 'sendChatMessageStream').mockReturnValue(response$);
 
     typeMessage('slow message');
     clickSend();
 
     expect(fixture.nativeElement.querySelector('.typing')).toBeTruthy();
 
-    response$.next({ message: 'Done', isBot: true });
+    response$.next('Done');
     response$.complete();
     fixture.detectChanges();
 
@@ -134,8 +133,8 @@ describe('SimpleChat', () => {
   });
 
   it('should disable the send button while loading', () => {
-    const response$ = new Subject<ChatResponse>();
-    vi.spyOn(chatService, 'sendChatMessage').mockReturnValue(response$);
+    const response$ = new Subject<string>();
+    vi.spyOn(chatService, 'sendChatMessageStream').mockReturnValue(response$);
 
     typeMessage('slow message');
     clickSend();
@@ -145,7 +144,7 @@ describe('SimpleChat', () => {
   });
 
   it('should render an error message when the service fails', () => {
-    vi.spyOn(chatService, 'sendChatMessage').mockReturnValue(
+    vi.spyOn(chatService, 'sendChatMessageStream').mockReturnValue(
       throwError(() => new Error('Service error'))
     );
 
@@ -158,14 +157,14 @@ describe('SimpleChat', () => {
   });
 
   it('should sanitize HTML and script tags before sending', () => {
-    vi.spyOn(chatService, 'sendChatMessage').mockReturnValue(
-      of({ message: 'Response', isBot: true })
+    vi.spyOn(chatService, 'sendChatMessageStream').mockReturnValue(
+      of('Response')
     );
 
     typeMessage('Hello <script>alert("xss")</script> <b>world</b>');
     clickSend();
 
-    expect(chatService.sendChatMessage).toHaveBeenCalledWith('Hello  world');
+    expect(chatService.sendChatMessageStream).toHaveBeenCalledWith('Hello  world');
   });
 
   it('should show the character counter hint', () => {
