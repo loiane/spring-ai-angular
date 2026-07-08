@@ -113,7 +113,7 @@ describe('ChatPanel', () => {
     expect(mockMemoryChatService.continueChat).not.toHaveBeenCalled();
   });
 
-  it('should start a new chat when no chat is selected', async () => {
+  it('should start a new chat when no chat is selected', () => {
     mockMemoryChatService.selectedChatId.set(undefined);
 
     typeMessage('new chat message');
@@ -122,7 +122,6 @@ describe('ChatPanel', () => {
     expect(mockMemoryChatService.startNewChat).toHaveBeenCalledWith('new chat message');
     expect(mockMemoryChatService.selectChat).toHaveBeenCalledWith('new-chat-123');
     expect(mockMemoryChatService.chatsResource.reload).toHaveBeenCalled();
-    await fixture.whenStable();
     expect(getInput().value).toBe('');
   });
 

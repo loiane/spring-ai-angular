@@ -89,12 +89,11 @@ describe('DocumentChat', () => {
     expect(fixture.nativeElement.querySelector('mat-chip')).toBeNull();
   });
 
-  it('should disable the question input until a document is ready', async () => {
+  it('should disable the question input until a document is ready', () => {
     expect(getQuestionInput().disabled).toBe(true);
 
     selectFile('test.pdf', 'application/pdf');
 
-    await fixture.whenStable();
     expect(getQuestionInput().disabled).toBe(false);
   });
 
@@ -182,7 +181,7 @@ describe('DocumentChat', () => {
     expect(bubbles[bubbles.length - 1]).toContain('could not process');
   });
 
-  it('should send a question and render the answer with sources', async () => {
+  it('should send a question and render the answer with sources', () => {
     const response: RagResponse = {
       answer: 'The answer',
       sources: [{ content: 'snippet from doc', filename: 'test.pdf', metadata: {} }]
@@ -201,7 +200,6 @@ describe('DocumentChat', () => {
     const sources: HTMLElement = fixture.nativeElement.querySelector('.sources');
     expect(sources.textContent).toContain('test.pdf');
     expect(sources.textContent).toContain('snippet from doc');
-    await fixture.whenStable();
     expect(getQuestionInput().value).toBe('');
   });
 

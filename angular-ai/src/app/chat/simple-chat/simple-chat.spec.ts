@@ -77,7 +77,7 @@ describe('SimpleChat', () => {
     expect(button.disabled).toBe(false);
   });
 
-  it('should send the message and render the response when clicking send', async () => {
+  it('should send the message and render the response when clicking send', () => {
     vi.spyOn(chatService, 'sendChatMessage').mockReturnValue(
       of({ message: 'Test response', isBot: true })
     );
@@ -89,7 +89,6 @@ describe('SimpleChat', () => {
     const bubbles = getMessageBubbles();
     expect(bubbles).toContain('test message');
     expect(bubbles[bubbles.length - 1]).toBe('Test response');
-    await fixture.whenStable();
     expect(getInput().value).toBe('');
   });
 
