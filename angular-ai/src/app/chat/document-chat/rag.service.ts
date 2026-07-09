@@ -53,6 +53,20 @@ export class RagService {
   }
 
   /**
+   * List all previously uploaded documents, most recently uploaded first.
+   */
+  listDocuments(): Observable<DocumentMetadata[]> {
+    return this.http.get<DocumentMetadata[]>(`${this.API}/documents`);
+  }
+
+  /**
+   * Delete a document and its chunks from the vector store.
+   */
+  deleteDocument(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.API}/documents/${id}`);
+  }
+
+  /**
    * Ask a question scoped to a single uploaded document.
    * The answer is grounded on the document content and includes source citations.
    */

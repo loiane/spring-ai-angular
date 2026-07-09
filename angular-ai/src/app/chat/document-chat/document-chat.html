@@ -11,6 +11,11 @@
           </mat-chip>
         </mat-chip-set>
       }
+      <button mat-icon-button
+              aria-label="Documents"
+              [matMenuTriggerFor]="documentsMenu">
+        <mat-icon>folder</mat-icon>
+      </button>
       <button mat-stroked-button
               aria-label="Upload PDF"
               (click)="fileInput.click()"
@@ -25,6 +30,30 @@
       <input #fileInput type="file" accept="application/pdf" hidden (change)="onFileSelected($event)">
     </mat-toolbar>
   </div>
+
+  <mat-menu #documentsMenu="matMenu">
+    <mat-nav-list (click)="$event.stopPropagation()">
+      @for (doc of documents(); track doc.id) {
+        <mat-list-item [class.selected]="document()?.id === doc.id"
+                        [disabled]="doc.status !== 'READY'"
+                        (click)="selectDocument(doc)">
+          <mat-icon matListItemIcon>description</mat-icon>
+          <span matListItemTitle>{{ doc.filename }}</span>
+          <span matListItemLine [class.ready]="doc.status === 'READY'" [class.error]="doc.status === 'ERROR'">
+            {{ doc.status }}
+          </span>
+          <button mat-icon-button matListItemMeta aria-label="Delete document"
+                  (click)="confirmDeleteDocument(doc); $event.stopPropagation()">
+            <mat-icon>close_small</mat-icon>
+          </button>
+        </mat-list-item>
+      } @empty {
+        <mat-list-item>
+          <span>No documents uploaded yet</span>
+        </mat-list-item>
+      }
+    </mat-nav-list>
+  </mat-menu>
   <div class="chat-history" #chatHistory>
     <div class="messages">
     @for (message of messages(); track $index) {

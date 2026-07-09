@@ -82,6 +82,43 @@ describe('RagService', () => {
     });
   });
 
+  describe('listDocuments', () => {
+    it('should list all documents', () => {
+      const documents = [mockDocument, { ...mockDocument, id: 'doc-2', status: 'READY' as const }];
+
+      service.listDocuments().subscribe(response => {
+        expect(response).toEqual(documents);
+      });
+
+      const req = httpMock.expectOne(`${service.API}/documents`);
+      expect(req.request.method).toBe('GET');
+      req.flush(documents);
+    });
+  });
+
+  describe('deleteDocument', () => {
+    it('should delete a document by id', () => {
+      let completed = false;
+      service.deleteDocument('doc-1').subscribe({ complete: () => completed = true });
+
+      const req = httpMock.expectOne(`${service.API}/documents/doc-1`);
+      expect(req.request.method).toBe('DELETE');
+      req.flush(null);
+
+      expect(completed).toBe(true);
+    });
+
+    it('should handle delete errors', () => {
+      service.deleteDocument('doc-1').subscribe({
+        next: () => expect.unreachable('should have failed with an error'),
+        error: (error) => expect(error.status).toBe(404)
+      });
+
+      const req = httpMock.expectOne(`${service.API}/documents/doc-1`);
+      req.flush('Not found', { status: 404, statusText: 'Not Found' });
+    });
+  });
+
   describe('askQuestion', () => {
     it('should send question and documentId and return the rag response', () => {
       const mockResponse: RagResponse = {

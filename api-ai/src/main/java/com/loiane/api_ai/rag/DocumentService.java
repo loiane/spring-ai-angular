@@ -8,6 +8,8 @@ import org.springframework.ai.reader.pdf.PagePdfDocumentReader;
 import org.springframework.ai.reader.pdf.config.PdfDocumentReaderConfig;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.ai.vectorstore.filter.Filter;
+import org.springframework.ai.vectorstore.filter.FilterExpressionBuilder;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -276,39 +278,42 @@ public class DocumentService {
     }
 
     /**
-     * Deletes a document from disk and database.
-     * 
+     * Deletes a document from disk, the vector store, and the database.
+     *
      * <p>This performs the following cleanup operations:
      * <ol>
      *   <li>Delete file from disk</li>
+     *   <li>Delete the document's chunks from the vector store</li>
      *   <li>Delete document metadata from database</li>
      * </ol>
-     * 
-     * <p><strong>Note:</strong> Vectors remain in the vector store. This is intentional
-     * to avoid complex deletion logic and because vectors consume minimal space.
-     * 
+     *
      * @param documentId The ID of the document to delete
      */
     public void deleteDocument(String documentId) {
         log.info("Deleting document: id={}", documentId);
-        
+
         // Find document to get filename
         Optional<DocumentMetadata> documentOpt = documentRepository.findById(documentId);
         if (documentOpt.isEmpty()) {
             log.warn("Document not found for deletion: id={}", documentId);
             throw new DocumentNotFoundException("Document not found: " + documentId);
         }
-        
+
         DocumentMetadata documentMetadata = documentOpt.get();
-        
+
         try {
             // Delete file from disk
             deleteDocumentFile(documentMetadata.filename());
-            
+
+            // Delete the document's chunks from the vector store
+            Filter.Expression filter = new FilterExpressionBuilder().eq("document_id", documentId).build();
+            vectorStore.delete(filter);
+            log.info("Deleted vectors for document: id={}", documentId);
+
             // Delete document metadata
             documentRepository.deleteById(documentId);
             log.info("Successfully deleted document metadata: id={}", documentId);
-            
+
         } catch (Exception e) {
             log.error("Error deleting document: id={}, error={}", documentId, e.getMessage(), e);
             throw new DocumentProcessingException("Failed to delete document: " + documentId, e);

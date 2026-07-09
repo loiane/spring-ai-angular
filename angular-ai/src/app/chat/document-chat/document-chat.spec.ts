@@ -1,5 +1,6 @@
 import { provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatDialog } from '@angular/material/dialog';
 import { of, Subject, throwError } from 'rxjs';
 
 import { DocumentChat } from './document-chat';
@@ -15,6 +16,15 @@ const readyDocument: DocumentMetadata = {
   status: 'READY'
 };
 
+const otherDocument: DocumentMetadata = {
+  id: 'doc-2',
+  filename: 'other.pdf',
+  contentType: 'application/pdf',
+  fileSize: 2048,
+  uploadDate: '2026-07-05T10:00:00Z',
+  status: 'READY'
+};
+
 class MockRagService {
   uploadDocument() {
     return of(readyDocument);
@@ -24,6 +34,12 @@ class MockRagService {
   }
   askQuestionStream() {
     return of({ type: 'answer', content: 'Mocked answer' }, { type: 'sources', sources: [] });
+  }
+  listDocuments() {
+    return of([]);
+  }
+  deleteDocument() {
+    return of(undefined);
   }
 }
 
@@ -283,5 +299,102 @@ describe('DocumentChat', () => {
 
     const button = fixture.nativeElement.querySelector('button[aria-label="Send"]');
     expect(button.disabled).toBe(true);
+  });
+
+  describe('document list', () => {
+    it('should load the document list on init', () => {
+      expect(component['documents']()).toEqual([]);
+    });
+
+    it('should populate the document list from the backend', () => {
+      vi.spyOn(ragService, 'listDocuments').mockReturnValue(of([readyDocument, otherDocument]));
+
+      component['loadDocuments']();
+
+      expect(component['documents']()).toEqual([readyDocument, otherDocument]);
+    });
+
+    it('should select a ready document, switching the active document immediately', () => {
+      component['documents'].set([readyDocument, otherDocument]);
+
+      component['selectDocument'](otherDocument);
+      expect(component['document']()).toEqual(otherDocument);
+
+      component['selectDocument'](readyDocument);
+      expect(component['document']()).toEqual(readyDocument);
+    });
+
+    it('should not select a document that is not ready', () => {
+      const processingDocument: DocumentMetadata = { ...otherDocument, status: 'PROCESSING' };
+      component['documents'].set([processingDocument]);
+
+      component['selectDocument'](processingDocument);
+
+      expect(component['document']()).toBeNull();
+    });
+
+    it('should refresh the document list once an uploaded document settles', () => {
+      vi.spyOn(ragService, 'listDocuments').mockReturnValue(of([readyDocument]));
+
+      selectFile('test.pdf', 'application/pdf');
+
+      expect(ragService.listDocuments).toHaveBeenCalled();
+      expect(component['documents']()).toEqual([readyDocument]);
+    });
+  });
+
+  describe('confirmDeleteDocument', () => {
+    it('should delete the document and remove it from the list when confirmed', () => {
+      const dialog = TestBed.inject(MatDialog);
+      vi.spyOn(dialog, 'open').mockReturnValue({ afterClosed: () => of(true) } as ReturnType<MatDialog['open']>);
+      vi.spyOn(ragService, 'deleteDocument').mockReturnValue(of(undefined));
+      component['documents'].set([readyDocument, otherDocument]);
+      component['document'].set(readyDocument);
+
+      component['confirmDeleteDocument'](readyDocument);
+
+      expect(ragService.deleteDocument).toHaveBeenCalledWith('doc-1');
+      expect(component['documents']()).toEqual([otherDocument]);
+      expect(component['document']()).toBeNull();
+    });
+
+    it('should not delete anything when the dialog is dismissed', () => {
+      const dialog = TestBed.inject(MatDialog);
+      vi.spyOn(dialog, 'open').mockReturnValue({ afterClosed: () => of(false) } as ReturnType<MatDialog['open']>);
+      vi.spyOn(ragService, 'deleteDocument');
+      component['documents'].set([readyDocument]);
+
+      component['confirmDeleteDocument'](readyDocument);
+
+      expect(ragService.deleteDocument).not.toHaveBeenCalled();
+      expect(component['documents']()).toEqual([readyDocument]);
+    });
+
+    it('should keep the active document unaffected when deleting a different document', () => {
+      const dialog = TestBed.inject(MatDialog);
+      vi.spyOn(dialog, 'open').mockReturnValue({ afterClosed: () => of(true) } as ReturnType<MatDialog['open']>);
+      vi.spyOn(ragService, 'deleteDocument').mockReturnValue(of(undefined));
+      component['documents'].set([readyDocument, otherDocument]);
+      component['document'].set(readyDocument);
+
+      component['confirmDeleteDocument'](otherDocument);
+
+      expect(component['document']()).toEqual(readyDocument);
+      expect(component['documents']()).toEqual([readyDocument]);
+    });
+
+    it('should show an error message when deletion fails', () => {
+      const dialog = TestBed.inject(MatDialog);
+      vi.spyOn(dialog, 'open').mockReturnValue({ afterClosed: () => of(true) } as ReturnType<MatDialog['open']>);
+      vi.spyOn(ragService, 'deleteDocument').mockReturnValue(throwError(() => new Error('delete failed')));
+      component['documents'].set([readyDocument]);
+
+      component['confirmDeleteDocument'](readyDocument);
+      fixture.detectChanges();
+
+      const bubbles = getMessageBubbles();
+      expect(bubbles[bubbles.length - 1]).toContain('could not delete');
+      expect(component['documents']()).toEqual([readyDocument]);
+    });
   });
 });

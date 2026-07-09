@@ -25,6 +25,18 @@ mat-chip.error {
   --mdc-chip-label-text-color: #b71c1c;
 }
 
+mat-list-item.selected {
+  background-color: rgba(0, 0, 0, 0.06);
+}
+
+span.ready {
+  color: #1b5e20;
+}
+
+span.error {
+  color: #b71c1c;
+}
+
 .chat-history {
   flex: 1 1 auto;
   overflow-y: auto;

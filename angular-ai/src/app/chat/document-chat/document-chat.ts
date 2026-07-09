@@ -3,11 +3,15 @@ import { disabled, form, FormField, maxLength } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatListModule } from '@angular/material/list';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatToolbar } from '@angular/material/toolbar';
-import { catchError, interval, of, switchMap, takeWhile } from 'rxjs';
+import { catchError, EMPTY, interval, of, switchMap, takeWhile } from 'rxjs';
+import { ConfirmDialog } from '../../shared/confirm-dialog/confirm-dialog';
 import { LoggingService } from '../../shared/logging.service';
 import { MarkdownToHtmlPipe } from '../../shared/markdown-to-html.pipe';
 import { DocumentMetadata, RagChatMessage, RagStreamEvent, Source } from './rag.model';
@@ -19,7 +23,8 @@ const POLL_INTERVAL_MS = 2000;
 @Component({
   selector: 'app-document-chat',
   imports: [MatCardModule, MatInputModule, MatButtonModule, FormField, MatToolbar,
-    MatIconModule, MatChipsModule, MatProgressSpinnerModule, MarkdownToHtmlPipe],
+    MatIconModule, MatChipsModule, MatProgressSpinnerModule, MatListModule, MatMenuModule,
+    MarkdownToHtmlPipe],
   templateUrl: './document-chat.html',
   styleUrl: './document-chat.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -30,6 +35,7 @@ export class DocumentChat {
 
   private readonly ragService = inject(RagService);
   private readonly logger = inject(LoggingService);
+  private readonly dialog = inject(MatDialog);
 
   protected readonly MAX_LENGTH = MAX_MESSAGE_LENGTH;
 
@@ -42,6 +48,7 @@ export class DocumentChat {
   private isUploading = signal(false);
 
   protected document = signal<DocumentMetadata | null>(null);
+  protected documents = signal<DocumentMetadata[]>([]);
 
   protected messages = signal<RagChatMessage[]>([
     { message: 'Upload a PDF document and I will answer questions about it.', isBot: true },
@@ -69,6 +76,10 @@ export class DocumentChat {
     this.messages();
     setTimeout(() => this.scrollToBottom(), 0);
   });
+
+  constructor() {
+    this.loadDocuments();
+  }
 
   protected onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
@@ -143,6 +154,54 @@ export class DocumentChat {
     } else if (document.status === 'ERROR') {
       this.updateMessages(`Sorry, I could not process **${document.filename}**. Please try another PDF.`, true);
     }
+    this.loadDocuments();
+  }
+
+  private loadDocuments(): void {
+    this.ragService.listDocuments()
+      .pipe(
+        catchError(() => {
+          this.logger.error('Failed to load documents');
+          return of<DocumentMetadata[]>([]);
+        })
+      )
+      .subscribe(documents => this.documents.set(documents));
+  }
+
+  protected selectDocument(doc: DocumentMetadata): void {
+    if (doc.status !== 'READY') {
+      return;
+    }
+    this.document.set(doc);
+  }
+
+  protected confirmDeleteDocument(doc: DocumentMetadata): void {
+    this.dialog.open(ConfirmDialog, {
+      data: {
+        title: 'Delete document',
+        message: `Delete "${doc.filename}"? This also removes it from the vector store and cannot be undone.`
+      }
+    }).afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        this.deleteDocument(doc);
+      }
+    });
+  }
+
+  private deleteDocument(doc: DocumentMetadata): void {
+    this.ragService.deleteDocument(doc.id)
+      .pipe(
+        catchError(() => {
+          this.updateMessages(`Sorry, I could not delete "${doc.filename}". Please try again.`, true);
+          return EMPTY;
+        })
+      )
+      .subscribe(() => {
+        this.documents.update(documents => documents.filter(d => d.id !== doc.id));
+        if (this.document()?.id === doc.id) {
+          this.document.set(null);
+        }
+      });
   }
 
   private askQuestion(question: string): void {
