@@ -1,59 +1,130 @@
-# AngularAi
+# Angular AI Client
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.0.0-rc.3.
+[![Angular](https://img.shields.io/badge/Angular-22-red.svg)](https://angular.io/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
+[![Angular Material](https://img.shields.io/badge/Angular%20Material-22-brightgreen.svg)](https://material.angular.io/)
 
-## Development server
+A comprehensive Angular frontend client for the Spring AI backend, showcasing various AI capabilities with a modern Material Design UI.
 
-To start a local development server, run:
+## 🚀 Features
+
+- **Simple Chat**: Direct chat interface for single-turn conversations
+- **Memory Chat**: Multi-turn conversations with persistent history
+- **Chat with Documents**: Upload documents and have context-aware conversations
+- **Flight Reservations**: Manage and search flight reservations
+- **Material UI Layout**: Responsive navigation with Angular Material components
+
+## 📋 Prerequisites
+
+- **Node.js** 20+ and npm
+- **Angular CLI** 22+
+- **Spring AI Backend** running on `http://localhost:8080`
+
+## 🛠️ Installation & Setup
+
+### 1. Install Dependencies
 
 ```bash
-ng serve
+npm install
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+### 2. Start the Development Server
 
-## Code scaffolding
+```bash
+npm start
+```
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+Open your browser and navigate to `http://localhost:4200/`. The application will automatically reload when you modify source files.
+
+### 3. API Configuration
+
+The app uses `proxy.conf.js` to forward API calls to the backend during development. Ensure the backend is running on `http://localhost:8080`.
+
+## 📚 Development
+
+### Code Generation
+
+Generate new components, services, or other artifacts using Angular CLI:
 
 ```bash
 ng generate component component-name
+ng generate service service-name
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+For a complete list of available schematics:
 
 ```bash
 ng generate --help
 ```
 
-## Building
+### Building
 
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+To build the project for production:
 
 ```bash
-ng test
+npm run build
 ```
 
-## Running end-to-end tests
+Build artifacts are stored in the `dist/` directory.
 
-For end-to-end (e2e) testing, run:
+## 🧪 Testing
+
+### Unit Tests
 
 ```bash
-ng e2e
+npm run test
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+Tests run with [Vitest](https://vitest.dev/) and coverage reporting.
 
-## Additional Resources
+### End-to-End Tests
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+```bash
+npm run e2e
+```
+
+E2E tests use [Playwright](https://playwright.dev/) for browser automation.
+
+## 📁 Project Structure
+
+```text
+src/
+├── app/
+│   ├── chat/              # Simple chat component
+│   ├── chat-memory/       # Memory chat component
+│   ├── chat-documents/    # Chat with documents component
+│   ├── flight-reservations/  # Flight reservations component
+│   ├── services/          # API communication services
+│   └── shared/            # Shared utilities and models
+├── assets/                # Static assets
+└── styles.scss            # Global styles
+```
+
+## 📖 Dependencies
+
+- **Angular**: web application framework
+- **Angular Material**: UI component library
+- **RxJS**: reactive programming library
+- **TypeScript**: typed JavaScript
+- **Vitest & Playwright**: testing frameworks
+
+## 🔧 Development Tips
+
+- **Hot Reload**: Changes to source files automatically reload in the browser
+- **DevTools**: Use Angular DevTools browser extension for debugging
+- **API Testing**: Refer to `api-ai/api.http` for backend endpoint examples
+
+## 📝 License
+
+This project is licensed under the MIT License — see the [LICENSE](../LICENSE) file at the repository root.
+
+## 🔗 Related Resources
+
+- [Angular Documentation](https://angular.io/docs)
+- [Angular Material](https://material.angular.io/)
+- [TypeScript Documentation](https://www.typescriptlang.org/docs/)
+- [Spring AI Documentation](https://docs.spring.io/spring-ai/reference/)
+
+---
+
+Built with ❤️ using Angular and Spring AI

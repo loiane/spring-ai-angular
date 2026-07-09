@@ -13,6 +13,7 @@ A comprehensive Spring AI demonstration application showcasing various AI capabi
 
 - **Simple Chat**: Direct OpenAI integration for single-turn conversations
 - **Memory Chat**: Persistent conversation history with PostgreSQL storage
+- **Chat with Documents**: Upload documents and have context-aware conversations
 - **Book Recommendations**: AI-powered book suggestions by author
 
 ### 📚 RAG (Retrieval-Augmented Generation)
@@ -117,6 +118,35 @@ Content-Type: application/json
 ```http
 GET /api/chat-memory
 GET /api/chat-memory/{chatId}
+```
+
+#### Chat with Documents - Upload Document
+
+```http
+POST /api/chat-documents/upload
+Content-Type: multipart/form-data
+
+file=<document file>
+```
+
+#### Chat with Documents - Ask Question
+
+```http
+POST /api/chat-documents/ask
+Content-Type: application/json
+
+{
+    "message": "What is this document about?",
+    "documentId": "document-uuid"
+}
+```
+
+#### Chat with Documents - List / Get / Delete
+
+```http
+GET /api/chat-documents
+GET /api/chat-documents/{id}
+DELETE /api/chat-documents/{id}
 ```
 
 ### 📖 Book Recommendation Endpoints

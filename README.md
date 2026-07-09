@@ -6,6 +6,7 @@ The project demonstrates practical AI application patterns end-to-end:
 
 - simple chat
 - chat with memory
+- chat with documents
 - RAG with document upload and retrieval
 - an AI-assisted flight reservation workflow
 
@@ -46,6 +47,7 @@ The project demonstrates practical AI application patterns end-to-end:
 
 - Simple Chat page
 - Memory Chat page
+- Chat with Documents page
 - Flight Reservations page
 - Material UI layout with route-based navigation
 
