@@ -8,15 +8,20 @@ This directory contains end-to-end tests for the Angular AI application using Pl
 e2e/
 ├── fixtures/         # Mock data for tests
 │   ├── chat-responses.json
+│   ├── memory-chat-responses.json
+│   ├── document-responses.json
+│   ├── sample.pdf
 │   └── flight-data.json
 ├── pages/           # Page Object Models
 │   ├── simple-chat.page.ts
-│   ├── memory-chat.page.ts (TODO)
+│   ├── memory-chat.page.ts
+│   ├── document-chat.page.ts
+│   └── flight-reservations.page.ts
 └── tests/           # Test specifications
     ├── simple-chat.spec.ts
-    ├── memory-chat.spec.ts (TODO)
-    ├── error-scenarios.spec.ts (TODO)
-    └── loading-states.spec.ts (TODO)
+    ├── memory-chat.spec.ts
+    ├── document-chat.spec.ts
+    └── flight-reservations.spec.ts
 ```
 
 ## 🚀 Running Tests
@@ -61,16 +66,14 @@ npx playwright test --project=webkit
 ## 🎯 Test Coverage
 
 ### ✅ Implemented
-- Simple Chat: Basic flow and validation
-- Simple Chat: Error scenarios
+- Simple Chat: Basic flow, validation, and error scenarios
+- Memory Chat: Session listing, starting/continuing chats (SSE streaming), chat history, empty state
+- Chat with Documents: Upload, processing/ready/error states, streaming Q&A with sources, document switching
+- Flight Reservations: Reservation listing, selection, refresh, concierge chat (SSE streaming), validation
 
 ### 🚧 TODO
-- Memory Chat: Session management
-- Memory Chat: Chat history
-- Flight Reservation: Booking flow
-- Flight Reservation: Cancellation
+- Flight Reservation: Cancellation flow
 - Loading states across all components
-- Network error handling
 - Offline scenarios
 
 ## 📝 Writing Tests

@@ -1,10 +1,12 @@
 import { Page, Locator } from '@playwright/test';
 
 /**
- * Page Object Model for Simple Chat component
+ * Page Object Model for Memory Chat component
  */
-export class SimpleChatPage {
+export class MemoryChatPage {
   readonly page: Page;
+  readonly newChatButton: Locator;
+  readonly chatListItems: Locator;
   readonly messageInput: Locator;
   readonly sendButton: Locator;
   readonly characterCounter: Locator;
@@ -16,6 +18,8 @@ export class SimpleChatPage {
 
   constructor(page: Page) {
     this.page = page;
+    this.newChatButton = page.locator('button[aria-label="Create new chat"]');
+    this.chatListItems = page.locator('mat-nav-list mat-list-item');
     this.messageInput = page.locator('input[matInput]');
     this.sendButton = page.locator('button[aria-label="Send"]');
     this.characterCounter = page.locator('mat-hint.mat-mdc-form-field-hint-end');
@@ -27,7 +31,18 @@ export class SimpleChatPage {
   }
 
   async goto() {
-    await this.page.goto('/simple-chat');
+    await this.page.goto('/memory-chat');
+  }
+
+  async selectChatByDescription(description: string) {
+    await this.page.locator('mat-list-item', { hasText: description }).click();
+  }
+
+  async deleteChatByDescription(description: string) {
+    await this.page
+      .locator('mat-list-item', { hasText: description })
+      .locator('button')
+      .click();
   }
 
   async typeMessage(message: string) {
@@ -41,17 +56,6 @@ export class SimpleChatPage {
   async sendMessage(message: string) {
     await this.typeMessage(message);
     await this.clickSend();
-  }
-
-  async getCharacterCount(): Promise<string> {
-    return await this.characterCounter.textContent() || '';
-  }
-
-  async getValidationError(): Promise<string | null> {
-    if (await this.validationError.isVisible()) {
-      return await this.validationError.textContent();
-    }
-    return null;
   }
 
   async getLastUserMessage(): Promise<string> {
@@ -68,20 +72,5 @@ export class SimpleChatPage {
 
   async getMessageCount(): Promise<number> {
     return await this.chatMessages.count();
-  }
-
-  async isSendButtonDisabled(): Promise<boolean> {
-    return await this.sendButton.isDisabled();
-  }
-
-  async isLoading(): Promise<boolean> {
-    return await this.loadingIndicator.isVisible().catch(() => false);
-  }
-
-  async waitForResponse() {
-    // Wait for loading indicator to appear and disappear
-    await this.page.waitForTimeout(100);
-    await this.loadingIndicator.waitFor({ state: 'visible' }).catch(() => {});
-    await this.loadingIndicator.waitFor({ state: 'hidden' }).catch(() => {});
   }
 }

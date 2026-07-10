@@ -1,0 +1,20 @@
+{
+  "chats": [
+    { "id": "chat-1", "description": "Programming jokes" },
+    { "id": "chat-2", "description": "Angular questions" }
+  ],
+  "startChat": {
+    "userMessage": "Tell me a joke about programming",
+    "chatId": "chat-new",
+    "description": "Programming jokes",
+    "aiResponseDelta": "Why do programmers prefer dark mode? Because light attracts bugs."
+  },
+  "continueChat": {
+    "userMessage": "Tell me another one",
+    "aiResponseDelta": "Why did the developer go broke? Because they used up all their cache."
+  },
+  "history": [
+    { "content": "Tell me a joke about programming", "type": "USER" },
+    { "content": "Why do programmers prefer dark mode? Because light attracts bugs.", "type": "ASSISTANT" }
+  ]
+}

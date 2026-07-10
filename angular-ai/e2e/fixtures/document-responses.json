@@ -1,0 +1,32 @@
+{
+  "document": {
+    "id": "doc-1",
+    "filename": "sample.pdf",
+    "contentType": "application/pdf",
+    "fileSize": 12345,
+    "uploadDate": "2026-07-01T10:00:00Z",
+    "status": "READY"
+  },
+  "processingDocument": {
+    "id": "doc-2",
+    "filename": "processing.pdf",
+    "contentType": "application/pdf",
+    "fileSize": 54321,
+    "uploadDate": "2026-07-01T10:00:00Z",
+    "status": "PROCESSING"
+  },
+  "errorDocument": {
+    "id": "doc-3",
+    "filename": "bad.pdf",
+    "contentType": "application/pdf",
+    "fileSize": 999,
+    "uploadDate": "2026-07-01T10:00:00Z",
+    "status": "ERROR",
+    "errorMessage": "Could not parse document"
+  },
+  "question": "What is this document about?",
+  "answerDelta": "This document describes Spring AI integration patterns.",
+  "sources": [
+    { "content": "Spring AI provides abstractions for LLMs.", "filename": "sample.pdf", "metadata": {} }
+  ]
+}
