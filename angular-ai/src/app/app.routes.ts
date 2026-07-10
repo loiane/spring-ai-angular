@@ -14,5 +14,8 @@ export const routes: Routes = [
   { path: 'flight-reservations',
     loadComponent: () => import('./flight-reservation/components/flight-reservation-main/flight-reservation-main').then(c => c.FlightReservationMain)
   },
+  { path: 'book-cover-identifier',
+    loadComponent: () => import('./book-cover-identifier/book-cover-identifier').then(c => c.BookCoverIdentifier)
+  },
   { path: '**', redirectTo: 'simple-chat' }
 ];

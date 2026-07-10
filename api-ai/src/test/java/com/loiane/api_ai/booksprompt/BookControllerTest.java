@@ -7,6 +7,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -15,6 +16,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -175,6 +177,35 @@ class BookControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(handler().handlerType(BookController.class))
                 .andExpect(handler().methodName("listBooksByAuthor"));
+    }
+
+    @Test
+    void testIdentifyCover_WithValidImage_ShouldReturnBook() throws Exception {
+        // Given
+        MockMultipartFile file = new MockMultipartFile("file", "cover.png", "image/png", new byte[]{1, 2, 3});
+        Book expectedBook = new Book("The Hobbit", "978-0547928227", "A tale of a hobbit's adventure");
+        when(bookPromptService.identifyBookFromCover(any())).thenReturn(expectedBook);
+
+        // When & Then
+        mockMvc.perform(multipart("/api/books/identify-cover").file(file))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.bookName").value("The Hobbit"))
+                .andExpect(jsonPath("$.isbn").value("978-0547928227"));
+
+        verify(bookPromptService, times(1)).identifyBookFromCover(any());
+    }
+
+    @Test
+    void testIdentifyCover_WithUnsupportedImage_ShouldReturnBadRequest() throws Exception {
+        // Given
+        MockMultipartFile file = new MockMultipartFile("file", "cover.txt", "text/plain", "not an image".getBytes());
+        when(bookPromptService.identifyBookFromCover(any())).thenThrow(new BookCoverException("Unsupported image type"));
+
+        // When & Then
+        mockMvc.perform(multipart("/api/books/identify-cover").file(file))
+                .andDo(print())
+                .andExpect(status().isBadRequest());
     }
 
     @Test

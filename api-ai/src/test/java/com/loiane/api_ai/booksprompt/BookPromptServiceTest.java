@@ -8,6 +8,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.mock.web.MockMultipartFile;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -159,6 +160,42 @@ class BookPromptServiceTest {
         assertThat(book.bookName()).isEqualTo("Test Title");
         assertThat(book.isbn()).isEqualTo("123-456-789");
         assertThat(book.description()).isEqualTo("Test Description");
+    }
+
+    @Test
+    void testIdentifyBookFromCover_WithValidImage_ShouldReturnBook() {
+        // Given
+        MockMultipartFile image = new MockMultipartFile("file", "cover.png", "image/png", new byte[]{1, 2, 3});
+        Book expectedBook = new Book("The Hobbit", "978-0547928227", "A tale of a hobbit's adventure");
+
+        BookPromptService spyService = spy(bookPromptService);
+        doReturn(expectedBook).when(spyService).identifyBookFromCover(image);
+
+        // When
+        Book actualBook = spyService.identifyBookFromCover(image);
+
+        // Then
+        assertThat(actualBook).isEqualTo(expectedBook);
+    }
+
+    @Test
+    void testIdentifyBookFromCover_WithUnsupportedContentType_ShouldThrowException() {
+        // Given
+        MockMultipartFile file = new MockMultipartFile("file", "cover.txt", "text/plain", "not an image".getBytes());
+
+        // When & Then
+        assertThatThrownBy(() -> bookPromptService.identifyBookFromCover(file))
+                .isInstanceOf(BookCoverException.class);
+    }
+
+    @Test
+    void testIdentifyBookFromCover_WithNullContentType_ShouldThrowException() {
+        // Given
+        MockMultipartFile file = new MockMultipartFile("file", "cover", null, new byte[]{1, 2, 3});
+
+        // When & Then
+        assertThatThrownBy(() -> bookPromptService.identifyBookFromCover(file))
+                .isInstanceOf(BookCoverException.class);
     }
 
     @Test

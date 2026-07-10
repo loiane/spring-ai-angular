@@ -1,0 +1,43 @@
+<mat-card class="scanner-container">
+  <mat-toolbar>
+    <span>Book Cover Identifier</span>
+    <span class="spacer"></span>
+    <button mat-stroked-button
+            aria-label="Upload cover"
+            (click)="fileInput.click()"
+            [disabled]="isLoading()">
+      @if (isLoading()) {
+        <mat-spinner diameter="18"></mat-spinner>
+      } @else {
+        <mat-icon>photo_camera</mat-icon>
+      }
+      Upload Cover
+    </button>
+    <input #fileInput type="file" accept="image/png,image/jpeg" hidden (change)="onFileSelected($event)">
+  </mat-toolbar>
+
+  <div class="content">
+    @if (previewUrl(); as url) {
+      <img class="preview" [src]="url" alt="Book cover preview">
+    } @else {
+      <div class="placeholder">
+        <mat-icon>menu_book</mat-icon>
+        <span>Upload a photo of a book cover to identify it</span>
+      </div>
+    }
+
+    @if (errorMessage(); as error) {
+      <p class="error">{{ error }}</p>
+    }
+
+    @if (result(); as book) {
+      <div class="result">
+        <h3>{{ book.bookName }}</h3>
+        @if (book.isbn) {
+          <p class="isbn">ISBN: {{ book.isbn }}</p>
+        }
+        <p class="description">{{ book.description }}</p>
+      </div>
+    }
+  </div>
+</mat-card>
