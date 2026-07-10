@@ -69,10 +69,9 @@ npx playwright test --project=webkit
 - Simple Chat: Basic flow, validation, and error scenarios
 - Memory Chat: Session listing, starting/continuing chats (SSE streaming), chat history, empty state
 - Chat with Documents: Upload, processing/ready/error states, streaming Q&A with sources, document switching
-- Flight Reservations: Reservation listing, selection, refresh, concierge chat (SSE streaming), validation
+- Flight Reservations: Reservation listing, selection, refresh, concierge chat (SSE streaming), validation, conversational cancellation flow
 
 ### 🚧 TODO
-- Flight Reservation: Cancellation flow
 - Loading states across all components
 - Offline scenarios
 

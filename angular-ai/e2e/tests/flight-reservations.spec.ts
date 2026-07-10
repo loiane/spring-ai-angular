@@ -154,4 +154,54 @@ test.describe('Flight Reservations - Concierge Chat', () => {
     await reservationsPage.toggleSidenavButton.click();
     await expect(page.locator('mat-sidenav.concierge-sidenav')).not.toHaveClass(/mat-drawer-opened/);
   });
+
+  test('should cancel a reservation via the concierge and reflect it after refresh', async ({ page }) => {
+    // The concierge cancels reservations conversationally: the AI calls a
+    // backend tool and streams back a confirmation. The list itself is not
+    // auto-refreshed, so the cancelled status only appears once the user
+    // clicks Refresh.
+    await page.route('**/api/concierge/stream', async route => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'text/event-stream',
+        body: sseBody([fixtures.cancellationResponseDelta]),
+      });
+    });
+
+    await reservationsPage.sendConciergeMessage(fixtures.cancellationMessage);
+    await page.waitForTimeout(500);
+
+    const lastAssistantMsg = await reservationsPage.getLastConciergeAssistantMessage();
+    expect(lastAssistantMsg).toContain('cancelled');
+
+    // The reservations table should still show the old (pre-cancellation) status.
+    const rowBeforeRefresh = page.locator('table.reservations-table tbody tr', {
+      hasText: fixtures.reservations[0].reservationId,
+    });
+    await expect(rowBeforeRefresh.locator('mat-chip')).not.toHaveClass(/status-cancelled/);
+
+    // After refresh, the backend reflects the cancellation.
+    const cancelledReservations = fixtures.reservations.map(r =>
+      r.reservationId === fixtures.reservations[0].reservationId ? { ...r, status: 'CANCELLED' } : r
+    );
+    await page.route('**/api/flight-reservations', async route => {
+      if (route.request().method() === 'GET') {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(cancelledReservations),
+        });
+      } else {
+        await route.continue();
+      }
+    });
+
+    await reservationsPage.refreshButton.click();
+    await page.waitForTimeout(300);
+
+    const rowAfterRefresh = page.locator('table.reservations-table tbody tr', {
+      hasText: fixtures.reservations[0].reservationId,
+    });
+    await expect(rowAfterRefresh.locator('mat-chip')).toHaveClass(/status-cancelled/);
+  });
 });

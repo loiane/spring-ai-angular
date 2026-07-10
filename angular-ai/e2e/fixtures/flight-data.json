@@ -30,5 +30,7 @@
     }
   ],
   "conciergeMessage": "What is the status of my reservation RES-001?",
-  "conciergeResponseDelta": "Your reservation RES-001 is confirmed for flight SF100 from JFK to LAX, seat 12A."
+  "conciergeResponseDelta": "Your reservation RES-001 is confirmed for flight SF100 from JFK to LAX, seat 12A.",
+  "cancellationMessage": "Please cancel my reservation RES-001",
+  "cancellationResponseDelta": "Your reservation RES-001 has been cancelled. You will receive a confirmation email shortly."
 }
