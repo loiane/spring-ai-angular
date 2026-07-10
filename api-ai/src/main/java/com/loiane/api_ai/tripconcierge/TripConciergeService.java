@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 
 import com.loiane.api_ai.tripconcierge.flight.FlightOption;
 import com.loiane.api_ai.tripconcierge.flight.FlightSearchTools;
+import com.loiane.api_ai.tripconcierge.itinerary.DayPlan;
+import com.loiane.api_ai.tripconcierge.itinerary.ItineraryAgentService;
 
 /**
  * Orchestrator for the Trip Planning Concierge. Parses a free-text trip request into
@@ -32,12 +34,15 @@ public class TripConciergeService {
 
     private final ChatClient parsingChatClient;
     private final FlightSearchTools flightSearchTools;
+    private final ItineraryAgentService itineraryAgentService;
 
-    public TripConciergeService(ChatClient.Builder chatClientBuilder, FlightSearchTools flightSearchTools) {
+    public TripConciergeService(ChatClient.Builder chatClientBuilder, FlightSearchTools flightSearchTools,
+            ItineraryAgentService itineraryAgentService) {
         this.parsingChatClient = chatClientBuilder
                 .defaultSystem(PARSE_SYSTEM_PROMPT)
                 .build();
         this.flightSearchTools = flightSearchTools;
+        this.itineraryAgentService = itineraryAgentService;
     }
 
     public TripPlanResult planTrip(String message) {
@@ -45,9 +50,10 @@ public class TripConciergeService {
 
         TripPlanRequest request = parseRequest(message);
         FlightOption selectedFlight = findBestFlight(request);
+        List<DayPlan> itinerary = planItinerary(request);
         String summary = buildSummary(request, selectedFlight);
 
-        return new TripPlanResult(request, selectedFlight, summary);
+        return new TripPlanResult(request, selectedFlight, itinerary, summary);
     }
 
     private TripPlanRequest parseRequest(String message) {
@@ -65,6 +71,13 @@ public class TripConciergeService {
         return options.stream()
                 .min(Comparator.comparingDouble(FlightOption::price))
                 .orElse(null);
+    }
+
+    private List<DayPlan> planItinerary(TripPlanRequest request) {
+        LocalDate startDate = request.startDate() != null ? request.startDate() : LocalDate.now().plusMonths(1);
+        LocalDate endDate = request.endDate() != null ? request.endDate() : startDate.plusDays(5);
+
+        return itineraryAgentService.planItinerary(request.destination(), startDate, endDate, request.interests());
     }
 
     private String buildSummary(TripPlanRequest request, FlightOption flight) {
