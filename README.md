@@ -9,6 +9,7 @@ The project demonstrates practical AI application patterns end-to-end:
 - chat with documents
 - RAG with document upload and retrieval
 - an AI-assisted flight reservation workflow
+- an MCP (Model Context Protocol) server/client pair exposing the flight reservation tools remotely
 
 ## Technologies
 
@@ -23,8 +24,9 @@ The project demonstrates practical AI application patterns end-to-end:
 
 ## Repository Structure
 
-- `api-ai/`: Spring Boot API and AI services
+- `api-ai/`: Spring Boot API and AI services (also acts as an MCP server for flight reservation tools)
 - `angular-ai/`: Angular UI client
+- `mcp-client-ai/`: Standalone Spring Boot MCP client that consumes `api-ai`'s flight reservation tools over MCP
 
 ## Features
 
@@ -42,6 +44,7 @@ The project demonstrates practical AI application patterns end-to-end:
   - update reservation status
   - search by passenger email
 - Book recommendation prompt endpoints (`/api/books/**`)
+- MCP server exposing the flight reservation tools (list, get, search, cancel) at `/mcp`, consumed by the standalone `mcp-client-ai` module
 
 ### Frontend (`angular-ai`)
 
@@ -84,6 +87,18 @@ Frontend URL: `http://localhost:4200`
 
 The Angular app uses `proxy.conf.js` to forward API calls to the backend
 during development.
+
+### 3. (Optional) Start the MCP client example
+
+With `api-ai` already running (its MCP server is available at `/mcp`), from `mcp-client-ai/`:
+
+```bash
+OPENAI_API_KEY=your_openai_api_key ./mvnw spring-boot:run
+```
+
+This starts a separate service on `http://localhost:8081` that discovers and
+calls the flight reservation tools over MCP instead of in-process. See
+[`mcp-client-ai/README.md`](mcp-client-ai/README.md) for details.
 
 ## Useful Commands
 

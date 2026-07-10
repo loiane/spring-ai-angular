@@ -27,6 +27,15 @@ A comprehensive Spring AI demonstration application showcasing various AI capabi
 - **Reservation Management**: Create, list, and search reservations
 - **Status Updates**: Cancel reservations and update reservation status
 
+### 🔌 MCP Server
+
+- Exposes the same flight reservation tools used by the in-process SpringFly
+  Concierge (list all, get by id, search by email, cancel) as an MCP
+  (Model Context Protocol) server
+- Streamable HTTP transport, reachable at `POST /mcp`
+- Consumed by the standalone [`mcp-client-ai`](../mcp-client-ai/README.md) module,
+  demonstrating tools being called across a process boundary instead of in-process
+
 ### 💾 Data Persistence
 
 - **PostgreSQL Integration**: Robust data storage for chat history
@@ -215,6 +224,14 @@ PUT /api/flight-reservations/{reservationId}/status
 ```http
 GET /api/flight-reservations/search?email=passenger@example.com
 ```
+
+### 🔌 MCP Server Endpoint
+
+The flight reservation tools (list, get, search, cancel) are exposed over MCP
+at `/mcp` using the Streamable HTTP transport. Any MCP-compatible client can
+connect to `http://localhost:8080/mcp` and discover the 4 tools, mirroring
+what the in-process SpringFly Concierge already does. See
+[`mcp-client-ai`](../mcp-client-ai/README.md) for a working example client.
 
 ## 🏗️ Project Structure
 

@@ -1,0 +1,15 @@
+### Chat via MCP-discovered flight reservation tools
+POST http://localhost:8081/api/chat
+Content-Type: application/json
+
+{
+    "message": "Can you look up reservations for jane.doe@example.com?"
+}
+
+###
+POST http://localhost:8081/api/chat
+Content-Type: application/json
+
+{
+    "message": "Cancel reservation FR-12345678"
+}
