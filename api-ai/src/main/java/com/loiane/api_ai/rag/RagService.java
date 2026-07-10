@@ -9,13 +9,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
+import org.springframework.ai.chat.evaluation.RelevancyEvaluator;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.document.Document;
+import org.springframework.ai.evaluation.EvaluationRequest;
+import org.springframework.ai.evaluation.EvaluationResponse;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.ai.vectorstore.filter.Filter;
 import org.springframework.ai.vectorstore.filter.FilterExpressionBuilder;
 import org.springframework.stereotype.Service;
+
+import io.micrometer.core.instrument.MeterRegistry;
 
 import com.loiane.api_ai.rag.config.DocumentProperties;
 import com.loiane.api_ai.rag.model.RagResponse;
@@ -65,11 +70,16 @@ public class RagService {
     private final ChatClient chatClient;
     private final VectorStore vectorStore;
     private final DocumentProperties documentProperties;
+    private final RelevancyEvaluator relevancyEvaluator;
+    private final MeterRegistry meterRegistry;
 
     public RagService(ChatClient.Builder chatClientBuilder, VectorStore vectorStore,
-                      DocumentProperties documentProperties) {
+                      DocumentProperties documentProperties, RelevancyEvaluator relevancyEvaluator,
+                      MeterRegistry meterRegistry) {
         this.vectorStore = vectorStore;
         this.documentProperties = documentProperties;
+        this.relevancyEvaluator = relevancyEvaluator;
+        this.meterRegistry = meterRegistry;
 
         // Configure ChatClient with QuestionAnswerAdvisor as a default advisor,
         // using a grounded prompt that restricts answers to the retrieved context
@@ -124,8 +134,10 @@ public class RagService {
             // Extract unique sources from document metadata
             List<Source> sources = extractSources(relevantDocs);
 
+            boolean relevant = evaluateRelevancy(question, relevantDocs, answer);
+
             log.info("Generated answer with {} sources", sources.size());
-            return new RagResponse(answer, sources);
+            return new RagResponse(answer, sources, relevant);
 
         } catch (Exception e) {
             log.error("Error processing RAG question: {}", question, e);
@@ -199,6 +211,29 @@ public class RagService {
                             "document_id == '" + documentId + "'"));
         }
         return promptSpec;
+    }
+
+    /**
+     * Evaluates whether the generated answer is relevant to the question given the
+     * retrieved context, and records the result as a Micrometer counter.
+     *
+     * @param question The original question
+     * @param context The documents retrieved for context
+     * @param answer The generated answer
+     * @return true if the answer passed relevancy evaluation
+     */
+    private boolean evaluateRelevancy(String question, List<Document> context, String answer) {
+        EvaluationRequest evaluationRequest = new EvaluationRequest(question, context, answer);
+        EvaluationResponse evaluationResponse = relevancyEvaluator.evaluate(evaluationRequest);
+        boolean pass = evaluationResponse.isPass();
+
+        if (!pass) {
+            log.warn("RAG answer failed relevancy evaluation for question: {} (feedback: {})",
+                    question, evaluationResponse.getFeedback());
+        }
+
+        meterRegistry.counter("rag.evaluation.result", "result", pass ? "pass" : "fail").increment();
+        return pass;
     }
 
     private Filter.Expression buildDocumentFilter(String documentId) {

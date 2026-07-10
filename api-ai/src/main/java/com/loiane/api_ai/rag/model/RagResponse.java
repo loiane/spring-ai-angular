@@ -11,19 +11,22 @@ import java.util.List;
  * 
  * @param answer The AI-generated answer to the user's question
  * @param sources List of document sources that were used to generate the answer
- * 
+ * @param relevant Whether the answer passed relevancy evaluation against the retrieved context, or null if not evaluated
+ *
  * @author Loiane Groner
  * @since 1.0
  */
 public record RagResponse(
     String answer,
-    List<Source> sources
+    List<Source> sources,
+    Boolean relevant
 ) {
     /**
-     * Creates a new RagResponse with the specified answer and sources.
-     * 
+     * Creates a new RagResponse with the specified answer, sources, and relevancy result.
+     *
      * @param answer The generated answer
      * @param sources List of source citations
+     * @param relevant Whether the answer passed relevancy evaluation
      */
     public RagResponse {
         // Ensure sources is not null
@@ -31,15 +34,25 @@ public record RagResponse(
             sources = List.of();
         }
     }
-    
+
+    /**
+     * Creates a new RagResponse with an answer and sources, without a relevancy result.
+     *
+     * @param answer The generated answer
+     * @param sources List of source citations
+     */
+    public RagResponse(String answer, List<Source> sources) {
+        this(answer, sources, null);
+    }
+
     /**
      * Creates a new RagResponse with only an answer and no sources.
      * Convenience constructor for responses without citations.
-     * 
+     *
      * @param answer The generated answer
      */
     public RagResponse(String answer) {
-        this(answer, List.of());
+        this(answer, List.of(), null);
     }
     
     /**
