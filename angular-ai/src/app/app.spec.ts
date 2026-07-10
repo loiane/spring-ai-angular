@@ -34,12 +34,13 @@ describe('App', () => {
     expect(toolbar).toBeTruthy();
 
     const buttons = toolbar?.querySelectorAll('button');
-    expect(buttons?.length).toBe(4);
+    expect(buttons?.length).toBe(5);
 
     expect(buttons?.[0]?.textContent?.trim()).toBe('Simple Chat');
     expect(buttons?.[1]?.textContent?.trim()).toBe('Memory Chat');
     expect(buttons?.[2]?.textContent?.trim()).toBe('Chat with Document');
     expect(buttons?.[3]?.textContent?.trim()).toBe('Flight Reservations');
+    expect(buttons?.[4]?.textContent?.trim()).toBe('Book Cover Identifier');
   });
 
   it('should have router outlet', () => {

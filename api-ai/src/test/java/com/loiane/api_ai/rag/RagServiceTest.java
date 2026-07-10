@@ -13,13 +13,19 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
+import org.springframework.ai.chat.evaluation.RelevancyEvaluator;
 import org.springframework.ai.document.Document;
+import org.springframework.ai.evaluation.EvaluationRequest;
+import org.springframework.ai.evaluation.EvaluationResponse;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 
 import com.loiane.api_ai.rag.config.DocumentProperties;
 import com.loiane.api_ai.rag.model.RagResponse;
 import com.loiane.api_ai.rag.model.RagStreamEvent;
+
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
 import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
@@ -60,6 +66,11 @@ class RagServiceTest {
     @Mock
     private DocumentProperties documentProperties;
 
+    @Mock
+    private RelevancyEvaluator relevancyEvaluator;
+
+    private final MeterRegistry meterRegistry = new SimpleMeterRegistry();
+
     private ChatClient.ChatClientRequestSpec requestSpec;
     private ChatClient.CallResponseSpec callResponseSpec;
     private ChatClient.StreamResponseSpec streamResponseSpec;
@@ -70,6 +81,8 @@ class RagServiceTest {
     @BeforeEach
     void setUp() {
         lenient().when(documentProperties.getTopK()).thenReturn(5);
+        lenient().when(relevancyEvaluator.evaluate(any(EvaluationRequest.class)))
+                .thenReturn(new EvaluationResponse(true, "", Map.of()));
 
         ChatClient chatClient = mock(ChatClient.class);
         requestSpec = mock(ChatClient.ChatClientRequestSpec.class);
@@ -86,7 +99,7 @@ class RagServiceTest {
         when(chatClientBuilder.defaultAdvisors(any(Advisor.class))).thenReturn(chatClientBuilder);
         when(chatClientBuilder.build()).thenReturn(chatClient);
 
-        ragService = new RagService(chatClientBuilder, vectorStore, documentProperties);
+        ragService = new RagService(chatClientBuilder, vectorStore, documentProperties, relevancyEvaluator, meterRegistry);
     }
 
     private Document documentChunk(String documentId, String filename, String content) {
