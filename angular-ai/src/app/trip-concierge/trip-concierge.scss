@@ -1,0 +1,143 @@
+:host {
+  display: block;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.trip-concierge-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.card-header-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  mat-icon {
+    color: #673ab7;
+  }
+}
+
+.request-card {
+  .message-input {
+    width: 100%;
+  }
+
+  button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    mat-spinner {
+      display: inline-block;
+    }
+  }
+}
+
+.progress-card {
+  .stage-stepper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .stage {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #9e9e9e;
+
+    mat-icon {
+      font-size: 20px;
+      height: 20px;
+      width: 20px;
+    }
+
+    &.stage-complete {
+      color: #2e7d32;
+    }
+
+    &.stage-active {
+      color: #673ab7;
+
+      mat-icon {
+        animation: spin 1.2s linear infinite;
+      }
+    }
+  }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.results {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.result-card {
+  .price {
+    font-size: 1.1em;
+    font-weight: 600;
+  }
+}
+
+.itinerary-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  .day-plan {
+    padding: 8px 0;
+    border-bottom: 1px solid #e0e0e0;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    .day-date {
+      font-weight: 600;
+    }
+
+    .day-weather {
+      color: #666;
+      font-size: 0.9em;
+      margin: 4px 0;
+    }
+  }
+}
+
+.budget-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+
+  div {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    span {
+      font-size: 0.85em;
+      color: #666;
+    }
+  }
+
+  .remaining strong {
+    color: #2e7d32;
+  }
+}
+
+.budget-notes {
+  margin-top: 12px;
+  font-style: italic;
+  color: #666;
+}

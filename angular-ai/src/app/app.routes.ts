@@ -17,5 +17,8 @@ export const routes: Routes = [
   { path: 'book-cover-identifier',
     loadComponent: () => import('./book-cover-identifier/book-cover-identifier').then(c => c.BookCoverIdentifier)
   },
+  { path: 'trip-concierge',
+    loadComponent: () => import('./trip-concierge/trip-concierge').then(c => c.TripConcierge)
+  },
   { path: '**', redirectTo: 'simple-chat' }
 ];

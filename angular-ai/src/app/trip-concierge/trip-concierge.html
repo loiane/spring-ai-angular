@@ -1,0 +1,138 @@
+<div class="trip-concierge-container">
+  <mat-card class="request-card">
+    <mat-card-header>
+      <div class="card-header-content">
+        <mat-icon>travel_explore</mat-icon>
+        <mat-card-title>Trip Planning Concierge</mat-card-title>
+      </div>
+    </mat-card-header>
+    <mat-card-content>
+      <mat-form-field class="message-input" appearance="outline">
+        <mat-label>Describe your trip</mat-label>
+        <textarea
+          matInput
+          [formField]="messageForm"
+          placeholder="e.g. Plan a 5-day trip to Lisbon in September for 2 people, budget $2000, interested in museums and food"
+          rows="3">
+        </textarea>
+        <mat-hint align="end">{{ message().length }}/{{ MAX_LENGTH }}</mat-hint>
+      </mat-form-field>
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="planTrip()"
+        [disabled]="!canPlan()"
+        aria-label="Plan trip">
+        @if (isPlanning()) {
+          <mat-spinner diameter="20"></mat-spinner>
+        } @else {
+          <mat-icon>send</mat-icon>
+        }
+        Plan my trip
+      </button>
+    </mat-card-content>
+  </mat-card>
+
+  @if (latestEvent()) {
+    <mat-card class="progress-card">
+      <mat-card-content>
+        <div class="stage-stepper">
+          @for (stage of stages; track stage) {
+            <div class="stage" [class]="'stage-' + stageStatus(stage)">
+              <mat-icon>
+                @switch (stageStatus(stage)) {
+                  @case ('complete') { check_circle }
+                  @case ('active') { autorenew }
+                  @default { radio_button_unchecked }
+                }
+              </mat-icon>
+              <span>{{ stageLabel(stage) }}</span>
+            </div>
+          }
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  @if (result(); as plan) {
+    <div class="results">
+      @if (plan.selectedFlight; as flight) {
+        <mat-card class="result-card">
+          <mat-card-header>
+            <div class="card-header-content">
+              <mat-icon>flight_takeoff</mat-icon>
+              <mat-card-title>Flight</mat-card-title>
+            </div>
+          </mat-card-header>
+          <mat-card-content>
+            <p>
+              <strong>{{ flight.airline }} {{ flight.flightNumber }}</strong>
+              &middot; {{ flight.origin }} &rarr; {{ flight.destination }}
+            </p>
+            <p>{{ flight.departureDate }}, departs {{ flight.departureTime }}, arrives {{ flight.arrivalTime }}</p>
+            <p class="price">{{ flight.price | number:'1.2-2' }} {{ flight.currency }}</p>
+          </mat-card-content>
+        </mat-card>
+      }
+
+      @if (plan.itinerary.length > 0) {
+        <mat-card class="result-card">
+          <mat-card-header>
+            <div class="card-header-content">
+              <mat-icon>event_note</mat-icon>
+              <mat-card-title>Itinerary</mat-card-title>
+            </div>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="itinerary-list">
+              @for (day of plan.itinerary; track day.date) {
+                <div class="day-plan">
+                  <div class="day-date">{{ day.date }}</div>
+                  <div class="day-weather">{{ day.weatherSummary }}</div>
+                  <div class="day-activities">{{ day.suggestedActivities }}</div>
+                </div>
+              }
+            </div>
+          </mat-card-content>
+        </mat-card>
+      }
+
+      @if (plan.budget; as budget) {
+        <mat-card class="result-card">
+          <mat-card-header>
+            <div class="card-header-content">
+              <mat-icon>account_balance_wallet</mat-icon>
+              <mat-card-title>Budget</mat-card-title>
+            </div>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="budget-grid">
+              <div><span>Flight</span><strong>{{ budget.flightCost | number:'1.2-2' }} {{ budget.currency }}</strong></div>
+              <div><span>Lodging</span><strong>{{ budget.lodgingEstimate | number:'1.2-2' }} {{ budget.currency }}</strong></div>
+              <div><span>Food</span><strong>{{ budget.foodEstimate | number:'1.2-2' }} {{ budget.currency }}</strong></div>
+              <div><span>Activities</span><strong>{{ budget.activitiesEstimate | number:'1.2-2' }} {{ budget.currency }}</strong></div>
+              <div class="remaining"><span>Remaining</span><strong>{{ budget.remaining | number:'1.2-2' }} {{ budget.currency }}</strong></div>
+            </div>
+            @if (budget.notes) {
+              <p class="budget-notes">{{ budget.notes }}</p>
+            }
+          </mat-card-content>
+        </mat-card>
+      }
+
+      @if (plan.docsNotes) {
+        <mat-card class="result-card">
+          <mat-card-header>
+            <div class="card-header-content">
+              <mat-icon>fact_check</mat-icon>
+              <mat-card-title>Entry Requirements</mat-card-title>
+            </div>
+          </mat-card-header>
+          <mat-card-content>
+            <p>{{ plan.docsNotes }}</p>
+          </mat-card-content>
+        </mat-card>
+      }
+    </div>
+  }
+</div>
