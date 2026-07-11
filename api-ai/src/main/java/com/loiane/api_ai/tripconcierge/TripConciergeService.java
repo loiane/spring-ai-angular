@@ -9,6 +9,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 
+import com.loiane.api_ai.tripconcierge.budget.BudgetAgentService;
+import com.loiane.api_ai.tripconcierge.budget.BudgetBreakdown;
 import com.loiane.api_ai.tripconcierge.flight.FlightOption;
 import com.loiane.api_ai.tripconcierge.flight.FlightSearchTools;
 import com.loiane.api_ai.tripconcierge.itinerary.DayPlan;
@@ -35,25 +37,32 @@ public class TripConciergeService {
     private final ChatClient parsingChatClient;
     private final FlightSearchTools flightSearchTools;
     private final ItineraryAgentService itineraryAgentService;
+    private final BudgetAgentService budgetAgentService;
 
     public TripConciergeService(ChatClient.Builder chatClientBuilder, FlightSearchTools flightSearchTools,
-            ItineraryAgentService itineraryAgentService) {
+            ItineraryAgentService itineraryAgentService, BudgetAgentService budgetAgentService) {
         this.parsingChatClient = chatClientBuilder
                 .defaultSystem(PARSE_SYSTEM_PROMPT)
                 .build();
         this.flightSearchTools = flightSearchTools;
         this.itineraryAgentService = itineraryAgentService;
+        this.budgetAgentService = budgetAgentService;
     }
 
     public TripPlanResult planTrip(String message) {
         logger.info("Planning trip from request: {}", message);
 
         TripPlanRequest request = parseRequest(message);
-        FlightOption selectedFlight = findBestFlight(request);
-        List<DayPlan> itinerary = planItinerary(request);
+        LocalDate startDate = request.startDate() != null ? request.startDate() : LocalDate.now().plusMonths(1);
+        LocalDate endDate = request.endDate() != null ? request.endDate() : startDate.plusDays(5);
+
+        FlightOption selectedFlight = findBestFlight(request, startDate);
+        List<DayPlan> itinerary = itineraryAgentService.planItinerary(
+                request.destination(), startDate, endDate, request.interests());
+        BudgetBreakdown budget = planBudget(request, selectedFlight, startDate, endDate);
         String summary = buildSummary(request, selectedFlight);
 
-        return new TripPlanResult(request, selectedFlight, itinerary, summary);
+        return new TripPlanResult(request, selectedFlight, itinerary, budget, summary);
     }
 
     private TripPlanRequest parseRequest(String message) {
@@ -63,8 +72,7 @@ public class TripConciergeService {
                 .entity(TripPlanRequest.class);
     }
 
-    private FlightOption findBestFlight(TripPlanRequest request) {
-        LocalDate departureDate = request.startDate() != null ? request.startDate() : LocalDate.now().plusMonths(1);
+    private FlightOption findBestFlight(TripPlanRequest request, LocalDate departureDate) {
         List<FlightOption> options = flightSearchTools.searchFlights(
                 request.origin(), request.destination(), departureDate);
 
@@ -73,11 +81,13 @@ public class TripConciergeService {
                 .orElse(null);
     }
 
-    private List<DayPlan> planItinerary(TripPlanRequest request) {
-        LocalDate startDate = request.startDate() != null ? request.startDate() : LocalDate.now().plusMonths(1);
-        LocalDate endDate = request.endDate() != null ? request.endDate() : startDate.plusDays(5);
+    private BudgetBreakdown planBudget(TripPlanRequest request, FlightOption flight, LocalDate startDate, LocalDate endDate) {
+        double flightCost = flight != null ? flight.price() : 0;
+        String flightCurrency = flight != null ? flight.currency() : request.budgetCurrency();
 
-        return itineraryAgentService.planItinerary(request.destination(), startDate, endDate, request.interests());
+        return budgetAgentService.planBudget(
+                request.budget(), request.budgetCurrency(), flightCost, flightCurrency,
+                startDate, endDate, request.travelers());
     }
 
     private String buildSummary(TripPlanRequest request, FlightOption flight) {
