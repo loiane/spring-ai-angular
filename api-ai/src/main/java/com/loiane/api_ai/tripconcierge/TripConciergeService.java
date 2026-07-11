@@ -3,6 +3,7 @@ package com.loiane.api_ai.tripconcierge;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +17,10 @@ import com.loiane.api_ai.tripconcierge.flight.FlightOption;
 import com.loiane.api_ai.tripconcierge.flight.FlightSearchTools;
 import com.loiane.api_ai.tripconcierge.itinerary.DayPlan;
 import com.loiane.api_ai.tripconcierge.itinerary.ItineraryAgentService;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * Orchestrator for the Trip Planning Concierge. Parses a free-text trip request into
@@ -68,6 +73,49 @@ public class TripConciergeService {
         String summary = buildSummary(request, selectedFlight);
 
         return new TripPlanResult(request, selectedFlight, itinerary, budget, docsNotes, summary);
+    }
+
+    public Flux<TripPlanStreamEvent> planTripStream(String message) {
+        logger.info("Planning trip (streaming) from request: {}", message);
+
+        TripPlanRequest request = parseRequest(message);
+        LocalDate startDate = request.startDate() != null ? request.startDate() : LocalDate.now().plusMonths(1);
+        LocalDate endDate = request.endDate() != null ? request.endDate() : startDate.plusDays(5);
+
+        AtomicReference<FlightOption> flightRef = new AtomicReference<>();
+        AtomicReference<List<DayPlan>> itineraryRef = new AtomicReference<>();
+        AtomicReference<BudgetBreakdown> budgetRef = new AtomicReference<>();
+        AtomicReference<String> docsRef = new AtomicReference<>();
+
+        Mono<TripPlanStreamEvent> flightEvent = Mono.fromCallable(() -> findBestFlight(request, startDate))
+                .doOnNext(flightRef::set)
+                .map(TripPlanStreamEvent::flight)
+                .subscribeOn(Schedulers.boundedElastic());
+
+        Mono<TripPlanStreamEvent> itineraryEvent = Mono.fromCallable(() -> itineraryAgentService.planItinerary(
+                        request.destination(), startDate, endDate, request.interests()))
+                .doOnNext(itineraryRef::set)
+                .map(TripPlanStreamEvent::itinerary)
+                .subscribeOn(Schedulers.boundedElastic());
+
+        Mono<TripPlanStreamEvent> budgetEvent = Mono.fromCallable(() -> planBudget(request, flightRef.get(), startDate, endDate))
+                .doOnNext(budgetRef::set)
+                .map(TripPlanStreamEvent::budget)
+                .subscribeOn(Schedulers.boundedElastic());
+
+        Mono<TripPlanStreamEvent> docsEvent = Mono.fromCallable(() -> travelDocsAgentService.getEntryRequirements(request.destination()))
+                .doOnNext(docsRef::set)
+                .map(TripPlanStreamEvent::docs)
+                .subscribeOn(Schedulers.boundedElastic());
+
+        Mono<TripPlanStreamEvent> doneEvent = Mono.fromCallable(() -> {
+            String summary = buildSummary(request, flightRef.get());
+            TripPlanResult result = new TripPlanResult(
+                    request, flightRef.get(), itineraryRef.get(), budgetRef.get(), docsRef.get(), summary);
+            return TripPlanStreamEvent.done(result);
+        });
+
+        return Flux.concat(flightEvent, itineraryEvent, budgetEvent, docsEvent, doneEvent);
     }
 
     private TripPlanRequest parseRequest(String message) {
