@@ -7,14 +7,14 @@ import com.loiane.api_ai.tripconcierge.flight.FlightOption;
 import com.loiane.api_ai.tripconcierge.itinerary.DayPlan;
 
 /**
- * The composed result of a trip planning request. Travel-docs field is populated in
- * a later stage of the concierge pipeline.
+ * The composed result of a trip planning request.
  */
 public record TripPlanResult(
         TripPlanRequest request,
         FlightOption selectedFlight,
         List<DayPlan> itinerary,
         BudgetBreakdown budget,
+        String docsNotes,
         String summary
 ) {
 }

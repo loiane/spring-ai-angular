@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import com.loiane.api_ai.tripconcierge.budget.BudgetAgentService;
 import com.loiane.api_ai.tripconcierge.budget.BudgetBreakdown;
+import com.loiane.api_ai.tripconcierge.docs.TravelDocsAgentService;
 import com.loiane.api_ai.tripconcierge.flight.FlightOption;
 import com.loiane.api_ai.tripconcierge.flight.FlightSearchTools;
 import com.loiane.api_ai.tripconcierge.itinerary.DayPlan;
@@ -38,15 +39,18 @@ public class TripConciergeService {
     private final FlightSearchTools flightSearchTools;
     private final ItineraryAgentService itineraryAgentService;
     private final BudgetAgentService budgetAgentService;
+    private final TravelDocsAgentService travelDocsAgentService;
 
     public TripConciergeService(ChatClient.Builder chatClientBuilder, FlightSearchTools flightSearchTools,
-            ItineraryAgentService itineraryAgentService, BudgetAgentService budgetAgentService) {
+            ItineraryAgentService itineraryAgentService, BudgetAgentService budgetAgentService,
+            TravelDocsAgentService travelDocsAgentService) {
         this.parsingChatClient = chatClientBuilder
                 .defaultSystem(PARSE_SYSTEM_PROMPT)
                 .build();
         this.flightSearchTools = flightSearchTools;
         this.itineraryAgentService = itineraryAgentService;
         this.budgetAgentService = budgetAgentService;
+        this.travelDocsAgentService = travelDocsAgentService;
     }
 
     public TripPlanResult planTrip(String message) {
@@ -60,9 +64,10 @@ public class TripConciergeService {
         List<DayPlan> itinerary = itineraryAgentService.planItinerary(
                 request.destination(), startDate, endDate, request.interests());
         BudgetBreakdown budget = planBudget(request, selectedFlight, startDate, endDate);
+        String docsNotes = travelDocsAgentService.getEntryRequirements(request.destination());
         String summary = buildSummary(request, selectedFlight);
 
-        return new TripPlanResult(request, selectedFlight, itinerary, budget, summary);
+        return new TripPlanResult(request, selectedFlight, itinerary, budget, docsNotes, summary);
     }
 
     private TripPlanRequest parseRequest(String message) {
