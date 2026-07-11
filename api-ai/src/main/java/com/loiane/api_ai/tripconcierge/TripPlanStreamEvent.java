@@ -17,6 +17,7 @@ import com.loiane.api_ai.tripconcierge.itinerary.DayPlan;
  * @param budget   populated when stage is "budget"
  * @param docsNotes populated when stage is "docs"
  * @param result   populated when stage is "done", the full composed plan
+ * @param error    populated when stage is "error", a message describing which stage failed
  */
 public record TripPlanStreamEvent(
         String stage,
@@ -24,25 +25,30 @@ public record TripPlanStreamEvent(
         List<DayPlan> itinerary,
         BudgetBreakdown budget,
         String docsNotes,
-        TripPlanResult result
+        TripPlanResult result,
+        String error
 ) {
     public static TripPlanStreamEvent flight(FlightOption flight) {
-        return new TripPlanStreamEvent("flight", flight, null, null, null, null);
+        return new TripPlanStreamEvent("flight", flight, null, null, null, null, null);
     }
 
     public static TripPlanStreamEvent itinerary(List<DayPlan> itinerary) {
-        return new TripPlanStreamEvent("itinerary", null, itinerary, null, null, null);
+        return new TripPlanStreamEvent("itinerary", null, itinerary, null, null, null, null);
     }
 
     public static TripPlanStreamEvent budget(BudgetBreakdown budget) {
-        return new TripPlanStreamEvent("budget", null, null, budget, null, null);
+        return new TripPlanStreamEvent("budget", null, null, budget, null, null, null);
     }
 
     public static TripPlanStreamEvent docs(String docsNotes) {
-        return new TripPlanStreamEvent("docs", null, null, null, docsNotes, null);
+        return new TripPlanStreamEvent("docs", null, null, null, docsNotes, null, null);
     }
 
     public static TripPlanStreamEvent done(TripPlanResult result) {
-        return new TripPlanStreamEvent("done", null, null, null, null, result);
+        return new TripPlanStreamEvent("done", null, null, null, null, result, null);
+    }
+
+    public static TripPlanStreamEvent error(String stage, String message) {
+        return new TripPlanStreamEvent(stage, null, null, null, null, null, message);
     }
 }

@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.prompt.PromptTemplate;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 
 /**
@@ -58,9 +57,10 @@ public class ItineraryAgentService {
                 "interests", interests == null || interests.isBlank() ? "general sightseeing" : interests
         ));
 
-        return chatClient.prompt()
+        ItineraryPlan plan = chatClient.prompt()
                 .user(prompt)
                 .call()
-                .entity(new ParameterizedTypeReference<List<DayPlan>>() { });
+                .entity(ItineraryPlan.class);
+        return plan == null ? List.of() : plan.days();
     }
 }

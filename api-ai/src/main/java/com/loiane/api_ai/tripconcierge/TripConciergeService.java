@@ -90,29 +90,48 @@ public class TripConciergeService {
         Mono<TripPlanStreamEvent> flightEvent = Mono.fromCallable(() -> findBestFlight(request, startDate))
                 .doOnNext(flightRef::set)
                 .map(TripPlanStreamEvent::flight)
-                .subscribeOn(Schedulers.boundedElastic());
+                .subscribeOn(Schedulers.boundedElastic())
+                .onErrorResume(e -> {
+                    logger.error("Error planning flight", e);
+                    return Mono.just(TripPlanStreamEvent.error("flight", e.getMessage()));
+                });
 
         Mono<TripPlanStreamEvent> itineraryEvent = Mono.fromCallable(() -> itineraryAgentService.planItinerary(
                         request.destination(), startDate, endDate, request.interests()))
                 .doOnNext(itineraryRef::set)
                 .map(TripPlanStreamEvent::itinerary)
-                .subscribeOn(Schedulers.boundedElastic());
+                .subscribeOn(Schedulers.boundedElastic())
+                .onErrorResume(e -> {
+                    logger.error("Error planning itinerary", e);
+                    return Mono.just(TripPlanStreamEvent.error("itinerary", e.getMessage()));
+                });
 
         Mono<TripPlanStreamEvent> budgetEvent = Mono.fromCallable(() -> planBudget(request, flightRef.get(), startDate, endDate))
                 .doOnNext(budgetRef::set)
                 .map(TripPlanStreamEvent::budget)
-                .subscribeOn(Schedulers.boundedElastic());
+                .subscribeOn(Schedulers.boundedElastic())
+                .onErrorResume(e -> {
+                    logger.error("Error planning budget", e);
+                    return Mono.just(TripPlanStreamEvent.error("budget", e.getMessage()));
+                });
 
         Mono<TripPlanStreamEvent> docsEvent = Mono.fromCallable(() -> travelDocsAgentService.getEntryRequirements(request.destination()))
                 .doOnNext(docsRef::set)
                 .map(TripPlanStreamEvent::docs)
-                .subscribeOn(Schedulers.boundedElastic());
+                .subscribeOn(Schedulers.boundedElastic())
+                .onErrorResume(e -> {
+                    logger.error("Error fetching travel docs", e);
+                    return Mono.just(TripPlanStreamEvent.error("docs", e.getMessage()));
+                });
 
         Mono<TripPlanStreamEvent> doneEvent = Mono.fromCallable(() -> {
             String summary = buildSummary(request, flightRef.get());
             TripPlanResult result = new TripPlanResult(
                     request, flightRef.get(), itineraryRef.get(), budgetRef.get(), docsRef.get(), summary);
             return TripPlanStreamEvent.done(result);
+        }).onErrorResume(e -> {
+            logger.error("Error finalizing trip plan", e);
+            return Mono.just(TripPlanStreamEvent.error("done", e.getMessage()));
         });
 
         return Flux.concat(flightEvent, itineraryEvent, budgetEvent, docsEvent, doneEvent);

@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientResponseException;
 
 /**
  * Client for the free, no-API-key Open-Meteo geocoding and forecast APIs.
@@ -66,17 +67,23 @@ public class WeatherClient {
     public List<DailyForecast> getForecast(double latitude, double longitude, LocalDate startDate, LocalDate endDate) {
         logger.info("Fetching forecast for ({}, {}) from {} to {}", latitude, longitude, startDate, endDate);
 
-        Map<String, Object> response = forecastClient.get()
-                .uri(uriBuilder -> uriBuilder.path("/v1/forecast")
-                        .queryParam("latitude", latitude)
-                        .queryParam("longitude", longitude)
-                        .queryParam("daily", "temperature_2m_max,temperature_2m_min,weather_code")
-                        .queryParam("timezone", "auto")
-                        .queryParam("start_date", startDate)
-                        .queryParam("end_date", endDate)
-                        .build())
-                .retrieve()
-                .body(JSON_MAP);
+        Map<String, Object> response;
+        try {
+            response = forecastClient.get()
+                    .uri(uriBuilder -> uriBuilder.path("/v1/forecast")
+                            .queryParam("latitude", latitude)
+                            .queryParam("longitude", longitude)
+                            .queryParam("daily", "temperature_2m_max,temperature_2m_min,weather_code")
+                            .queryParam("timezone", "auto")
+                            .queryParam("start_date", startDate)
+                            .queryParam("end_date", endDate)
+                            .build())
+                    .retrieve()
+                    .body(JSON_MAP);
+        } catch (RestClientResponseException e) {
+            logger.warn("Forecast unavailable for {} to {}: {}", startDate, endDate, e.getResponseBodyAsString());
+            return List.of();
+        }
 
         if (response == null || response.get("daily") == null) {
             return List.of();
