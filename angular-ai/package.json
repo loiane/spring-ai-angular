@@ -20,7 +20,7 @@
     "@angular/cdk": "^22.0.3",
     "@angular/common": "^22.0.5",
     "@angular/compiler": "^22.0.5",
-    "@angular/core": "^22.0.5",
+    "@angular/core": "^22.0.6",
     "@angular/forms": "^22.0.5",
     "@angular/material": "^22.0.3",
     "@angular/platform-browser": "^22.0.5",
