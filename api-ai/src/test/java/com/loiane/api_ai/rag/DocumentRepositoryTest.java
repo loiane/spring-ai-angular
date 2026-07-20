@@ -9,44 +9,32 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration;
 import org.springframework.boot.jdbc.autoconfigure.JdbcTemplateAutoConfiguration;
-import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.boot.jdbc.test.autoconfigure.JdbcTest;
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.jdbc.Sql;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.postgresql.PostgreSQLContainer;
 
 import com.loiane.api_ai.rag.model.DocumentMetadata;
 import com.loiane.api_ai.rag.model.DocumentStatus;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase.Replace;
 
 /**
- * Integration tests for {@link DocumentRepository} against a real Postgres instance.
+ * Integration tests for {@link DocumentRepository} against an embedded H2 database.
  *
  * <p>Runs the {@code documents} table DDL from {@code rag-schema-test.sql} (a copy of
  * the {@code id UUID} column from the production {@code rag-schema.sql}), so a
- * regression like binding a Java {@code String} to a {@code uuid} column without
- * casting it is caught here rather than only at runtime.
+ * regression like binding a Java {@code String} to a {@code uuid} column is caught
+ * here rather than only at runtime.
  */
-@Testcontainers
 @JdbcTest
-@AutoConfigureTestDatabase(replace = Replace.NONE)
 @Import({DocumentRepositoryTest.TestConfig.class, JdbcTemplateAutoConfiguration.class})
 @Sql(scripts = "classpath:rag-schema-test.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_CLASS)
 @Sql(statements = "DELETE FROM documents", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 class DocumentRepositoryTest {
-
-    @Container
-    @ServiceConnection
-    static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:16");
 
     @TestConfiguration(proxyBeanMethods = false)
     @Import(DataSourceAutoConfiguration.class)

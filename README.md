@@ -17,7 +17,7 @@ The project demonstrates practical AI application patterns end-to-end:
 - Spring Boot 4.x
 - Spring AI 2.x
 - Maven Wrapper
-- PostgreSQL + pgvector
+- H2 (file-based, no external database/Docker required)
 - Angular 22
 - Angular Material
 - Playwright + Vitest tooling
@@ -64,13 +64,16 @@ From `api-ai/`, set at least:
 OPENAI_API_KEY=your_openai_api_key
 ```
 
-Start database and API:
+Start the API:
 
 ```bash
 ./mvnw spring-boot:run
 ```
 
-Spring Boot Docker Compose integration will start PostgreSQL/pgvector from `compose.yaml`.
+No Docker or external database is required - the app uses a file-based H2
+database (`api-ai/data/`) created automatically on first run. See
+[`api-ai/README.md`](api-ai/README.md) for details, including the H2 console
+and the one feature that behaves differently than the old Postgres/pgvector setup.
 
 API base URL: `http://localhost:8080`
 

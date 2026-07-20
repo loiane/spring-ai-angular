@@ -12,14 +12,14 @@ A comprehensive Spring AI demonstration application showcasing various AI capabi
 ### 🤖 AI Chat Services
 
 - **Simple Chat**: Direct OpenAI integration for single-turn conversations
-- **Memory Chat**: Persistent conversation history with PostgreSQL storage
+- **Memory Chat**: Persistent conversation history with H2 storage
 - **Chat with Documents**: Upload documents and have context-aware conversations
 - **Book Recommendations**: AI-powered book suggestions by author
 
 ### 📚 RAG (Retrieval-Augmented Generation)
 
 - **PDF Document Upload**: Upload, list, and delete PDF documents
-- **Vector Store Integration**: Semantic search capabilities with pgvector
+- **Vector Store Integration**: Semantic search via Spring AI's file-backed `SimpleVectorStore`
 - **Context-Aware Responses**: Enhanced AI responses with document context and sources
 
 ### ✈️ Flight Reservations
@@ -38,14 +38,14 @@ A comprehensive Spring AI demonstration application showcasing various AI capabi
 
 ### 💾 Data Persistence
 
-- **PostgreSQL Integration**: Robust data storage for chat history
-- **Vector Database Support**: pgvector for semantic search
-- **H2 Database**: In-memory database for testing
+- **H2 Database**: File-based storage for chat history, flight reservations, and document
+  metadata — no external database or Docker required. Tests use an in-memory H2 instance.
+- **Vector Store**: Spring AI's `SimpleVectorStore`, persisted to a local JSON file
+  (`data/vectorstore.json`)
 
 ## 📋 Prerequisites
 
 - **Java 25** or higher
-- **Docker & Docker Compose** (for the database)
 - **OpenAI API Key**
 
 Maven is not required — the project includes the Maven Wrapper (`./mvnw`).
@@ -73,12 +73,14 @@ export OPENAI_API_KEY=your_openai_api_key_here
 ./mvnw spring-boot:run
 ```
 
-Docker must be running: the project uses Spring Boot's Docker Compose integration
-(`spring-boot-docker-compose`), which automatically starts the PostgreSQL/pgvector
-container from `compose.yaml` when the application starts — no manual
-`docker compose up` needed.
+No Docker or external database needed. On first run, Spring Boot creates a
+file-based H2 database at `data/mydatabase.mv.db` (relative to `api-ai/`) and
+initializes it from `schema.sql`/`rag-schema.sql`. The `data/` directory is
+gitignored.
 
-The application will start on `http://localhost:8080`
+The application will start on `http://localhost:8080`. The H2 web console is
+available at `http://localhost:8080/h2-console` (JDBC URL
+`jdbc:h2:file:./data/mydatabase`, user `sa`, empty password).
 
 ## 📚 API Documentation
 
@@ -252,8 +254,8 @@ src/main/resources/     # application.properties, SQL schemas,
 All configuration lives in `src/main/resources/application.properties`:
 
 - **OpenAI**: API key and embedding model (`text-embedding-3-small`, 1536 dimensions)
-- **Database**: PostgreSQL connection settings (matching `compose.yaml`)
-- **Vector Store**: pgvector dimensions, distance type, and index type
+- **Database**: H2 file-based connection settings (`data/mydatabase`)
+- **Vector Store**: `app.vectorstore.file` — path to the local `SimpleVectorStore` JSON file
 - **RAG**: document upload directory, chunking, and retrieval settings (`app.documents.*`)
 - **Uploads**: multipart file size limits
 
@@ -276,16 +278,8 @@ Tests use an H2 in-memory database with test-specific configuration in
 
 ## 🐳 Docker
 
-The database container is managed automatically by Spring Boot's Docker Compose
-integration when running the application. To manage it manually:
-
-```bash
-docker compose up -d      # start PostgreSQL/pgvector
-docker compose down       # stop services
-docker compose logs -f    # view logs
-```
-
-To build a container image of the application:
+Docker is not required to run or develop this application. To build a container
+image of the application:
 
 ```bash
 ./mvnw spring-boot:build-image
@@ -299,11 +293,10 @@ To build a container image of the application:
 
 ## 📖 Dependencies
 
-- **Spring Boot**: application framework (Web MVC, JDBC, Actuator, DevTools)
+- **Spring Boot**: application framework (Web MVC, JDBC, H2 Console, Actuator, DevTools)
 - **Spring AI**: OpenAI chat and embedding models, JDBC chat memory,
-  pgvector vector store, PDF document reader, vector store advisor
-- **PostgreSQL + pgvector**: production database and vector store
-- **H2**: test database
+  `SimpleVectorStore`, PDF document reader, vector store advisor
+- **H2**: file-based database (runtime) and in-memory database (tests)
 
 ## 📝 License
 
@@ -314,8 +307,7 @@ This project is licensed under the MIT License — see the [LICENSE](../LICENSE)
 - [Spring AI Documentation](https://docs.spring.io/spring-ai/reference/)
 - [OpenAI API Documentation](https://platform.openai.com/docs/)
 - [Spring Boot Documentation](https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/)
-- [PostgreSQL Documentation](https://www.postgresql.org/docs/)
-- [pgvector Documentation](https://github.com/pgvector/pgvector)
+- [H2 Database Documentation](https://www.h2database.com/html/main.html)
 
 ---
 

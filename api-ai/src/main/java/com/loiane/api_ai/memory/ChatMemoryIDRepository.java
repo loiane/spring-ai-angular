@@ -4,6 +4,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.UUID;
 
 @Repository
 public class ChatMemoryIDRepository {
@@ -15,12 +16,14 @@ public class ChatMemoryIDRepository {
     }
 
     public String generateChatId(String userId, String description) {
-        String sql = "INSERT INTO chat_memory (user_id, description) VALUES (?, ?) RETURNING conversation_id";
-        return jdbcTemplate.queryForObject(sql, String.class, userId, description);
+        String conversationId = UUID.randomUUID().toString();
+        String sql = "INSERT INTO chat_memory (conversation_id, user_id, description) VALUES (?, ?, ?)";
+        jdbcTemplate.update(sql, conversationId, userId, description);
+        return conversationId;
     }
 
     public boolean chatIdExists(String chatId) {
-        String sql = "SELECT COUNT(*) FROM chat_memory WHERE conversation_id = ?::uuid";
+        String sql = "SELECT COUNT(*) FROM chat_memory WHERE conversation_id = ?";
         Integer count = jdbcTemplate.queryForObject(sql, Integer.class, chatId);
         return count != null && count == 1;
     }

@@ -7,13 +7,16 @@ import org.springframework.ai.reader.ExtractedTextFormatter;
 import org.springframework.ai.reader.pdf.PagePdfDocumentReader;
 import org.springframework.ai.reader.pdf.config.PdfDocumentReaderConfig;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
+import org.springframework.ai.vectorstore.SimpleVectorStore;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.ai.vectorstore.filter.Filter;
 import org.springframework.ai.vectorstore.filter.FilterExpressionBuilder;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -39,7 +42,7 @@ import com.loiane.api_ai.rag.model.DocumentStatus;
  *   <li>PDF text extraction</li>
  *   <li>Text chunking for optimal retrieval</li>
  *   <li>Embedding generation</li>
- *   <li>Vector storage in pgvector</li>
+ *   <li>Vector storage in the local vector store</li>
  *   <li>Document metadata management</li>
  *   <li>Document deletion with cascade</li>
  * </ol>
@@ -62,12 +65,25 @@ public class DocumentService {
     private final VectorStore vectorStore;
     private final DocumentProperties documentProperties;
 
-    public DocumentService(DocumentRepository documentRepository, 
+    @Value("${app.vectorstore.file:./data/vectorstore.json}")
+    private String vectorStoreFilePath;
+
+    public DocumentService(DocumentRepository documentRepository,
                           VectorStore vectorStore,
                           DocumentProperties documentProperties) {
         this.documentRepository = documentRepository;
         this.vectorStore = vectorStore;
         this.documentProperties = documentProperties;
+    }
+
+    /**
+     * Persists the in-memory vector store to disk if it's a {@link SimpleVectorStore}.
+     * Needed because SimpleVectorStore doesn't auto-save after mutations.
+     */
+    private void persistVectorStore() {
+        if (vectorStore instanceof SimpleVectorStore simpleVectorStore) {
+            simpleVectorStore.save(new File(vectorStoreFilePath));
+        }
     }
 
     /**
@@ -232,6 +248,7 @@ public class DocumentService {
     private void storeVectors(List<Document> documents, String documentId) {
         log.debug("Generating embeddings and storing in vector database");
         vectorStore.add(documents);
+        persistVectorStore();
         log.info("Successfully stored {} vectors for document: {}", documents.size(), documentId);
     }
 
@@ -308,6 +325,7 @@ public class DocumentService {
             // Delete the document's chunks from the vector store
             Filter.Expression filter = new FilterExpressionBuilder().eq("document_id", documentId).build();
             vectorStore.delete(filter);
+            persistVectorStore();
             log.info("Deleted vectors for document: id={}", documentId);
 
             // Delete document metadata

@@ -1,6 +1,6 @@
 -- RAG (Retrieval-Augmented Generation) Database Schema
--- This schema supports document upload, vector storage, and RAG queries
--- Note: vector extension and vector_store table are created in pgvector.sql
+-- This schema supports document upload metadata and RAG queries.
+-- Note: vector embeddings are stored in a local SimpleVectorStore file, not this database.
 
 -- Drop existing tables if they exist (for clean re-initialization)
 DROP TABLE IF EXISTS documents CASCADE;
@@ -10,7 +10,7 @@ DROP TABLE IF EXISTS documents CASCADE;
 -- Stores metadata about uploaded documents
 -- =============================================
 CREATE TABLE documents (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID DEFAULT RANDOM_UUID() PRIMARY KEY,
     filename VARCHAR(255) NOT NULL,
     content_type VARCHAR(100) NOT NULL,
     file_size BIGINT NOT NULL,
@@ -18,31 +18,21 @@ CREATE TABLE documents (
     status VARCHAR(20) NOT NULL DEFAULT 'PROCESSING',
     error_message TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    
-    CONSTRAINT chk_status CHECK (status IN ('PROCESSING', 'READY', 'ERROR'))
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+-- Note: status is validated in Java via the DocumentStatus enum, not a DB CHECK
+-- constraint. H2 2.4.240 has a connection-lifecycle bug (constraint's compiled
+-- expression caches a session reference) that makes `CHECK status IN (...)`
+-- intermittently throw "Check constraint invalid" after the DDL connection is
+-- recycled by a connection pool. Not an issue with a small, fixed set of values
+-- enforced at the application layer.
 
 -- Create indexes for efficient querying
 CREATE INDEX IF NOT EXISTS idx_documents_status ON documents(status);
 CREATE INDEX IF NOT EXISTS idx_documents_upload_date ON documents(upload_date DESC);
 
--- =============================================
--- Helper Function: Update updated_at timestamp
--- =============================================
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ language 'plpgsql';
-
--- Trigger to automatically update updated_at on documents table
-CREATE TRIGGER update_documents_updated_at 
-    BEFORE UPDATE ON documents
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
+-- Note: updated_at is maintained by the application (DocumentRepository sets
+-- CURRENT_TIMESTAMP explicitly on updates) since H2 doesn't support PL/pgSQL triggers.
 
 -- =============================================
 -- Sample Queries (for reference)

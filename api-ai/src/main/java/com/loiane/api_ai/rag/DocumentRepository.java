@@ -51,28 +51,39 @@ public class DocumentRepository {
      */
     public DocumentMetadata save(DocumentMetadata document) {
         String id = document.id() != null ? document.id() : UUID.randomUUID().toString();
-        
-        String sql = """
-            INSERT INTO documents (id, filename, content_type, file_size, upload_date, status, error_message)
-            VALUES (?::uuid, ?, ?, ?, ?, ?::VARCHAR, ?)
-            ON CONFLICT (id) DO UPDATE SET
-                filename = EXCLUDED.filename,
-                content_type = EXCLUDED.content_type,
-                file_size = EXCLUDED.file_size,
-                status = EXCLUDED.status,
-                error_message = EXCLUDED.error_message,
-                updated_at = CURRENT_TIMESTAMP
+
+        String updateSql = """
+            UPDATE documents SET
+                filename = ?, content_type = ?, file_size = ?, status = ?,
+                error_message = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
             """;
 
-        jdbcTemplate.update(sql,
-                id,
+        int rowsUpdated = jdbcTemplate.update(updateSql,
                 document.filename(),
                 document.contentType(),
                 document.fileSize(),
-                Timestamp.valueOf(document.uploadDate()),
                 document.status().name(),
-                document.errorMessage()
+                document.errorMessage(),
+                id
         );
+
+        if (rowsUpdated == 0) {
+            String insertSql = """
+                INSERT INTO documents (id, filename, content_type, file_size, upload_date, status, error_message)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """;
+
+            jdbcTemplate.update(insertSql,
+                    id,
+                    document.filename(),
+                    document.contentType(),
+                    document.fileSize(),
+                    Timestamp.valueOf(document.uploadDate()),
+                    document.status().name(),
+                    document.errorMessage()
+            );
+        }
 
         log.debug("Saved document: id={}, filename={}, status={}", id, document.filename(), document.status());
 
@@ -94,7 +105,7 @@ public class DocumentRepository {
      * @return Optional containing the document if found, empty otherwise
      */
     public Optional<DocumentMetadata> findById(String id) {
-        String sql = "SELECT * FROM documents WHERE id = ?::uuid";
+        String sql = "SELECT * FROM documents WHERE id = ?";
         
         try {
             DocumentMetadata document = jdbcTemplate.queryForObject(sql, documentRowMapper, id);
@@ -124,7 +135,7 @@ public class DocumentRepository {
      * @param id The document ID to delete
      */
     public void deleteById(String id) {
-        String sql = "DELETE FROM documents WHERE id = ?::uuid";
+        String sql = "DELETE FROM documents WHERE id = ?";
         int rowsAffected = jdbcTemplate.update(sql, id);
         
         if (rowsAffected > 0) {
@@ -141,7 +152,7 @@ public class DocumentRepository {
      * @param status The new status
      */
     public void updateStatus(String id, DocumentStatus status) {
-        String sql = "UPDATE documents SET status = ?::VARCHAR, updated_at = CURRENT_TIMESTAMP WHERE id = ?::uuid";
+        String sql = "UPDATE documents SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
         int rowsAffected = jdbcTemplate.update(sql, status.name(), id);
         
         if (rowsAffected > 0) {
@@ -159,7 +170,7 @@ public class DocumentRepository {
      * @param errorMessage The error message (can be null)
      */
     public void updateStatusWithError(String id, DocumentStatus status, String errorMessage) {
-        String sql = "UPDATE documents SET status = ?::VARCHAR, error_message = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?::uuid";
+        String sql = "UPDATE documents SET status = ?, error_message = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
         int rowsAffected = jdbcTemplate.update(sql, status.name(), errorMessage, id);
         
         if (rowsAffected > 0) {
@@ -176,7 +187,7 @@ public class DocumentRepository {
      * @return List of documents with the specified status
      */
     public List<DocumentMetadata> findByStatus(DocumentStatus status) {
-        String sql = "SELECT * FROM documents WHERE status = ?::VARCHAR ORDER BY upload_date DESC";
+        String sql = "SELECT * FROM documents WHERE status = ? ORDER BY upload_date DESC";
         List<DocumentMetadata> documents = jdbcTemplate.query(sql, documentRowMapper, status.name());
         log.debug("Found {} documents with status: {}", documents.size(), status);
         return documents;
