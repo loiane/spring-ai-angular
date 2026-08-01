@@ -36,7 +36,7 @@
     "@playwright/test": "^1.61.1",
     "@types/marked": "^5.0.2",
     "jsdom": "^29.1.1",
-    "typescript": "~6.0.3",
+    "typescript": "~7.0.2",
     "vitest": "^4.1.9"
   }
 }
