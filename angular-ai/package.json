@@ -33,7 +33,7 @@
     "@angular/build": "^22.1.2",
     "@angular/cli": "^22.1.2",
     "@angular/compiler-cli": "^22.1.0",
-    "@playwright/test": "^1.61.1",
+    "@playwright/test": "^1.62.1",
     "@types/marked": "^5.0.2",
     "jsdom": "^30.0.1",
     "typescript": "~6.0.3",
